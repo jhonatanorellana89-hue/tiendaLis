@@ -2,568 +2,368 @@
 <html lang="es">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Control Económico — Actualizado (RealtimeDB)</title>
-
-<!-- Estilos básicos -->
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Control Económico — v5 (Deudas & Bienes)</title>
+<link href="https://cdn.jsdelivr.net/npm/modern-normalize/modern-normalize.css" rel="stylesheet">
 <style>
-  :root{--bg:#f5f7fb;--card:#fff;--muted:#6b7280;--accent:#0f766e}
-  body{font-family:Inter,system-ui,Arial;background:var(--bg);margin:0;color:#0b1220}
+  :root{--bg:#f6f7fb;--card:#fff;--muted:#6b7280;--accent:#0f766e}
+  body{font-family:Inter,system-ui,Arial;background:var(--bg);margin:0;color:#0f172a}
   .wrap{max-width:1100px;margin:18px auto;padding:14px}
+  .grid{display:grid;grid-template-columns:260px 1fr;gap:14px}
   .card{background:var(--card);border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(12,16,35,0.06)}
-  .grid{display:grid;grid-template-columns:260px 1fr;gap:12px}
   .menu button{display:block;width:100%;text-align:left;padding:10px;border-radius:8px;border:0;background:transparent;cursor:pointer}
   .menu button.active{background:#eefbf9}
-  label{display:block;font-size:13px;margin-top:8px;color:var(--muted)}
+  .menu{position:sticky;top:18px}
   input,select,textarea{width:100%;padding:8px;border-radius:6px;border:1px solid #e6e9ef;margin-top:6px}
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  th,td{padding:8px;border-bottom:1px solid #f1f3f6;text-align:left}
-  .row{display:flex;gap:8px;align-items:center}
+  .row{display:flex;gap:8px}
   .btn{padding:8px 10px;border-radius:8px;border:0;cursor:pointer}
   .btn.primary{background:var(--accent);color:#fff}
-  .btn.ghost{background:transparent;border:1px solid #e6e9ef}
-  .notif{padding:8px;border-radius:8px;background:#fff7ed;border:1px solid #ffe1b8;font-size:13px;margin-top:8px}
-  #log{height:120px;overflow:auto;background:#0b1220;color:#fff;padding:8px;border-radius:6px;font-size:12px}
-  .time-meter{position:fixed;top:12px;right:12px;background:var(--card);padding:10px;border-radius:10px;box-shadow:0 8px 20px rgba(12,16,35,0.08);z-index:1200;display:flex;gap:8px;align-items:center}
-  @media (max-width:880px){.grid{grid-template-columns:1fr}.time-meter{position:static;margin-bottom:12px}}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:8px;border-bottom:1px solid #f1f3f6;text-align:left}
+  .time-meter{position:fixed;top:18px;right:18px;background:var(--card);padding:8px;border-radius:10px;box-shadow:0 8px 20px rgba(12,16,35,0.08);z-index:1200;display:flex;gap:8px;align-items:center}
+  .muted{color:var(--muted);font-size:13px}
+  .over{color:#b91c1c;font-weight:700}
+  .badge{display:inline-block;padding:6px 8px;border-radius:6px;background:#eefbf9;color:#055e52;font-weight:700;margin-right:6px}
+  @media (max-width:880px){.grid{grid-template-columns:1fr}.menu{position:relative}}
 </style>
-
-<!-- Librerías: Chart.js (CDN) y jsPDF -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-<!-- Firebase compat -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-messaging-compat.js"></script>
 </head>
 <body>
   <div class="wrap">
     <header class="card" style="display:flex;justify-content:space-between;align-items:center">
       <div>
-        <strong>Control Económico — Actualizado</strong>
-        <div style="color:var(--muted)">RealtimeDB • Huchas • Recurrentes • Alertas • Charts</div>
+        <div style="font-weight:700">Control Económico — v5</div>
+        <div class="muted">Deudas vinculadas a banco, Pasivos mensuales, Registro de bienes (activo/pasivo)</div>
       </div>
-      <div style="text-align:right">
-        <div id="userDisplay" style="font-size:13px;color:var(--muted)">No autenticado</div>
-        <small id="syncStatus" style="color:var(--muted)">Sincronización: local</small>
-      </div>
+      <div class="muted">Guardado en localStorage</div>
     </header>
 
     <div class="time-meter" id="timeMeter">
-      <button class="btn" id="prevMonth">◀</button>
+      <button class="btn" id="btnPrev">◀</button>
       <div style="min-width:160px;text-align:center">
-        <div id="monthName" style="font-weight:700">--</div>
-        <div id="monthYear" style="color:var(--muted)">----</div>
+        <div id="monthName" style="font-weight:800;letter-spacing:1px">--</div>
+        <div id="monthYear" class="muted">----</div>
       </div>
-      <button class="btn primary" id="nextMonth">▶</button>
-      <button class="btn" id="exportPDF">Exportar PDF</button>
-      <button class="btn" id="forceSync">Forzar sync</button>
+      <button class="btn primary" id="btnNext">▶</button>
+      <button class="btn ghost" id="btnUndo">↶</button>
     </div>
 
-    <div style="height:12px"></div>
-
-    <div class="grid">
+    <div class="grid" style="margin-top:14px">
       <aside class="card menu">
-        <button id="m_dashboard" class="active">Dashboard</button>
-        <button id="m_expenses">Gastos</button>
-        <button id="m_incomes">Ingresos</button>
-        <button id="m_banks">Bancos</button>
-        <button id="m_pots">Huchas</button>
-        <button id="m_categories">Categorías</button>
-        <button id="m_settings">Ajustes</button>
-        <div style="margin-top:12px;font-size:12px;color:var(--muted)">LOG</div>
-        <div id="log" class="card"></div>
+        <button id="mDashboard" class="active">Dashboard</button>
+        <button id="mBanks">Bancos</button>
+        <button id="mDebts">Deudas</button>
+        <button id="mLiabs">Pasivos (cuota mensual)</button>
+        <button id="mBienes">Bienes (Activo / Pasivo)</button>
+        <button id="mDiary">Registro Diario</button>
       </aside>
 
       <main>
         <!-- Dashboard -->
-        <section id="s_dashboard" class="card">
+        <section id="sDashboard" class="card">
           <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><h3 style="margin:0">Dashboard</h3><div class="muted">Resumen (mes actual y KPIs)</div></div>
             <div>
-              <h3 style="margin:0">Resumen mensual</h3>
-              <div style="color:var(--muted);font-size:13px">Visión rápida y gráficos</div>
-            </div>
-            <div class="row">
-              <div style="text-align:right">
-                <div style="color:var(--muted)">Balance</div>
-                <div id="k_balance" style="font-weight:700">S/ 0</div>
-              </div>
+              <div class="muted">Mes actual:</div>
+              <div><strong id="dashMonthName">--</strong> <span id="dashMonthYear">----</span></div>
             </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
-            <div class="card">
-              <canvas id="chartExpenses" height="220"></canvas>
-            </div>
-            <div class="card">
-              <canvas id="chartCategories" height="220"></canvas>
-            </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px">
+            <div class="card"><div class="muted">Balance</div><div id="kBalance" style="font-weight:700">S/ 0</div></div>
+            <div class="card"><div class="muted">Ahorros en bancos</div><div id="kBanks" style="font-weight:700">S/ 0</div></div>
+            <div class="card"><div class="muted">Total deuda mensual</div><div id="kDebtMonthly" style="font-weight:700">S/ 0</div></div>
+            <div class="card"><div class="muted">Activos netos (valor)</div><div id="kAssetsVal" style="font-weight:700">S/ 0</div></div>
           </div>
 
-          <div style="margin-top:12px" id="alertsContainer"></div>
-        </section>
-
-        <!-- Expenses -->
-        <section id="s_expenses" class="card" style="display:none">
-          <h3>Registrar gasto</h3>
-          <label>Fecha</label><input id="e_date" type="date">
-          <label>Monto</label><input id="e_amount" type="number" step="0.01">
-          <label>Categoría</label>
-          <select id="e_category"></select>
-          <label>Banco (opcional)</label>
-          <select id="e_bank"><option value="">-- Ninguno --</option></select>
-          <label>Nota</label><input id="e_note">
-          <label><input type="checkbox" id="e_recurrent"> Recurrente mensual</label>
-          <div style="margin-top:8px" class="row">
-            <button class="btn primary" id="btnSaveExpense">Guardar gasto</button>
-            <button class="btn" id="btnClearExpense">Limpiar (NO recomendado)</button>
-          </div>
-
-          <h4 style="margin-top:12px">Historial (últimos 50)</h4>
-          <div style="max-height:240px;overflow:auto"><table id="tblExpenses"><thead><tr><th>Fecha</th><th>Desc</th><th>Monto</th><th>Cat</th><th></th></tr></thead><tbody></tbody></table></div>
-        </section>
-
-        <!-- Incomes -->
-        <section id="s_incomes" class="card" style="display:none">
-          <h3>Ingresos</h3>
-          <label>Concepto</label><input id="i_name">
-          <label>Monto</label><input id="i_amount" type="number" step="0.01">
-          <label>Frecuencia</label>
-          <select id="i_freq"><option value="mensual">Mensual</option><option value="unica">Única</option></select>
-          <label>Banco (opcional)</label><select id="i_bank"><option value="">-- Ninguno --</option></select>
-          <div style="margin-top:8px"><button class="btn primary" id="btnSaveIncome">Guardar ingreso</button></div>
-
-          <h4 style="margin-top:12px">Ingresos (últimos 50)</h4>
-          <div style="max-height:200px;overflow:auto"><table id="tblIncomes"><thead><tr><th>Ingreso</th><th>Monto</th><th>Freq</th><th></th></tr></thead><tbody></tbody></table></div>
+          <div style="margin-top:12px" id="notifications"></div>
         </section>
 
         <!-- Banks -->
-        <section id="s_banks" class="card" style="display:none">
-          <h3>Bancos / cuentas</h3>
-          <label>Nombre banco</label><input id="b_name">
-          <label>Saldo inicial</label><input id="b_balance" type="number" step="0.01">
-          <div style="margin-top:8px"><button class="btn primary" id="btnSaveBank">Guardar banco</button></div>
-          <div style="margin-top:12px"><table id="tblBanks"><thead><tr><th>Banco</th><th>Saldo</th><th></th></tr></thead><tbody></tbody></table></div>
-        </section>
-
-        <!-- Pots (huchas) -->
-        <section id="s_pots" class="card" style="display:none">
-          <h3>Huchas / Ahorros</h3>
-          <label>Nombre</label><input id="p_name">
-          <label>Meta (S/)</label><input id="p_goal" type="number">
-          <label>Regla automática (%)</label><input id="p_percent" type="number" value="0">
-          <div style="margin-top:8px"><button class="btn primary" id="btnSavePot">Crear hucha</button></div>
-          <div style="margin-top:12px"><table id="tblPots"><thead><tr><th>Hucha</th><th>Meta</th><th>Balance</th><th></th></tr></thead><tbody></tbody></table></div>
-        </section>
-
-        <!-- Categories -->
-        <section id="s_categories" class="card" style="display:none">
-          <h3>Categorías y presupuesto</h3>
-          <label>Nombre categoría</label><input id="c_name">
-          <label>Límite mensual (S/)</label><input id="c_limit" type="number" step="0.01">
-          <div style="margin-top:8px"><button class="btn primary" id="btnSaveCategory">Crear categoría</button></div>
-          <div style="margin-top:12px"><table id="tblCategories"><thead><tr><th>Cat</th><th>Límite</th><th>Gasto mes</th><th></th></tr></thead><tbody></tbody></table></div>
-        </section>
-
-        <!-- Settings -->
-        <section id="s_settings" class="card" style="display:none">
-          <h3>Ajustes</h3>
-          <div style="margin-bottom:8px">
-            <button class="btn primary" id="btnLogin">Iniciar sesión (Google)</button>
-            <button class="btn" id="btnLogout" style="display:none">Cerrar sesión</button>
-            <button class="btn" id="btnClearLocal">Borrar local (no cloud)</button>
-          </div>
-          <div style="margin-top:12px">
-            <strong>Estado</strong>
-            <div id="stateRaw" style="white-space:pre-wrap;max-height:180px;overflow:auto;background:#f1f3f5;padding:8px;border-radius:6px"></div>
+        <section id="sBanks" class="card" style="display:none">
+          <h3>Bancos</h3>
+          <div class="muted">Registra cuentas bancarias (saldo inicial)</div>
+          <div style="display:flex;gap:12px;margin-top:10px">
+            <div style="flex:1">
+              <label>Nombre banco / cuenta</label><input id="bankName">
+              <label>Saldo inicial</label><input id="bankInit" type="number">
+              <label>Tipo</label><select id="bankType"><option value="ahorro">Ahorro</option><option value="corriente">Corriente</option></select>
+              <div style="margin-top:8px"><button class="btn primary" id="btnAddBank">Agregar banco</button></div>
+            </div>
+            <div style="flex:1;overflow:auto;height:240px"><table id="tblBanks"><thead><tr><th>Banco</th><th>Saldo</th><th>Tipo</th><th></th></tr></thead><tbody></tbody></table></div>
           </div>
         </section>
+
+        <!-- Debts -->
+        <section id="sDebts" class="card" style="display:none">
+          <h3>Deudas vinculadas a banco</h3>
+          <div class="muted">Registra deudas con total, meses a pagar y banco asociado</div>
+          <div style="display:flex;gap:12px;margin-top:10px">
+            <div style="flex:1">
+              <label>Concepto / Acreedor</label><input id="debtCred">
+              <label>Total deuda</label><input id="debtTotal" type="number">
+              <label>Meses a pagar</label><input id="debtMonths" type="number" value="12">
+              <label>Banco (opcional)</label><select id="debtBank"></select>
+              <label>Mes inicio (YYYY-MM)</label><input id="debtStart" placeholder="2025-11" type="month">
+              <div style="margin-top:8px"><button class="btn primary" id="btnAddDebt">Agregar deuda</button></div>
+            </div>
+            <div style="flex:1;overflow:auto;height:240px"><table id="tblDebts"><thead><tr><th>Acreedor</th><th>Total</th><th>Meses</th><th>Pago/m</th><th>Banco</th><th>Remanente</th><th></th></tr></thead><tbody></tbody></table></div>
+          </div>
+        </section>
+
+        <!-- Liabilities (monthly) -->
+        <section id="sLiabs" class="card" style="display:none">
+          <h3>Pasivos (solo costo mensual)</h3>
+          <div class="muted">Registra la cuota mensual de pasivos, vinculada a banco si aplica</div>
+          <div style="display:flex;gap:12px;margin-top:10px">
+            <div style="flex:1">
+              <label>Concepto</label><input id="liabName">
+              <label>Cuota mensual</label><input id="liabMonthly" type="number">
+              <label>Banco (opcional)</label><select id="liabBank"></select>
+              <div style="margin-top:8px"><button class="btn primary" id="btnAddLiab">Agregar pasivo</button></div>
+            </div>
+            <div style="flex:1;overflow:auto;height:240px"><table id="tblLiabs"><thead><tr><th>Concepto</th><th>Cuota/m</th><th>Banco</th><th></th></tr></thead><tbody></tbody></table></div>
+          </div>
+        </section>
+
+        <!-- Bienes -->
+        <section id="sBienes" class="card" style="display:none">
+          <h3>Registro de bienes</h3>
+          <div class="muted">Clasifica bienes como Activo (genera ingreso) o Pasivo (genera costo)</div>
+          <div style="display:flex;gap:12px;margin-top:10px">
+            <div style="flex:1">
+              <label>Nombre bien</label><input id="goodName">
+              <label>Tipo</label><select id="goodType"><option value="activo">Activo</option><option value="pasivo">Pasivo</option></select>
+              <label>Valor (S/)</label><input id="goodValue" type="number">
+              <label>Ingreso mensual (si activo) / Costo mensual (si pasivo)</label><input id="goodMonthly" type="number">
+              <div style="margin-top:8px"><button class="btn primary" id="btnAddGood">Agregar bien</button></div>
+            </div>
+            <div style="flex:1;overflow:auto;height:240px"><table id="tblGoods"><thead><tr><th>Bien</th><th>Tipo</th><th>Valor</th><th>Mensual</th><th></th></tr></thead><tbody></tbody></table></div>
+          </div>
+        </section>
+
+        <!-- Diary -->
+        <section id="sDiary" class="card" style="display:none">
+          <h3>Registro diario</h3>
+          <div class="muted">Registra gastos por categoría o libre (afecta banco si asignas)</div>
+          <div style="display:flex;gap:12px;margin-top:10px">
+            <div style="flex:1">
+              <label>Fecha</label><input id="dDate" type="date">
+              <label>Descripción</label><input id="dDesc">
+              <label>Monto</label><input id="dAmount" type="number">
+              <label>Banco (opcional)</label><select id="dBank"></select>
+              <div style="margin-top:8px"><button class="btn primary" id="btnAddDiary">Registrar gasto</button></div>
+            </div>
+            <div style="flex:1;overflow:auto;height:240px"><table id="tblDiary"><thead><tr><th>Fecha</th><th>Desc</th><th>Monto</th><th>Banco</th><th></th></tr></thead><tbody></tbody></table></div>
+          </div>
+        </section>
+
       </main>
     </div>
   </div>
 
 <script>
-/* ========= FIREBASE CONFIG (ajusta databaseURL si es distinto) ========= */
-const firebaseConfig = {
-  apiKey: "AIzaSyBVppNAicRPFXEUdErmHd24se_9bjXiqcM",
-  authDomain: "jhona-1b398.firebaseapp.com",
-  databaseURL: "https://jhona-1b398-default-rtdb.firebaseio.com",
-  projectId: "jhona-1b398",
-  storageBucket: "jhona-1b398.firebasestorage.app",
-  messagingSenderId: "981136306223",
-  appId: "1:981136306223:web:52a7b67c22c274efcc56da",
-  measurementId: "G-NVGKL0XGER"
-};
-
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const rdb = firebase.database();
-const messaging = firebase.messaging();
-
-/* ========= App state & helpers ========= */
-const STORAGE_KEY = 'ce_app_v2_local';
+/* ---------- Estado ---------- */
+const KEY='ce_v5_deudas_bienes';
 let state = {
-  currentMonthISO: new Date().toISOString().slice(0,10),
-  balance: 0,
-  banks: [],
-  expenses: [],
-  incomes: [],
-  pots: [],
-  categories: []
+  currentDate: new Date().toISOString().slice(0,10),
+  balance:0,
+  banks:[],
+  debts:[], // {id, creditor, total, months, monthly, bankId, startMonth (YYYY-MM), remaining, paidMonths}
+  liabs:[], // {id,name,monthly,bankId}
+  goods:[], // {id,name,type,valor,monthly}
+  diary:[],
+  history:[]
 };
 
+function uid(p='id'){return p+'_'+Math.random().toString(36).slice(2,9)}
+function load(){const raw=localStorage.getItem(KEY); if(raw) state=JSON.parse(raw)}
+function save(){localStorage.setItem(KEY,JSON.stringify(state)); renderAll()}
+
+function notify(t,ttl=7000){ const n=document.createElement('div'); n.className='notif'; n.style.marginTop='8px'; n.innerText=t; document.getElementById('notifications').prepend(n); setTimeout(()=>n.remove(),ttl); }
+
+/* ---------- Helpers de mes ---------- */
 const MONTHS_ES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SETIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+function setMonthUI(iso){ const d=new Date(iso); document.getElementById('monthName').innerText = MONTHS_ES[d.getMonth()]; document.getElementById('monthYear').innerText = d.getFullYear(); document.getElementById('dashMonthName').innerText = MONTHS_ES[d.getMonth()]; document.getElementById('dashMonthYear').innerText = d.getFullYear(); }
 
-function uid(pref='id'){ return pref + '_' + Math.random().toString(36).slice(2,9); }
-function formatCur(v){ return 'S/ ' + Number(v||0).toLocaleString(); }
-function log(msg){ const el = document.getElementById('log'); el.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}<br>` + el.innerHTML; console.log(msg); }
-
-/* ========= Local storage ========= */
-function loadLocal(){ try{ const raw = localStorage.getItem(STORAGE_KEY); if(raw) state = JSON.parse(raw); renderAll(); log('Estado local cargado'); }catch(e){ log('Error cargando local: ' + e.message); } }
-function saveLocal(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); renderAll(); saveStateCloudIfPossible(); }
-
-/* ========= Cloud save (debounced) ========= */
-let _deb = null;
-function saveStateCloudIfPossible(){
-  if(!window.__UID){ enqueueOp({type:'state', payload: state}); document.getElementById('syncStatus').innerText = 'Sincronización: local (no auth)'; return; }
-  clearTimeout(_deb);
-  _deb = setTimeout(()=> {
-    rdb.ref(`users/${window.__UID}/state/current`).set({ state, updatedAt: new Date().toISOString() })
-      .then(()=> { document.getElementById('syncStatus').innerText = 'Sincronización: cloud'; log('Estado enviado a cloud'); })
-      .catch(err => { enqueueOp({type:'state', payload: state}); log('Error push state: ' + err.message); });
-  }, 700);
-}
-
-/* ========= Queue for offline ops ========= */
-const QUEUE_KEY = 'ce_app_v2_ops';
-function enqueueOp(op){
-  const raw = localStorage.getItem(QUEUE_KEY); const arr = raw ? JSON.parse(raw) : []; arr.push(op); localStorage.setItem(QUEUE_KEY, JSON.stringify(arr)); log('Op encolada: ' + (op.type || op.subcol)); 
-}
-async function flushQueue(){
-  const raw = localStorage.getItem(QUEUE_KEY); if(!raw) { log('Cola vacía'); return; }
-  const arr = JSON.parse(raw); if(!arr.length) { localStorage.removeItem(QUEUE_KEY); log('Cola vacía'); return; }
-  if(!window.__UID) { log('No auth, no puedo vaciar cola'); return; }
-  for(const op of arr){
-    try{
-      if(op.type==='state') await rdb.ref(`users/${window.__UID}/state/current`).set({ state: op.payload, updatedAt: new Date().toISOString() });
-      else if(op.type==='subcol') await rdb.ref(`users/${window.__UID}/${op.subcol}`).push(Object.assign({}, op.payload, { createdAt:new Date().toISOString() }));
-      log('Op enviada: ' + (op.type || op.subcol));
-    }catch(e){ log('Error enviando op: ' + e.message); return; }
-  }
-  localStorage.removeItem(QUEUE_KEY); log('Cola sincronizada');
-}
-
-/* ========= Real-time listeners ========= */
-let listeners = [];
-function startRealtime(uid){
-  stopRealtime();
-  try{
-    // state
-    const sref = rdb.ref(`users/${uid}/state/current`);
-    sref.on('value', snap => {
-      if(!snap.exists()) return;
-      const remote = snap.val().state;
-      state = remote;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); renderAll();
-      log('Estado remoto aplicado');
-    });
-    listeners.push(sref);
-
-    // subcollections: banks, expenses, incomes, pots, categories
-    ['banks','expenses','incomes','pots','categories'].forEach(path => {
-      const ref = rdb.ref(`users/${uid}/${path}`);
-      ref.on('value', snap => {
-        const arr = [];
-        snap.forEach(child => { const d = child.val(); d._remoteId = child.key; arr.push(d); });
-        state[path === 'expenses' ? 'expenses': path] = arr;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        renderAll();
-        log(`Synced remote '${path}' (${arr.length})`);
-      });
-      listeners.push(ref);
-    });
-
-    log('Realtime listeners activados');
-  }catch(e){ log('startRealtime error: ' + e.message); }
-}
-function stopRealtime(){ listeners.forEach(r=> r.off()); listeners = []; log('Realtime listeners detenidos'); }
-
-/* ========= UI render ========= */
-let chartExpenses=null, chartCat=null;
+/* ---------- Renderers ---------- */
 function renderAll(){
-  // month UI
-  const d = new Date(state.currentMonthISO);
-  document.getElementById('monthName').innerText = MONTHS_ES[d.getMonth()];
-  document.getElementById('monthYear').innerText = d.getFullYear();
+  setMonthUI(state.currentDate);
+  document.getElementById('kBalance').innerText = formatCur(state.balance);
+  const totalBank = state.banks.reduce((s,b)=>s+Number(b.balance||0),0); document.getElementById('kBanks').innerText = formatCur(totalBank);
+  const debtMonthly = state.debts.reduce((s,d)=>s+Number(d.monthly||0),0); document.getElementById('kDebtMonthly').innerText = formatCur(debtMonthly);
+  const assetsVal = state.goods.filter(g=>g.type==='activo').reduce((s,g)=>s+Number(g.valor||0),0); document.getElementById('kAssetsVal').innerText = formatCur(assetsVal);
 
-  // KPIs
-  document.getElementById('k_balance').innerText = formatCur(state.balance || 0);
+  // banks table & selects
+  const tbBanks = document.querySelector('#tblBanks tbody'); tbBanks.innerHTML='';
+  state.banks.forEach(b=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${b.name}</td><td>${formatCur(b.balance)}</td><td>${b.type}</td><td><button class="btn ghost" data-id="${b.id}">Eliminar</button></td>`; tbBanks.appendChild(tr); });
+  document.querySelectorAll('#tblBanks button[data-id]').forEach(btn=>btn.onclick=()=>{ const id=btn.dataset.id; state.banks=state.banks.filter(x=>x.id!==id); save(); notify('Banco eliminado'); });
 
-  // populate selects & tables
-  const catSel = document.getElementById('e_category'); catSel.innerHTML = '';
-  state.categories.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.name; catSel.appendChild(o); });
+  ['debtBank','liabBank','dBank'].forEach(id=>{ const sel=document.getElementById(id); if(!sel) return; const prev=sel.value; sel.innerHTML='<option value=\"\">-- Ninguno --</option>'; state.banks.forEach(b=>{ const o=document.createElement('option'); o.value=b.id; o.textContent=`${b.name} (S/ ${Number(b.balance||0).toLocaleString()})`; sel.appendChild(o); }); sel.value = prev||''; });
 
-  const bankSel = document.getElementById('e_bank'); bankSel.innerHTML = '<option value="">-- Ninguno --</option>';
-  state.banks.forEach(b => { const o = document.createElement('option'); o.value = b.id; o.textContent = `${b.name} (S/ ${Number(b.balance||0).toLocaleString()})`; bankSel.appendChild(o); });
-  const iBankSel = document.getElementById('i_bank'); iBankSel.innerHTML = '<option value="">-- Ninguno --</option>'; state.banks.forEach(b=>{ const o=document.createElement('option'); o.value=b.id; o.textContent=b.name; iBankSel.appendChild(o); });
-  const bBankSel = document.getElementById('b_balance'); // no usa
+  // debts
+  const tbDebt = document.querySelector('#tblDebts tbody'); tbDebt.innerHTML='';
+  state.debts.forEach(d=>{ const b = state.banks.find(x=>x.id===d.bankId); const bn=b?b.name:''; const tr=document.createElement('tr'); tr.innerHTML=`<td>${d.creditor}</td><td>${formatCur(d.total)}</td><td>${d.months}</td><td>${formatCur(d.monthly)}</td><td>${bn}</td><td>${formatCur(d.remaining)}</td><td><button class="btn ghost" data-id="${d.id}">Eliminar</button></td>`; tbDebt.appendChild(tr); });
+  document.querySelectorAll('#tblDebts button[data-id]').forEach(b=>b.onclick=()=>{ const id=b.dataset.id; state.debts=state.debts.filter(x=>x.id!==id); save(); notify('Deuda eliminada'); });
 
-  // tables
-  const tbExp = document.querySelector('#tblExpenses tbody'); if(tbExp){ tbExp.innerHTML = ''; (state.expenses || []).slice().reverse().slice(0,50).forEach(e => { const tr = document.createElement('tr'); tr.innerHTML = `<td>${e.date}</td><td>${e.note || e.category || ''}</td><td>${formatCur(e.amount)}</td><td>${(state.categories.find(c=>c.id===e.category)||{}).name || ''}</td><td><button class="btn ghost" onclick="delLocalExpense('${e.id}')">Eliminar</button></td>`; tbExp.appendChild(tr); }); }
+  // liabs
+  const tbLiab=document.querySelector('#tblLiabs tbody'); tbLiab.innerHTML='';
+  state.liabs.forEach(l=>{ const b=state.banks.find(x=>x.id===l.bankId); const bn=b?b.name:''; const tr=document.createElement('tr'); tr.innerHTML=`<td>${l.name}</td><td>${formatCur(l.monthly)}</td><td>${bn}</td><td><button class="btn ghost" data-id="${l.id}">Eliminar</button></td>`; tbLiab.appendChild(tr); });
+  document.querySelectorAll('#tblLiabs button[data-id]').forEach(b=>b.onclick=()=>{ state.liabs=state.liabs.filter(x=>x.id!==b.dataset.id); save(); notify('Pasivo eliminado'); });
 
-  const tbInc = document.querySelector('#tblIncomes tbody'); if(tbInc){ tbInc.innerHTML=''; (state.incomes||[]).slice().reverse().slice(0,50).forEach(i=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${i.name}</td><td>${formatCur(i.amount)}</td><td>${i.freq}</td><td><button class="btn ghost" onclick="delLocalIncome('${i.id}')">Eliminar</button></td>`; tbInc.appendChild(tr); }); }
+  // goods
+  const tbGoods = document.querySelector('#tblGoods tbody'); tbGoods.innerHTML='';
+  state.goods.forEach(g=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${g.name}</td><td>${g.type}</td><td>${formatCur(g.valor)}</td><td>${formatCur(g.monthly)}</td><td><button class="btn ghost" data-id="${g.id}">Eliminar</button></td>`; tbGoods.appendChild(tr); });
+  document.querySelectorAll('#tblGoods button[data-id]').forEach(b=>b.onclick=()=>{ state.goods=state.goods.filter(x=>x.id!==b.dataset.id); save(); notify('Bien eliminado'); });
 
-  const tbBanks = document.querySelector('#tblBanks tbody'); if(tbBanks){ tbBanks.innerHTML=''; (state.banks||[]).forEach(b=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${b.name}</td><td>${formatCur(b.balance)}</td><td><button class="btn ghost" onclick="delLocalBank('${b.id}')">Eliminar</button></td>`; tbBanks.appendChild(tr); }); }
+  // diary
+  const tbD = document.querySelector('#tblDiary tbody'); tbD.innerHTML='';
+  state.diary.slice().reverse().forEach(e=>{ const b = state.banks.find(x=>x.id===e.bankId); const bn=b?b.name:''; const tr=document.createElement('tr'); tr.innerHTML=`<td>${e.date}</td><td>${e.desc}</td><td>${formatCur(e.amount)}</td><td>${bn}</td><td><button class="btn ghost" data-id="${e.id}">Eliminar</button></td>`; tbD.appendChild(tr); });
+  document.querySelectorAll('#tblDiary button[data-id]').forEach(btn=>btn.onclick=()=>{ const id=btn.dataset.id; const ent=state.diary.find(x=>x.id===id); if(ent){ state.balance += Number(ent.amount); if(ent.bankId){ const b = state.banks.find(x=>x.id===ent.bankId); if(b) b.balance = Number(b.balance) + Number(ent.amount); } } state.diary = state.diary.filter(x=>x.id!==id); save(); notify('Registro diario eliminado'); });
 
-  const tbPots = document.querySelector('#tblPots tbody'); if(tbPots){ tbPots.innerHTML=''; (state.pots||[]).forEach(p=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${p.name}</td><td>${formatCur(p.goal)}</td><td>${formatCur(p.balance||0)}</td><td><button class="btn ghost" onclick="delLocalPot('${p.id}')">Eliminar</button></td>`; tbPots.appendChild(tr); }); }
-
-  const tbCats = document.querySelector('#tblCategories tbody'); if(tbCats){ tbCats.innerHTML=''; (state.categories||[]).forEach(c=>{ // compute month spent
-    const month = state.currentMonthISO.slice(0,7);
-    const spent = (state.expenses||[]).filter(e => e.category===c.id && e.date && e.date.startsWith(month)).reduce((s,x)=>s+Number(x.amount||0),0);
-    const tr=document.createElement('tr'); tr.innerHTML=`<td>${c.name}</td><td>${formatCur(c.limit||0)}</td><td>${formatCur(spent)}</td><td><button class="btn ghost" onclick="delLocalCategory('${c.id}')">Eliminar</button></td>`; tbCats.appendChild(tr);
-  }); }
-
-  // charts: build expenses per day (month) and by category
-  buildCharts();
-  // raw state
-  document.getElementById('stateRaw').innerText = JSON.stringify(state, null, 2);
 }
 
-/* ========= Charts ========= */
-function buildCharts(){
-  const ctxE = document.getElementById('chartExpenses').getContext('2d');
-  const ctxC = document.getElementById('chartCategories').getContext('2d');
-  // expenses per day of current month
-  const month = state.currentMonthISO.slice(0,7);
-  const daysInMonth = new Date(Number(month.split('-')[0]), Number(month.split('-')[1]), 0).getDate();
-  const labels = Array.from({length: daysInMonth}, (_,i)=>String(i+1));
-  const totalsByDay = Array(daysInMonth).fill(0);
-  (state.expenses||[]).forEach(e => { if(e.date && e.date.startsWith(month)){ const day = Number(e.date.split('-')[2]) - 1; totalsByDay[day] += Number(e.amount||0); }});
-  if(chartExpenses) chartExpenses.destroy();
-  chartExpenses = new Chart(ctxE, { type:'bar', data:{ labels, datasets:[{ label:'Gastos por día', data: totalsByDay }]}, options:{ responsive:true, plugins:{legend:{display:false}} } });
+/* ---------- Format ---------- */
+function formatCur(v){ return 'S/ '+Number(v||0).toLocaleString(); }
 
-  // categories
-  const catNames = state.categories.map(c=>c.name);
-  const catTotals = state.categories.map(c => (state.expenses||[]).filter(e=>e.category===c.id && e.date && e.date.startsWith(month)).reduce((s,x)=>s+Number(x.amount||0),0));
-  if(chartCat) chartCat.destroy();
-  chartCat = new Chart(ctxC, { type:'pie', data:{ labels:catNames, datasets:[{ data:catTotals }]}, options:{ responsive:true } });
+/* ---------- CRUD actions (wired) ---------- */
+document.addEventListener('DOMContentLoaded', ()=>{
+
+  load(); renderAll(); setMonthUI(state.currentDate);
+
+  // menu wiring
+  document.getElementById('mDashboard').onclick = ()=> show('sDashboard');
+  document.getElementById('mBanks').onclick = ()=> show('sBanks');
+  document.getElementById('mDebts').onclick = ()=> show('sDebts');
+  document.getElementById('mLiabs').onclick = ()=> show('sLiabs');
+  document.getElementById('mBienes').onclick = ()=> show('sBienes');
+  document.getElementById('mDiary').onclick = ()=> show('sDiary');
+
+  // bank add
+  document.getElementById('btnAddBank').onclick = ()=>{
+    const name = document.getElementById('bankName').value.trim(); const bal = Number(document.getElementById('bankInit').value)||0; const type = document.getElementById('bankType').value;
+    if(!name) return alert('Nombre banco requerido');
+    state.banks.push({id:uid('b'),name,balance:bal,type}); document.getElementById('bankName').value=''; document.getElementById('bankInit').value=''; save(); notify('Banco agregado');
+  };
+
+  // add debt
+  document.getElementById('btnAddDebt').onclick = ()=>{
+    const cred = document.getElementById('debtCred').value.trim(); const total = Number(document.getElementById('debtTotal').value)||0; const months = Number(document.getElementById('debtMonths').value)||1; const bankId = document.getElementById('debtBank').value||null; const start = document.getElementById('debtStart').value;
+    if(!cred || total<=0 || months<=0) return alert('Completa campos válidos');
+    const monthly = +(total/months).toFixed(2);
+    state.debts.push({id:uid('d'),creditor:cred,total,months,monthly,bankId,startMonth:start||state.currentDate.slice(0,7),remaining:total,paidMonths:0});
+    document.getElementById('debtCred').value=''; document.getElementById('debtTotal').value=''; document.getElementById('debtMonths').value='12'; document.getElementById('debtStart').value='';
+    save(); notify('Deuda agregada');
+  };
+
+  // add liab (monthly only)
+  document.getElementById('btnAddLiab').onclick = ()=>{
+    const name = document.getElementById('liabName').value.trim(); const mon = Number(document.getElementById('liabMonthly').value)||0; const bankId = document.getElementById('liabBank').value||null;
+    if(!name || mon<=0) return alert('Nombre y cuota validos');
+    state.liabs.push({id:uid('l'),name,monthly:mon,bankId}); document.getElementById('liabName').value=''; document.getElementById('liabMonthly').value=''; save(); notify('Pasivo agregado');
+  };
+
+  // add good
+  document.getElementById('btnAddGood').onclick = ()=>{
+    const name = document.getElementById('goodName').value.trim(); const type = document.getElementById('goodType').value; const val = Number(document.getElementById('goodValue').value)||0; const mon = Number(document.getElementById('goodMonthly').value)||0;
+    if(!name) return alert('Nombre del bien requerido');
+    state.goods.push({id:uid('g'),name,type,valor:val,monthly:mon}); document.getElementById('goodName').value=''; document.getElementById('goodValue').value=''; document.getElementById('goodMonthly').value=''; save(); notify('Bien agregado');
+  };
+
+  // diary add
+  document.getElementById('btnAddDiary').onclick = ()=>{
+    const date = document.getElementById('dDate').value || new Date().toISOString().slice(0,10);
+    const desc = document.getElementById('dDesc').value || '';
+    const amt = Number(document.getElementById('dAmount').value)||0;
+    const bankId = document.getElementById('dBank').value||null;
+    if(amt<=0) return alert('Monto mayor que 0');
+    state.diary.push({id:uid('di'),date,desc,amount:amt,bankId}); state.balance -= amt;
+    if(bankId){ const b = state.banks.find(x=>x.id===bankId); if(b) b.balance = Number(b.balance) - amt; }
+    document.getElementById('dDesc').value=''; document.getElementById('dAmount').value=''; save(); notify('Gasto registrado');
+  };
+
+  // month controls
+  document.getElementById('btnNext').onclick = ()=>{ pushHistory(); advanceMonth(); save(); };
+  document.getElementById('btnPrev').onclick = ()=>{ if(confirm('Deshacer último avance?')) undoHistory(); };
+  document.getElementById('btnUndo').onclick = ()=>{ if(confirm('Deshacer último avance?')) undoHistory(); };
+
+}); // DOMContentLoaded end
+
+/* ---------- Section show ---------- */
+function show(id){
+  ['sDashboard','sBanks','sDebts','sLiabs','sBienes','sDiary'].forEach(s=>document.getElementById(s).style.display = (s===id?'block':'none'));
+  document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('active'));
+  const map = {sDashboard:'mDashboard',sBanks:'mBanks',sDebts:'mDebts',sLiabs:'mLiabs',sBienes:'mBienes',sDiary:'mDiary'};
+  const bid = map[id]; if(bid) document.getElementById(bid).classList.add('active');
 }
 
-/* ========= CRUD local & cloud actions ========= */
-/* Expenses */
-function saveExpense(){
-  const date = document.getElementById('e_date').value || new Date().toISOString().slice(0,10);
-  const amount = Number(document.getElementById('e_amount').value || 0);
-  const category = document.getElementById('e_category').value || null;
-  const bankId = document.getElementById('e_bank').value || null;
-  const note = document.getElementById('e_note').value || '';
-  const recurrent = document.getElementById('e_recurrent').checked;
-  if(amount <= 0) return alert('Monto debe ser mayor a 0');
-  const o = { id: uid('exp'), date, amount, category, bankId, note, recurrent };
-  state.expenses.push(o);
-  // update bank/ balance if bank assigned
-  if(bankId){
-    const b = state.banks.find(x=>x.id===bankId);
-    if(b){ b.balance = Number(b.balance||0) - Number(amount); }
-  } else {
-    state.balance = Number(state.balance||0) - Number(amount);
-  }
-  saveLocal();
-  // push to cloud if possible
-  if(window.__UID){ rdb.ref(`users/${window.__UID}/expenses`).push(Object.assign({}, o, { createdAt: new Date().toISOString() })).then(() => log('Gasto enviado a cloud')).catch(e=>{ enqueueOp({type:'subcol', subcol:'expenses', payload:o}); log('Error push expense: '+e.message); }); }
-  else { enqueueOp({type:'subcol', subcol:'expenses', payload:o}); log('Gasto encolado (no auth)'); }
+/* ---------- History ---------- */
+function pushHistory(){ state.history = state.history || []; state.history.push(JSON.stringify(state)); if(state.history.length>48) state.history.shift(); localStorage.setItem(KEY, JSON.stringify(state)); }
+function undoHistory(){ if(!state.history||state.history.length===0){ notify('No hay historial'); return } const snap = state.history.pop(); state = JSON.parse(snap); save(); notify('Deshecho'); }
 
-  // check budget and show immediate alert if needed
-  checkBudgetForCategory(o.category);
-}
+/* ---------- Advance month logic: aplica cuotas de deudas y pasivos ---------- */
+function advanceMonth(){
+  // mover mes
+  const cur = new Date(state.currentDate); const next = new Date(cur.getFullYear(), cur.getMonth()+1, 1); state.currentDate = next.toISOString().slice(0,10);
 
-/* Incomes */
-function saveIncome(){
-  const name = document.getElementById('i_name').value.trim();
-  const amount = Number(document.getElementById('i_amount').value||0);
-  const freq = document.getElementById('i_freq').value;
-  const bankId = document.getElementById('i_bank').value || null;
-  if(!name || amount<=0) return alert('Datos inválidos');
-  const o = { id: uid('inc'), name, amount, freq, bankId, createdAt: new Date().toISOString() };
-  state.incomes.push(o);
-  if(bankId){ const b = state.banks.find(x=>x.id===bankId); if(b) b.balance = Number(b.balance||0) + Number(amount); } else state.balance = Number(state.balance||0) + Number(amount);
-  saveLocal();
-  if(window.__UID){ rdb.ref(`users/${window.__UID}/incomes`).push(Object.assign({}, o, { createdAt: new Date().toISOString() })).then(()=>log('Ingreso enviado a cloud')).catch(e=>{ enqueueOp({type:'subcol', subcol:'incomes', payload:o}); log('Error push income: '+e.message); }); } else enqueueOp({type:'subcol', subcol:'incomes', payload:o});
-}
-
-/* Banks */
-function saveBank(){
-  const name = document.getElementById('b_name').value.trim();
-  const bal = Number(document.getElementById('b_balance').value||0);
-  if(!name) return alert('Ingrese nombre');
-  const o = { id: uid('bank'), name, balance: bal };
-  state.banks.push(o);
-  saveLocal();
-  if(window.__UID){ rdb.ref(`users/${window.__UID}/banks`).push(Object.assign({}, o, { createdAt: new Date().toISOString() })).then(()=>log('Banco enviado a cloud')).catch(e=>{ enqueueOp({type:'subcol', subcol:'banks', payload:o}); }); } else enqueueOp({type:'subcol', subcol:'banks', payload:o});
-}
-
-/* Pots */
-function savePot(){
-  const name = document.getElementById('p_name').value.trim();
-  const goal = Number(document.getElementById('p_goal').value||0);
-  const percent = Number(document.getElementById('p_percent').value||0);
-  if(!name) return alert('Nombre requerido');
-  const o = { id: uid('pot'), name, goal, percent, balance: 0 };
-  state.pots.push(o);
-  saveLocal();
-  if(window.__UID){ rdb.ref(`users/${window.__UID}/pots`).push(Object.assign({}, o, { createdAt:new Date().toISOString() })).then(()=>log('Hucha enviada a cloud')).catch(e=>enqueueOp({type:'subcol', subcol:'pots', payload:o})); } else enqueueOp({type:'subcol', subcol:'pots', payload:o});
-}
-
-/* Categories */
-function saveCategory(){
-  const name = document.getElementById('c_name').value.trim();
-  const limit = Number(document.getElementById('c_limit').value||0);
-  if(!name) return alert('Nombre requerido');
-  const o = { id: uid('cat'), name, limit };
-  state.categories.push(o);
-  saveLocal();
-  if(window.__UID){ rdb.ref(`users/${window.__UID}/categories`).push(Object.assign({}, o, { createdAt:new Date().toISOString() })).then(()=>log('Categoria enviada a cloud')).catch(e=>enqueueOp({type:'subcol', subcol:'categories', payload:o})); } else enqueueOp({type:'subcol', subcol:'categories', payload:o});
-}
-
-/* Delete local helpers (note: in this simple file we only remove locally; remote may remain until cluster sync or manual remote delete) */
-function delLocalExpense(id){ state.expenses = state.expenses.filter(e=>e.id!==id); saveLocal(); log('Gasto eliminado localmente'); }
-function delLocalIncome(id){ state.incomes = state.incomes.filter(i=>i.id!==id); saveLocal(); log('Ingreso eliminado localmente'); }
-function delLocalBank(id){ state.banks = state.banks.filter(b=>b.id!==id); saveLocal(); log('Banco eliminado localmente'); }
-function delLocalPot(id){ state.pots = state.pots.filter(p=>p.id!==id); saveLocal(); log('Hucha eliminada localmente'); }
-function delLocalCategory(id){ state.categories = state.categories.filter(c=>c.id!==id); saveLocal(); log('Categoria eliminada localmente'); }
-
-/* ========= Alerts & budget checks ========= */
-function checkBudgetForCategory(catId){
-  if(!catId) return;
-  const cat = state.categories.find(c=>c.id===catId);
-  if(!cat || !cat.limit) return;
-  const month = state.currentMonthISO.slice(0,7);
-  const spent = state.expenses.filter(e=>e.category===catId && e.date && e.date.startsWith(month)).reduce((s,x)=>s+Number(x.amount||0),0);
-  if(spent > Number(cat.limit || 0)){
-    // show alert UI and queue cloud alert (Cloud Function will send push too)
-    const alerts = document.getElementById('alertsContainer');
-    const div = document.createElement('div'); div.className='notif'; div.innerHTML = `<strong>Presupuesto superado:</strong> ${cat.name} — gastado ${formatCur(spent)} / límite ${formatCur(cat.limit)}`;
-    alerts.prepend(div);
-    setTimeout(()=> div.remove(), 15000);
-    // enqueue an alert object for Cloud Functions to process (optional)
-    const alertObj = { id: uid('alert'), type:'budget_over', categoryId: catId, spent, limit:cat.limit, createdAt: new Date().toISOString() };
-    if(window.__UID) rdb.ref(`users/${window.__UID}/alerts`).push(alertObj).catch(()=>enqueueOp({type:'subcol', subcol:'alerts', payload: alertObj}));
-    else enqueueOp({type:'subcol', subcol:'alerts', payload: alertObj});
-    log('Alerta de presupuesto registrada');
-  }
-}
-
-/* ========= Monthly automation (client-side quick automation + server scheduled more robust) ========= */
-function runMonthlyAutomation(){
-  // Apply pots % from incomes that are 'mensual' and created this month - lightweight approach
-  (state.incomes||[]).forEach(inc => {
-    if(inc.freq === 'mensual'){
-      const amount = Number(inc.amount || 0);
-      (state.pots||[]).forEach(p => {
-        if(Number(p.percent || 0) > 0){
-          const take = +(amount * (Number(p.percent) / 100)).toFixed(2);
-          p.balance = Number(p.balance || 0) + take;
-          // reduce from first bank or balance
-          if(state.banks && state.banks.length) state.banks[0].balance = Number(state.banks[0].balance || 0) - take;
-          else state.balance = Number(state.balance || 0) - take;
+  // 1) aplicar pagos mensuales de deudas que correspondan (si startMonth <= current month and remaining>0)
+  state.debts.forEach(d=>{
+    // check if debt is active this month: compare startMonth <= current YYYY-MM and remaining>0
+    const curYm = state.currentDate.slice(0,7);
+    if(d.remaining > 0 && d.startMonth <= curYm){
+      const pay = Number(d.monthly||0);
+      // debit from bank if present and has balance, else from balance
+      if(d.bankId){
+        const b = state.banks.find(x=>x.id===d.bankId);
+        if(b && Number(b.balance) >= pay){ b.balance = Number(b.balance) - pay; d.remaining = Math.max(0, Number(d.remaining) - pay); d.paidMonths = (d.paidMonths||0) + 1; }
+        else { // partial: debit what bank has then from balance
+          const taken = b ? Math.min(Number(b.balance), pay) : 0;
+          if(b) b.balance = Number(b.balance) - taken;
+          const rest = pay - taken;
+          state.balance -= rest;
+          d.remaining = Math.max(0, Number(d.remaining) - pay);
+          d.paidMonths = (d.paidMonths||0) + 1;
         }
-      });
+      } else { // no bank linked
+        state.balance -= pay; d.remaining = Math.max(0, Number(d.remaining) - pay); d.paidMonths = (d.paidMonths||0) + 1;
+      }
     }
   });
-  saveLocal();
-  log('Automatización mensual (cliente) aplicada');
-}
 
-/* ========= PDF export ========= */
-function exportPDF(){
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({unit:'pt', format:'a4'});
-  let y = 40; const left = 40;
-  doc.setFontSize(14); doc.text('Resumen Control Económico', left, y); y+=20;
-  doc.setFontSize(10); doc.text('Fecha: ' + new Date().toLocaleString(), left, y); y+=18;
-  doc.text('Balance: ' + formatCur(state.balance), left, y); y+=14;
-  doc.text('Bancos:', left, y); y+=12;
-  state.banks.forEach(b => { doc.text(`${b.name} — ${formatCur(b.balance)}`, left, y); y+=12; if(y>740){ doc.addPage(); y=40; }});
-  doc.save('resumen_ce_'+new Date().toISOString().slice(0,10)+'.pdf');
-  log('PDF generado');
-}
-
-/* ========= Auth & messaging (push token) ========= */
-(function authUI(){
-  document.getElementById('btnLogin').addEventListener('click', async ()=>{
-    const provider = new firebase.auth.GoogleAuthProvider();
-    try{ await auth.signInWithPopup(provider); }catch(e){ log('login popup error: ' + e.message); try{ await auth.signInWithRedirect(provider); }catch(err){ log('redirect error: '+ err.message); } }
+  // 2) aplicar pasivos (liabs) cuotas mensuales: debit from linked bank if possible else from balance
+  state.liabs.forEach(l=>{
+    const pay = Number(l.monthly||0);
+    if(l.bankId){
+      const b = state.banks.find(x=>x.id===l.bankId);
+      if(b && Number(b.balance) >= pay){ b.balance = Number(b.balance) - pay; } else {
+        const taken = b ? Math.min(Number(b.balance), pay) : 0; if(b) b.balance = Number(b.balance) - taken; const rest = pay - taken; state.balance -= rest;
+      }
+    } else { state.balance -= pay; }
   });
-  document.getElementById('btnLogout').addEventListener('click', ()=> auth.signOut());
-})();
 
-auth.onAuthStateChanged(async user => {
-  const ud = document.getElementById('userDisplay');
-  const loginBtn = document.getElementById('btnLogin'), logoutBtn = document.getElementById('btnLogout');
-  if(user){
-    window.__UID = user.uid;
-    ud.innerText = (user.displayName || user.email) + ' (' + user.uid.slice(0,6) + ')';
-    if(loginBtn) loginBtn.style.display='none'; if(logoutBtn) logoutBtn.style.display='inline-block';
-    log('Usuario autenticado: ' + (user.email || user.uid));
-    // store user basic info
-    rdb.ref(`users/${window.__UID}/meta`).set({ displayName: user.displayName || null, email: user.email || null, lastLogin: new Date().toISOString() }).catch(()=>{});
-    // register FCM token (ask permission)
-    try{
-      await messaging.requestPermission();
-      const token = await messaging.getToken();
-      if(token){ rdb.ref(`users/${window.__UID}/devices`).push({ token, platform:'web', createdAt: new Date().toISOString() }); log('FCM token guardado'); }
-    }catch(e){ log('FCM permiso/token error: ' + (e.message||e)); }
-    // start listeners & flush queue
-    startRealtime(window.__UID);
-    await flushQueue();
-    saveStateCloudIfPossible();
-  } else {
-    window.__UID = null;
-    ud.innerText = 'No autenticado';
-    if(loginBtn) loginBtn.style.display='inline-block'; if(logoutBtn) logoutBtn.style.display='none';
-    log('Sesión cerrada');
-    stopRealtime();
-  }
+  // 3) aplicar ingresos por bienes activos automáticamente al balance
+  const incomeFromGoods = state.goods.filter(g=>g.type==='activo').reduce((s,g)=>s + Number(g.monthly||0),0);
+  state.balance += incomeFromGoods;
+  if(incomeFromGoods>0) notify(`Ingresos por bienes activos: S/ ${incomeFromGoods.toFixed(2)}`);
+
+  notify(`Mes avanzado: se aplicaron pagos mensuales y se registraron ingresos activos`);
+}
+
+/* ---------- Utilities ---------- */
+function formatMonthYear(iso){
+  const d = new Date(iso);
+  return `${MONTHS_ES[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+/* ---------- Init ---------- */
+window.addEventListener('DOMContentLoaded', ()=>{
+  load(); renderAll(); setMonthUI(state.currentDate);
+  // make sure default section show
+  show('sDashboard');
 });
-
-/* ========= Buttons & wiring ========= */
-document.addEventListener('DOMContentLoaded', ()=>{
-  // menu
-  const map = { m_dashboard:'s_dashboard', m_expenses:'s_expenses', m_incomes:'s_incomes', m_banks:'s_banks', m_pots:'s_pots', m_categories:'s_categories', m_settings:'s_settings' };
-  Object.keys(map).forEach(k => { document.getElementById(k).addEventListener('click', ()=>{ document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('active')); document.getElementById(k).classList.add('active'); Object.values(map).forEach(id => document.getElementById(id).style.display = 'none'); document.getElementById(map[k]).style.display = 'block'; }); });
-
-  // init date input
-  document.getElementById('e_date').value = new Date().toISOString().slice(0,10);
-  document.getElementById('d_date')?.value = new Date().toISOString().slice(0,10);
-
-  // expense save
-  document.getElementById('btnSaveExpense').addEventListener('click', saveExpense);
-  document.getElementById('btnClearExpense').addEventListener('click', ()=>{ if(confirm('Limpiar inputs?')){ document.getElementById('e_amount').value=''; document.getElementById('e_note').value=''; document.getElementById('e_recurrent').checked=false; } });
-
-  document.getElementById('btnSaveIncome').addEventListener('click', saveIncome);
-  document.getElementById('btnSaveBank').addEventListener('click', saveBank);
-  document.getElementById('btnSavePot').addEventListener('click', savePot);
-  document.getElementById('btnSaveCategory').addEventListener('click', saveCategory);
-
-  document.getElementById('prevMonth').addEventListener('click', ()=>{ const d = new Date(state.currentMonthISO); const prev = new Date(d.getFullYear(), d.getMonth()-1, 1); state.currentMonthISO = prev.toISOString().slice(0,10); saveLocal(); });
-  document.getElementById('nextMonth').addEventListener('click', ()=>{ const d = new Date(state.currentMonthISO); const next = new Date(d.getFullYear(), d.getMonth()+1, 1); state.currentMonthISO = next.toISOString().slice(0,10); saveLocal(); });
-  document.getElementById('exportPDF').addEventListener('click', exportPDF);
-  document.getElementById('forceSync').addEventListener('click', ()=>{ if(window.__UID) flushQueue(); else alert('Inicia sesión para sincronizar'); });
-  document.getElementById('btnClearLocal').addEventListener('click', ()=>{ if(confirm('Borrar estado local? Esto no tocará la cloud.')){ localStorage.removeItem(STORAGE_KEY); loadLocal(); } });
-
-  // initial load
-  loadLocal();
-  // minor automation: run client monthly automation if first load of month
-  const lastRun = localStorage.getItem('ce_client_monthly_' + state.currentMonthISO.slice(0,7));
-  if(!lastRun){ runMonthlyAutomation(); localStorage.setItem('ce_client_monthly_' + state.currentMonthISO.slice(0,7), new Date().toISOString()); }
-});
-
-/* ========= Simple helper to show full state in UI ========= */
-setInterval(()=>{ document.getElementById('stateRaw').innerText = JSON.stringify(state, null, 2); }, 2000);
-
+window.addEventListener('beforeunload', ()=> save());
 </script>
 </body>
 </html>
+
+
 
