@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Control Económico — Realtime DB</title>
+<title>Control Económico — Shared (Realtime DB)</title>
 <link href="https://cdn.jsdelivr.net/npm/modern-normalize/modern-normalize.css" rel="stylesheet">
 <style>
   :root{--bg:#f6f7fb;--card:#fff;--muted:#6b7280;--accent:#0f766e}
@@ -30,7 +30,7 @@
 <body>
   <div class="wrap">
     <header style="display:flex;justify-content:space-between;align-items:center" class="card">
-      <div><strong>Control Económico — Realtime DB</strong><div class="muted">Sincronización con Firebase Realtime Database</div></div>
+      <div><strong>Control Económico — Shared DB</strong><div class="muted">Nodo compartido: /shared/miCuenta</div></div>
       <div class="muted" id="syncStatus">Conectando...</div>
     </header>
 
@@ -53,10 +53,8 @@
       </aside>
 
       <main>
-        <!-- (Secciones idénticas a tu UI original; por brevedad no las repito aquí) -->
-        <!-- Copia las mismas secciones e inputs que usabas; las he mantenido en el código JS -->
-        <!-- ... (usa el HTML anterior, se incluye abajo en la misma página) -->
-        <!-- For clarity, HTML sections are included below (unchanged) -->
+        <!-- (Todas las secciones están incluidas igual que en tu versión anterior) -->
+        <!-- Dashboard -->
         <section id="sDashboard" class="card">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div><h3 style="margin:0">Dashboard</h3><div class="muted">Resumen rápido</div></div>
@@ -70,6 +68,7 @@
           </div>
         </section>
 
+        <!-- Banks -->
         <section id="sBanks" class="card" style="display:none">
           <h3>Bancos</h3>
           <div class="muted">Agregar cuentas bancarias</div>
@@ -86,6 +85,7 @@
           </div>
         </section>
 
+        <!-- Categories -->
         <section id="sCategories" class="card" style="display:none">
           <h3>Categorías</h3>
           <div class="muted">Definir presupuesto por categoría</div>
@@ -99,6 +99,7 @@
           </div>
         </section>
 
+        <!-- Diary -->
         <section id="sDiary" class="card" style="display:none">
           <h3>Registro diario</h3>
           <div class="muted">Registrar gasto por categoría (afecta saldo banco si se asigna)</div>
@@ -114,6 +115,7 @@
           </div>
         </section>
 
+        <!-- Assets -->
         <section id="sAssets" class="card" style="display:none">
           <h3>Activos</h3>
           <div class="muted">Ingreso pasivo por activos</div>
@@ -127,6 +129,7 @@
           </div>
         </section>
 
+        <!-- Liabs -->
         <section id="sLiabs" class="card" style="display:none">
           <h3>Pasivos</h3>
           <div class="muted">Registrar deudas y vincular banco</div>
@@ -141,6 +144,7 @@
           </div>
         </section>
 
+        <!-- Incomes -->
         <section id="sIncomes" class="card" style="display:none">
           <h3>Ingresos</h3>
           <div class="muted">Registrar ingresos y asignar banco</div>
@@ -164,7 +168,7 @@
 
 <!-- Firebase SDK modular (v9+) -->
 <script type="module">
-  // -------------------- CONFIG (YA CON TU CONFIG) --------------------
+  // -------------------- CONFIG (TU CONFIG) --------------------
   const firebaseConfig = {
     apiKey: "AIzaSyBVppNAicRPFXEUdErmHd24se_9bjXiqcM",
     authDomain: "jhona-1b398.firebaseapp.com",
@@ -179,15 +183,19 @@
 
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-app.js";
   import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-auth.js";
-  import { getDatabase, ref, set, onValue, off } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-database.js";
+  import { getDatabase, ref, set, onValue, off, get } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-database.js";
 
   // Inicializa Firebase
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getDatabase(app);
 
+  // Ruta compartida: cambia 'miCuenta' por el id que quieras compartir
+  const SHARED_ID = 'miCuenta';
+  const SHARED_PATH = `shared/${SHARED_ID}`;
+
   // Clave localStorage
-  const KEY = 'ce_fix_v1_rtdb';
+  const KEY = 'ce_fix_shared_rtdb';
 
   // Estado inicial
   let state = {
@@ -218,11 +226,16 @@
   function localLoad(){ const raw = localStorage.getItem(KEY); if(raw) { try{ state = JSON.parse(raw); }catch(e){ console.warn('local parse error', e); } } renderAll(); }
   function localSave(){ localStorage.setItem(KEY, JSON.stringify(state)); }
 
-  // Escrita a Realtime DB (sobrescribe el objeto state completo en /users/{uid})
+  // Escrita a Realtime DB (sobrescribe el objeto state completo en /shared/miCuenta)
   async function writeRemote(){
     if(!remoteRef) return;
     try{
-      set(remoteRef, { state: state, updatedAt: new Date().toISOString() });
+      // mantén el campo owner si ya existe; el servidor validará permisos por reglas
+      // Escribimos: { owner, state, updatedAt }
+      // Note: set() reemplaza todo el objeto en remoteRef, por eso primero leemos owner si existe
+      const snap = await get(remoteRef);
+      const owner = snap && snap.exists() && snap.val().owner ? snap.val().owner : userUid;
+      await set(remoteRef, { owner: owner, state: state, updatedAt: new Date().toISOString() });
       document.getElementById('syncStatus').innerText = 'Sincronizado';
       syncing = true;
     }catch(e){
@@ -235,7 +248,6 @@
   // Escuchar cambios remotos y reemplazar local (remoto gana)
   function listenRemote(){
     if(!remoteRef) return;
-    // remove previous
     if(remoteListener) off(remoteRef, 'value', remoteListener);
     remoteListener = onValue(remoteRef, (snapshot) => {
       const val = snapshot.val();
@@ -249,7 +261,9 @@
         renderAll();
         notify('Datos actualizados desde la nube');
       }
-      document.getElementById('syncStatus').innerText = 'Sincronizado';
+      // muestra owner info en status
+      const owner = val.owner || '(sin owner)';
+      document.getElementById('syncStatus').innerText = `Sincronizado • owner: ${owner}`;
       syncing = true;
     }, (err)=>{
       console.error('listenRemote error', err);
@@ -258,7 +272,7 @@
     });
   }
 
-  // Inicializar auth anonymous y ref por uid
+  // Inicializar auth anonymous y ref compartido
   async function initAuthAndDB(){
     document.getElementById('syncStatus').innerText = 'Autenticando...';
     try{
@@ -268,14 +282,30 @@
       document.getElementById('syncStatus').innerText = 'Auth error';
       notify('Error autenticando en Firebase');
     }
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
       if(user){
         userUid = user.uid;
-        remoteRef = ref(db, `users/${userUid}`);
-        // leer existencia y empezar a escuchar
+        remoteRef = ref(db, SHARED_PATH);
+        // lee una vez: si no existe, crea y se asigna como owner
+        try{
+          const snap = await get(remoteRef);
+          if(!snap.exists()){
+            // primer creador -> establece owner = userUid y sube el estado local
+            await set(remoteRef, { owner: userUid, state: state, updatedAt: new Date().toISOString() });
+            notify('Nodo compartido creado. Eres el owner.');
+          } else {
+            const val = snap.val();
+            if(val.owner && val.owner !== userUid){
+              notify(`Conectado al nodo compartido. Owner actual: ${val.owner}`);
+            } else if(val.owner === userUid){
+              notify('Conectado como owner del nodo compartido.');
+            }
+            // si hay estado remoto, lo usaremos (listenRemote lo aplicará)
+          }
+        }catch(e){
+          console.error('init read error', e);
+        }
         listenRemote();
-        // si no existe remoto (primer uso) escribimos local en remoto
-        set(remoteRef).then(()=>{}).catch(()=>{});
         document.getElementById('syncStatus').innerText = 'Conectado';
       } else {
         document.getElementById('syncStatus').innerText = 'No autenticado';
@@ -283,7 +313,8 @@
     });
   }
 
-  /* ---------- Renderers (idéntico a tu versión) ---------- */
+  /* ---------- Renderers y lógica (idéntico a tu versión con saves remotas) ---------- */
+
   function renderAll(){
     document.getElementById('currentMonth').innerText = formatMonth(state.currentDate);
     document.getElementById('tmCurrent').innerText = formatMonth(state.currentDate);
@@ -348,14 +379,12 @@
 
   async function localSaveAndSync(){
     localSave();
-    // si hay conexión/al auth + remoteRef, escribimos remoto
     if(remoteRef) await writeRemote();
     renderAll();
   }
 
   // Wiring events and actions
   document.addEventListener('DOMContentLoaded', ()=>{
-    // menu wiring
     document.getElementById('mDashboard').onclick = ()=> showSection('sDashboard');
     document.getElementById('mBanks').onclick = ()=> showSection('sBanks');
     document.getElementById('mCategories').onclick = ()=> showSection('sCategories');
@@ -453,10 +482,15 @@
 
   Object.defineProperty(state, 'expensesSum', { get: function(){ return state.liabs.reduce((s,l)=>s+Number(l.monthly||0),0); }, configurable:true });
 
+  // function showSection (helper)
+  function showSection(id){
+    ['sDashboard','sBanks','sCategories','sDiary','sAssets','sLiabs','sIncomes'].forEach(s=>document.getElementById(s).style.display = (s===id? 'block':'none'));
+    document.querySelectorAll('.menu button').forEach(btn=>btn.classList.remove('active'));
+    const map = { sDashboard:'mDashboard', sBanks:'mBanks', sCategories:'mCategories', sDiary:'mDiary', sAssets:'mAssets', sLiabs:'mLiabs', sIncomes:'mIncomes' };
+    const btnId = map[id];
+    if(btnId) document.getElementById(btnId).classList.add('active');
+  }
+
 </script>
 </body>
 </html>
-
-
-
-
