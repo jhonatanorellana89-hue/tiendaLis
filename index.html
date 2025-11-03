@@ -3,570 +3,256 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Control Financiero — Sync RTDB</title>
-
-<!-- Minimal modern UI -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<title>Prueba botones — Sync RTDB</title>
 <style>
-  :root{
-    --bg:#f5f7fb; --card:#ffffff; --muted:#6b7280; --accent:#0f766e;
-    --danger:#ef4444; --success:#16a34a;
-  }
-  *{box-sizing:border-box}
-  body{font-family:Inter,system-ui,Arial;background:var(--bg);margin:0;color:#0b1220}
-  .container{max-width:1150px;margin:18px auto;padding:18px}
-  header.top{display:flex;justify-content:space-between;align-items:center;gap:12px}
-  .brand{font-weight:700;font-size:18px}
-  .card{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 8px 28px rgba(12,16,35,0.06)}
-  .grid{display:grid;grid-template-columns:260px 1fr;gap:14px;margin-top:14px}
-  .menu button{display:block;width:100%;text-align:left;padding:10px;border-radius:8px;border:0;background:transparent;cursor:pointer}
-  .menu button.active{background:#eefbf9}
-  label{display:block;font-size:13px;color:var(--muted);margin-top:8px}
-  input,select,textarea{width:100%;padding:8px;border-radius:8px;border:1px solid #e6e9ef;margin-top:6px}
-  .row{display:flex;gap:8px}
-  .btn{padding:8px 10px;border-radius:8px;border:0;cursor:pointer}
-  .btn.primary{background:var(--accent);color:#fff}
-  .btn.ghost{background:transparent;border:1px solid #e6e9ef}
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  th,td{padding:8px;border-bottom:1px solid #f1f3f6;text-align:left}
-  .kpi{display:flex;gap:8px;flex-wrap:wrap}
-  .kpi .item{flex:1;min-width:150px;padding:10px;border-radius:10px;background:#f8fafc}
-  .meter{height:10px;background:#e6eef0;border-radius:8px;overflow:hidden}
-  .meter > i{display:block;height:100%;background:var(--accent)}
-  .log{height:120px;overflow:auto;background:#0b1220;color:#fff;padding:8px;border-radius:8px;font-size:12px}
-  .timebar{position:fixed;top:12px;right:12px;background:var(--card);padding:10px;border-radius:12px;box-shadow:0 12px 36px rgba(12,16,35,0.08);z-index:1200;display:flex;gap:8px;align-items:center}
-  @media (max-width:980px){.grid{grid-template-columns:1fr} .timebar{position:static;margin-bottom:12px}}
+  body{font-family:Arial,Helvetica,sans-serif;background:#f4f6f8;margin:0;color:#111}
+  .wrap{max-width:980px;margin:18px auto;padding:14px}
+  .card{background:#fff;padding:12px;border-radius:10px;box-shadow:0 8px 20px rgba(12,16,35,0.06)}
+  label{display:block;margin-top:8px;color:#555}
+  input,select{width:100%;padding:8px;border-radius:6px;border:1px solid #ddd;margin-top:6px}
+  .btn{padding:8px 10px;border-radius:8px;border:0;cursor:pointer;background:#0f766e;color:#fff;margin-top:8px}
+  .btn.secondary{background:#6b7280}
+  #log{height:160px;overflow:auto;background:#0b1220;color:#fff;padding:8px;border-radius:6px;margin-top:12px;font-size:13px}
+  .row{display:flex;gap:12px}
+  .col{flex:1}
 </style>
 
-<!-- jsPDF para export PDF -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<!-- Firebase compat libs -->
+<!-- Firebase compat -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 </head>
 <body>
-  <div class="container">
-    <header class="top">
-      <div>
-        <div class="brand">Control Financiero — Superación (Beta)</div>
-        <div style="font-size:13px;color:var(--muted)">Banco • Deudas • Presupuestos • Metas • Sincronización automática</div>
-      </div>
-      <div style="text-align:right">
-        <div id="userInfo" style="font-size:13px;color:var(--muted)">No autenticado</div>
-        <div style="margin-top:6px">
-          <button id="btnLogin" class="btn primary">Ingresar (Google)</button>
-          <button id="btnLogout" class="btn" style="display:none">Salir</button>
+  <div class="wrap">
+    <h2>Prueba funcional — botones y sincronización</h2>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <strong id="userInfo">No autenticado</strong><br><small style="color:#666">Prueba simple</small>
+        </div>
+        <div>
+          <button id="btnLogin" class="btn">Ingresar Google</button>
+          <button id="btnLogout" class="btn secondary" style="display:none">Salir</button>
         </div>
       </div>
-    </header>
 
-    <div class="timebar card" id="timebar">
-      <button class="btn" onclick="goPrev()">◀</button>
-      <div style="text-align:center;min-width:170px">
-        <div id="monthLabel" style="font-weight:700">--</div>
-        <div id="yearLabel" style="font-size:12px;color:var(--muted)">----</div>
+      <hr style="margin:12px 0">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="card">
+          <h4>Bancos</h4>
+          <label>Nombre banco</label><input id="bankName" placeholder="Ej. BCP">
+          <label>Saldo inicial</label><input id="bankBalance" type="number" value="0">
+          <button onclick="testAddBank()" class="btn">Guardar banco</button>
+        </div>
+
+        <div class="card">
+          <h4>Deudas</h4>
+          <label>Acreedor</label><input id="debtCred" placeholder="Ej. Banco X">
+          <label>Total S/</label><input id="debtTotal" type="number" value="0">
+          <label>Meses</label><input id="debtMonths" type="number" value="12">
+          <button onclick="testAddDebt()" class="btn">Guardar deuda</button>
+        </div>
       </div>
-      <button class="btn primary" onclick="goNext()">▶</button>
-      <button class="btn" onclick="exportSummaryPDF()">Exportar PDF</button>
-      <button class="btn" onclick="flushQueue()">Sincronizar ahora</button>
-    </div>
 
-    <div class="grid">
-      <aside class="card menu">
-        <button id="menu_dashboard" class="active" onclick="showSection('dashboard')">Dashboard</button>
-        <button id="menu_banks" onclick="showSection('banks')">Bancos</button>
-        <button id="menu_debts" onclick="showSection('debts')">Deudas</button>
-        <button id="menu_expenses" onclick="showSection('expenses')">Gastos / Presupuestos</button>
-        <button id="menu_assets" onclick="showSection('assets')">Activos</button>
-        <button id="menu_goals" onclick="showSection('goals')">Metas Ahorro</button>
-        <div style="margin-top:12px;font-size:13px;color:var(--muted)">LOG</div>
-        <div id="log" class="log card"></div>
-      </aside>
+      <div style="display:flex;gap:12px;margin-top:12px">
+        <div style="flex:1" class="card">
+          <h4>Gastos</h4>
+          <label>Descripción</label><input id="expDesc" placeholder="Desayuno">
+          <label>Monto</label><input id="expAmount" type="number" value="0">
+          <button onclick="testAddExpense()" class="btn">Registrar gasto</button>
+        </div>
+        <div style="width:220px" class="card">
+          <h4>Controles</h4>
+          <button onclick="viewLocal()" class="btn secondary">Ver estado local</button>
+          <button onclick="flushQueue()" class="btn secondary">Forzar sincronización</button>
+        </div>
+      </div>
 
-      <main>
-        <!-- DASHBOARD -->
-        <section id="dashboard" class="card">
-          <h3>Resumen</h3>
-          <div class="kpi" style="margin-top:8px">
-            <div class="item"><div style="color:var(--muted)">Balance</div><div id="k_balance" style="font-weight:700">S/ 0</div></div>
-            <div class="item"><div style="color:var(--muted)">Ahorros (bancos)</div><div id="k_savings" style="font-weight:700">S/ 0</div></div>
-            <div class="item"><div style="color:var(--muted)">Deuda mensual</div><div id="k_debt" style="font-weight:700">S/ 0</div></div>
-            <div class="item"><div style="color:var(--muted)">Progreso metas</div><div id="k_goals" style="font-weight:700">0 / 0</div></div>
-          </div>
-
-          <div style="margin-top:12px;display:grid;grid-template-columns:2fr 1fr;gap:12px">
-            <div class="card">
-              <h4 style="margin:0">Últimos registros</h4>
-              <div id="recentList" style="margin-top:8px;font-size:13px;color:var(--muted)"></div>
-            </div>
-            <div class="card">
-              <h4 style="margin:0">Mes actual</h4>
-              <div style="margin-top:8px">
-                <div style="color:var(--muted)">Gasto planificado vs real</div>
-                <div style="height:10px" class="meter"><i id="budgetMeter" style="width:10%"></i></div>
-                <div style="font-size:13px;margin-top:6px;color:var(--muted)"><span id="budgetLabel">S/0 / S/0</span></div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- BANKS -->
-        <section id="banks" class="card" style="display:none">
-          <h3>Bancos / Cuentas</h3>
-          <div style="display:flex;gap:10px">
-            <div style="flex:1">
-              <label>Nombre</label><input id="input_bank_name" placeholder="Ej. BCP Ahorros">
-              <label>Saldo inicial (S/)</label><input id="input_bank_balance" type="number" value="0">
-              <label>Tipo</label><select id="input_bank_type"><option value="ahorro">Ahorro</option><option value="corriente">Corriente</option></select>
-              <div style="margin-top:8px"><button class="btn primary" onclick="addBank()">Guardar banco</button></div>
-            </div>
-            <div style="flex:2;overflow:auto">
-              <table id="table_banks"><thead><tr><th>Banco</th><th>Saldo</th><th>Tipo</th><th></th></tr></thead><tbody></tbody></table>
-            </div>
-          </div>
-        </section>
-
-        <!-- DEBTS -->
-        <section id="debts" class="card" style="display:none">
-          <h3>Deudas</h3>
-          <div style="display:flex;gap:10px">
-            <div style="flex:1">
-              <label>Acreedor</label><input id="input_debt_creditor">
-              <label>Total (S/)</label><input id="input_debt_total" type="number">
-              <label>Meses a pagar</label><input id="input_debt_months" type="number" value="12">
-              <label>Vincular a banco (opcional)</label><select id="input_debt_bank"><option value="">-- Ninguno --</option></select>
-              <div style="margin-top:8px"><button class="btn primary" onclick="addDebt()">Guardar deuda</button></div>
-            </div>
-            <div style="flex:2;overflow:auto">
-              <table id="table_debts"><thead><tr><th>Acreedor</th><th>Total</th><th>Pago/m</th><th>Remanente</th><th></th></tr></thead><tbody></tbody></table>
-            </div>
-          </div>
-        </section>
-
-        <!-- EXPENSES / BUDGET -->
-        <section id="expenses" class="card" style="display:none">
-          <h3>Gastos y presupuestos por categoría</h3>
-          <div style="display:flex;gap:12px">
-            <div style="flex:1">
-              <label>Fecha</label><input id="input_exp_date" type="date">
-              <label>Descripción</label><input id="input_exp_desc">
-              <label>Monto (S/)</label><input id="input_exp_amount" type="number">
-              <label>Categoría</label><select id="input_exp_cat">
-                <option value="alimentacion">Alimentación</option>
-                <option value="educacion">Educación</option>
-                <option value="transporte">Transporte</option>
-                <option value="hogar">Hogar</option>
-                <option value="otros">Otros</option>
-              </select>
-              <div style="margin-top:8px"><button class="btn primary" onclick="addExpense()">Registrar gasto</button></div>
-            </div>
-            <div style="flex:1">
-              <label>Presupuesto mensual por categoría</label>
-              <div><input id="budget_alimentacion" placeholder="Alimentación S/" type="number"></div>
-              <div><input id="budget_educacion" placeholder="Educación S/" type="number"></div>
-              <div><input id="budget_transporte" placeholder="Transporte S/" type="number"></div>
-              <div style="margin-top:8px"><button class="btn" onclick="saveBudgets()">Guardar presupuestos</button></div>
-            </div>
-            <div style="flex:1;overflow:auto">
-              <h4 style="margin:0">Historial gastos (últimos)</h4>
-              <div id="table_expense_list" style="margin-top:8px;font-size:13px;color:var(--muted)"></div>
-            </div>
-          </div>
-        </section>
-
-        <!-- ASSETS -->
-        <section id="assets" class="card" style="display:none">
-          <h3>Activos</h3>
-          <div style="display:flex;gap:12px">
-            <div style="flex:1">
-              <label>Nombre activo</label><input id="input_asset_name">
-              <label>Ingreso mensual estimado (S/)</label><input id="input_asset_income" type="number">
-              <div style="margin-top:8px"><button class="btn primary" onclick="addAsset()">Guardar activo</button></div>
-            </div>
-            <div style="flex:2;overflow:auto">
-              <table id="table_assets"><thead><tr><th>Activo</th><th>Ingreso/m</th><th></th></tr></thead><tbody></tbody></table>
-            </div>
-          </div>
-        </section>
-
-        <!-- GOALS -->
-        <section id="goals" class="card" style="display:none">
-          <h3>Metas de ahorro</h3>
-          <div style="display:flex;gap:12px">
-            <div style="flex:1">
-              <label>Nombre meta</label><input id="input_goal_name">
-              <label>Monto objetivo (S/)</label><input id="input_goal_amount" type="number">
-              <div style="margin-top:8px"><button class="btn primary" onclick="addGoal()">Crear meta</button></div>
-            </div>
-            <div style="flex:2;overflow:auto">
-              <div id="goals_list" style="font-size:13px;color:var(--muted)"></div>
-            </div>
-          </div>
-        </section>
-      </main>
+      <div id="log" aria-live="polite"></div>
     </div>
   </div>
 
 <script>
-/* ==========================
-  CONFIGURACIÓN FIREBASE (TU PROYECTO)
-  - Si tu Realtime DB tiene otra URL, reemplaza databaseURL
-  - AUTO_SIGNIN: si true, intenta signInWithRedirect automáticamente si no hay sesión
-========================== */
+/* ============ CONFIG FIREBASE ============
+ Replace databaseURL if your Realtime DB URL is different.
+ You must create a Realtime Database in Firebase console.
+=========================================== */
 const firebaseConfig = {
   apiKey: "AIzaSyBVppNAicRPFXEUdErmHd24se_9bjXiqcM",
   authDomain: "jhona-1b398.firebaseapp.com",
-  databaseURL: "https://jhona-1b398-default-rtdb.firebaseio.com", // revisa esto en Firebase Console > Realtime Database
+  databaseURL: "https://jhona-1b398-default-rtdb.firebaseio.com",
   projectId: "jhona-1b398",
   storageBucket: "jhona-1b398.firebasestorage.app",
   messagingSenderId: "981136306223",
   appId: "1:981136306223:web:52a7b67c22c274efcc56da",
   measurementId: "G-NVGKL0XGER"
 };
-const AUTO_SIGNIN = true; // si no quieres redirect automático pon false
 
-/* ---------- init firebase (compat) ---------- */
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
-const rdb  = firebase.database();
+const rdb = firebase.database();
 
-/* ========== ESTADO LOCAL ========== */
-const STORAGE_KEY = 'CF_superacion_v1';
-let state = {
-  monthISO: new Date().toISOString().slice(0,10),
-  balance: 0,
-  banks: [],
-  debts: [],
-  expenses: [],
-  budgets: {}, // por categoría
-  assets: [],
-  goals: []
+const LOCAL_KEY = 'test_buttons_state_v1';
+const QUEUE_KEY = 'test_buttons_queue_v1';
+
+let STATE = { banks: [], debts: [], expenses: [] };
+let UID = null;
+
+/* ========== Logging helper ========== */
+function log(msg){
+  const el = document.getElementById('log');
+  const t = new Date().toLocaleTimeString();
+  el.innerHTML = `[${t}] ${msg}<br>` + el.innerHTML;
+  console.log(msg);
+}
+
+/* ========== Global error capture ========== */
+window.onerror = function(msg, src, line, col, err){
+  log('ERROR: ' + msg + (err && err.stack ? ' — ' + err.stack : ''));
 };
 
-/* ========== COLA OFFLINE ========== */
-const QUEUE_KEY = 'CF_queue_v1';
+/* ========== Local save/load ========== */
+function saveLocalState(){
+  localStorage.setItem(LOCAL_KEY, JSON.stringify(STATE));
+  log('Estado guardado localmente');
+}
+function loadLocalState(){
+  const raw = localStorage.getItem(LOCAL_KEY);
+  if(raw) STATE = JSON.parse(raw);
+  log('Estado cargado desde local');
+}
+
+/* ========== Queue operations ========== */
 function enqueue(op){
   const raw = localStorage.getItem(QUEUE_KEY);
   const arr = raw ? JSON.parse(raw) : [];
   arr.push(op);
   localStorage.setItem(QUEUE_KEY, JSON.stringify(arr));
-  log('Encolada operación: ' + (op.type||op.path));
+  log('Operación encolada: ' + op.type);
 }
 async function flushQueue(){
   const raw = localStorage.getItem(QUEUE_KEY);
-  if(!raw) { log('Cola vacía'); return; }
+  if(!raw){ log('Cola vacía'); return; }
   const arr = JSON.parse(raw);
-  if(!arr.length){ log('Cola vacía'); localStorage.removeItem(QUEUE_KEY); return; }
-  if(!window.__UID){ log('No autenticado. No puedo vaciar la cola.'); return; }
+  if(!arr.length){ localStorage.removeItem(QUEUE_KEY); log('Cola vacía'); return; }
+  if(!UID){ log('No autenticado: no puedo vaciar cola'); return; }
   for(const op of arr){
     try{
-      if(op.type === 'state'){
-        await rdb.ref(`users/${window.__UID}/state/current`).set({ state: op.payload, updatedAt: Date.now() });
-      } else if(op.type === 'push'){
-        await rdb.ref(`users/${window.__UID}/${op.path}`).push(Object.assign({}, op.payload, {createdAt: Date.now()}));
+      if(op.type === 'push'){
+        await rdb.ref(`users/${UID}/${op.path}`).push(Object.assign({}, op.payload, { createdAt: Date.now() }));
+        log('Op enviada a cloud: ' + op.path);
+      } else if(op.type === 'state'){
+        await rdb.ref(`users/${UID}/state/current`).set({ state: op.payload, updatedAt: Date.now() });
+        log('Estado enviado a cloud');
       }
-      log('Op enviada: ' + (op.type||op.path));
     } catch(e){
-      log('Error enviando op: '+ e.message); return;
+      log('Error enviando op: ' + e.message);
+      return;
     }
   }
   localStorage.removeItem(QUEUE_KEY);
   log('Cola sincronizada correctamente');
 }
 
-/* ========== Logging UI ========= */
-function log(msg){
-  const el = document.getElementById('log');
-  const time = new Date().toLocaleTimeString();
-  el.innerHTML = `[${time}] ${msg}<br>` + el.innerHTML;
-  console.log(msg);
-}
-
-/* ========== Storage local ========== */
-function loadLocal(){
+/* ========== Test actions called by buttons (guaranteed global) ========== */
+function testAddBank(){
   try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw) state = JSON.parse(raw);
-    renderAll();
-    log('Estado cargado de localStorage');
-  }catch(e){ log('Error cargando local: ' + e.message); }
-}
-function saveLocal(){
-  try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    renderAll();
-    // push to cloud (debounced)
-    if(window.__UID) debounceSaveCloud();
-    else enqueue({ type:'state', payload: state });
-  }catch(e){ log('Error guardando local: '+e.message); }
-}
-
-/* ========== Guardado en RTDB (debounced) ========== */
-let _debSave = null;
-function debounceSaveCloud(delay=800){
-  clearTimeout(_debSave);
-  _debSave = setTimeout(async ()=>{
-    try{
-      await rdb.ref(`users/${window.__UID}/state/current`).set({ state: state, updatedAt: Date.now() });
-      log('Estado sincronizado en Realtime DB');
-    } catch(e){ log('Error push state: '+ e.message); enqueue({ type:'state', payload: state }); }
-  }, delay);
-}
-
-/* ========== Realtime listeners (on login) ========== */
-let activeListeners = [];
-function startRealtime(uid){
-  stopRealtime();
-  // state/current
-  const stateRef = rdb.ref(`users/${uid}/state/current`);
-  const f1 = stateRef.on('value', snap=>{
-    if(!snap.exists()) return;
-    const remote = snap.val().state;
-    // Aplicar remoto de forma conservadora: solo cuando cambie timestamp
-    if(JSON.stringify(remote) !== JSON.stringify(state)){
-      state = remote;
-      saveLocal();
-      log('Estado remoto aplicado');
+    const name = document.getElementById('bankName').value.trim() || 'Banco prueba';
+    const balance = Number(document.getElementById('bankBalance').value||0);
+    const item = { id: 'b_' + Math.random().toString(36).slice(2,8), name, balance };
+    STATE.banks.push(item);
+    saveLocalState();
+    // try cloud push
+    if(UID){
+      rdb.ref(`users/${UID}/banks`).push(Object.assign({}, item, { createdAt: Date.now() }))
+        .then(ref => { log('Banco enviado a RTDB id=' + ref.key); })
+        .catch(e => { log('Error push banco: ' + e.message); enqueue({ type:'push', path:'banks', payload: item }); });
+    } else {
+      enqueue({ type:'push', path:'banks', payload: item });
+      log('No auth — banco encolado');
     }
-  });
-  activeListeners.push({ref: stateRef, ev: 'value'});
-
-  // subpaths: banks, debts, expenses, assets, goals
-  ['banks','debts','expenses','assets','goals'].forEach(path=>{
-    const ref = rdb.ref(`users/${uid}/${path}`);
-    const f = ref.on('value', snap=>{
-      const arr = [];
-      snap.forEach(child=>{ const d = child.val(); d._remoteId = child.key; arr.push(d); });
-      state[path] = arr;
-      saveLocal();
-      log(`Sincronizado remoto ${path} (${arr.length})`);
-    });
-    activeListeners.push({ref, ev:'value'});
-  });
-
-  log('Listeners RTDB iniciados');
+  }catch(e){ log('testAddBank error: ' + e.message); }
 }
-function stopRealtime(){
+
+function testAddDebt(){
   try{
-    activeListeners.forEach(o=> o.ref.off(o.ev));
-  }catch(e){}
-  activeListeners = [];
-  log('Listeners detenidos');
+    const creditor = document.getElementById('debtCred').value.trim() || 'Acreedor prueba';
+    const total = Number(document.getElementById('debtTotal').value||0);
+    const months = Number(document.getElementById('debtMonths').value||1);
+    const monthly = +(total / months).toFixed(2);
+    const item = { id: 'd_' + Math.random().toString(36).slice(2,8), creditor, total, months, monthly, remaining: total };
+    STATE.debts.push(item);
+    saveLocalState();
+    if(UID){
+      rdb.ref(`users/${UID}/debts`).push(Object.assign({}, item, { createdAt: Date.now() }))
+        .then(ref => log('Deuda enviada a RTDB id=' + ref.key))
+        .catch(e => { log('Error push deuda: ' + e.message); enqueue({ type:'push', path:'debts', payload: item }); });
+    } else { enqueue({ type:'push', path:'debts', payload: item }); log('No auth — deuda encolada'); }
+  }catch(e){ log('testAddDebt error: ' + e.message); }
 }
 
-/* ========== Render UI ========== */
-function renderAll(){
-  // month labels
-  const d = new Date(state.monthISO);
-  const MONTHS = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SETIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
-  document.getElementById('monthLabel').innerText = MONTHS[d.getMonth()];
-  document.getElementById('yearLabel').innerText = d.getFullYear();
-
-  // KPIs
-  document.getElementById('k_balance').innerText = 'S/ ' + Number(state.balance||0).toLocaleString();
-  document.getElementById('k_savings').innerText = 'S/ ' + (state.banks.reduce((s,b)=>s+Number(b.balance||0),0)||0).toLocaleString();
-  // debt monthly sum
-  const debtMonthly = (state.debts||[]).reduce((s,d)=>s+(Number(d.monthly||0)),0);
-  document.getElementById('k_debt').innerText = 'S/ ' + debtMonthly.toLocaleString();
-  // goals progress
-  const goalsTotal = (state.goals||[]).reduce((s,g)=>s+Number(g.amount||0),0);
-  const goalsProgress = (state.goals||[]).reduce((s,g)=>s+Number(g.saved||0),0);
-  document.getElementById('k_goals').innerText = `S/ ${goalsProgress.toLocaleString()} / S/ ${goalsTotal.toLocaleString()}`;
-
-  // recent list
-  const rec = (state.expenses||[]).slice(-8).reverse().map(e=>`${e.date} • ${e.desc} • S/ ${Number(e.amount).toLocaleString()}`).join('<br>');
-  document.getElementById('recentList').innerHTML = rec || '<span style="color:var(--muted)">Sin registros</span>';
-
-  // budgets meter
-  const budgetPlanned = Object.values(state.budgets||{}).reduce((s,v)=>s+Number(v||0),0);
-  const budgetSpent = (state.expenses||[]).reduce((s,e)=>s+Number(e.amount||0),0);
-  const percent = budgetPlanned ? Math.min(100, Math.round((budgetSpent/budgetPlanned)*100)) : 0;
-  document.getElementById('budgetMeter').style.width = percent + '%';
-  document.getElementById('budgetLabel').innerText = `S/${budgetSpent.toLocaleString()} / S/${budgetPlanned.toLocaleString()}`;
-
-  // fill tables
-  // banks
-  const tbBanks = document.querySelector('#table_banks tbody'); if(tbBanks){ tbBanks.innerHTML = ''; (state.banks||[]).forEach(b=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${b.name}</td><td>S/ ${Number(b.balance||0).toLocaleString()}</td><td>${b.type}</td><td><button onclick="removeBank('${b.id}')" class="btn">Eliminar</button></td>`; tbBanks.appendChild(tr); }); }
-  // debts
-  const tbDebts = document.querySelector('#table_debts tbody'); if(tbDebts){ tbDebts.innerHTML = ''; (state.debts||[]).forEach(d=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${d.creditor}</td><td>S/ ${Number(d.total||0).toLocaleString()}</td><td>S/ ${Number(d.monthly||0).toLocaleString()}</td><td>S/ ${Number(d.remaining||0).toLocaleString()}</td><td><button onclick="removeDebt('${d.id}')" class="btn">Eliminar</button></td>`; tbDebts.appendChild(tr); }); }
-  // assets
-  const tbAssets = document.querySelector('#table_assets tbody'); if(tbAssets){ tbAssets.innerHTML=''; (state.assets||[]).forEach(a=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${a.name}</td><td>S/ ${Number(a.income||0).toLocaleString()}</td><td><button onclick="removeAsset('${a.id}')" class="btn">Eliminar</button></td>`; tbAssets.appendChild(tr); }); }
-  // expenses list
-  const elExpList = document.getElementById('table_expense_list'); if(elExpList){ elExpList.innerHTML = (state.expenses||[]).slice(-12).reverse().map(e=>`<div>${e.date} • ${e.desc} • S/ ${Number(e.amount).toLocaleString()} • <small style="color:var(--muted)">${e.category}</small></div>`).join('') || '<span style="color:var(--muted)">Sin gastos</span>'; }
-  // goals
-  document.getElementById('goals_list').innerHTML = (state.goals||[]).map(g=>`<div style="margin-bottom:8px"><strong>${g.name}</strong><div style="height:8px;background:#f1f5f9;border-radius:8px;margin-top:6px"><i style="display:block;height:100%;background:var(--accent);width:${Math.min(100,(Number(g.saved||0)/Number(g.amount||1))*100)}%"></i></div><div style="font-size:13px;color:var(--muted)">S/${Number(g.saved||0).toLocaleString()} / S/${Number(g.amount||0).toLocaleString()}</div></div>`).join('') || '<span style="color:var(--muted)">Sin metas</span>';
-}
-
-/* ========== Operaciones CRUD + negocio ========== */
-function addBank(){
-  const name = document.getElementById('input_bank_name').value.trim();
-  const bal = Number(document.getElementById('input_bank_balance').value||0);
-  const type = document.getElementById('input_bank_type').value;
-  if(!name) return alert('Nombre requerido');
-  const item = { id: uid('b'), name, balance: bal, type };
-  state.banks.push(item);
-  saveLocal();
-  // push cloud
-  if(window.__UID) addCloud(window.__UID, 'banks', item).catch(()=>enqueue({type:'push', path:'banks', payload:item}));
-  else enqueue({type:'push', path:'banks', payload:item});
-  log('Banco agregado localmente');
-}
-
-function removeBank(id){
-  state.banks = (state.banks||[]).filter(b=>b.id!==id);
-  saveLocal();
-  log('Banco eliminado localmente');
-}
-
-function addDebt(){
-  const creditor = document.getElementById('input_debt_creditor').value.trim();
-  const total = Number(document.getElementById('input_debt_total').value||0);
-  const months = Number(document.getElementById('input_debt_months').value||1);
-  const bank = document.getElementById('input_debt_bank').value || null;
-  if(!creditor || total<=0 || months<=0) return alert('Completa campos');
-  const monthly = +(total/months).toFixed(2);
-  const item = { id: uid('d'), creditor, total, months, monthly, remaining: total, bankId: bank };
-  state.debts.push(item);
-  saveLocal();
-  if(window.__UID) addCloud(window.__UID, 'debts', item).catch(()=>enqueue({type:'push', path:'debts', payload:item}));
-  else enqueue({type:'push', path:'debts', payload:item});
-  log('Deuda agregada localmente');
-}
-
-function removeDebt(id){ state.debts = state.debts.filter(d=>d.id!==id); saveLocal(); log('Deuda eliminada localmente'); }
-
-function addExpense(){
-  const date = document.getElementById('input_exp_date').value || new Date().toISOString().slice(0,10);
-  const desc = document.getElementById('input_exp_desc').value.trim();
-  const amount = Number(document.getElementById('input_exp_amount').value||0);
-  const category = document.getElementById('input_exp_cat').value;
-  if(amount<=0) return alert('Monto > 0');
-  const item = { id: uid('e'), date, desc, amount, category };
-  state.expenses.push(item);
-  state.balance = Number(state.balance) - amount;
-  saveLocal();
-  if(window.__UID) addCloud(window.__UID, 'expenses', item).catch(()=>enqueue({type:'push', path:'expenses', payload:item}));
-  else enqueue({type:'push', path:'expenses', payload:item});
-  log('Gasto registrado localmente');
-}
-
-function saveBudgets(){
-  const bA = Number(document.getElementById('budget_alimentacion').value||0);
-  const bE = Number(document.getElementById('budget_educacion').value||0);
-  const bT = Number(document.getElementById('budget_transporte').value||0);
-  state.budgets = { alimentacion: bA, educacion: bE, transporte: bT };
-  saveLocal();
-  log('Presupuestos guardados');
-}
-
-function addAsset(){
-  const name = document.getElementById('input_asset_name').value.trim();
-  const income = Number(document.getElementById('input_asset_income').value||0);
-  if(!name) return alert('Nombre requerido');
-  const item = { id: uid('a'), name, income };
-  state.assets.push(item);
-  saveLocal();
-  if(window.__UID) addCloud(window.__UID, 'assets', item).catch(()=>enqueue({type:'push', path:'assets', payload:item}));
-  else enqueue({type:'push', path:'assets', payload:item});
-  log('Activo agregado localmente');
-}
-function removeAsset(id){ state.assets = state.assets.filter(a=>a.id!==id); saveLocal(); log('Activo eliminado'); }
-
-function addGoal(){
-  const name = document.getElementById('input_goal_name').value.trim();
-  const amount = Number(document.getElementById('input_goal_amount').value||0);
-  if(!name || amount<=0) return alert('Datos invalidos');
-  const item = { id: uid('g'), name, amount, saved: 0 };
-  state.goals.push(item);
-  saveLocal();
-  if(window.__UID) addCloud(window.__UID, 'goals', item).catch(()=>enqueue({type:'push', path:'goals', payload:item}));
-  else enqueue({type:'push', path:'goals', payload:item});
-  log('Meta creada localmente');
-}
-
-/* ========== Helpers cloud push ========== */
-async function addCloud(uid, path, payload){
-  const ref = await rdb.ref(`users/${uid}/${path}`).push(Object.assign({}, payload, {createdAt: Date.now()}));
-  log(`Cloud push ${path} id:${ref.key}`);
-  return ref.key;
-}
-
-/* ========== PDF resumen ========== */
-function exportSummaryPDF(){
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({unit:'pt',format:'a4'});
-  let y = 40;
-  doc.setFontSize(14); doc.text('Resumen Control Financiero',40,y); y+=20;
-  doc.setFontSize(10); doc.text(`Fecha: ${new Date().toLocaleString()}`,40,y); y+=18;
-  doc.text(`Balance: S/ ${Number(state.balance||0).toLocaleString()}`,40,y); y+=14;
-  doc.text(`Ahorros (bancos): S/ ${state.banks.reduce((s,b)=>s+Number(b.balance||0),0).toLocaleString()}`,40,y); y+=14;
-  doc.text('Deudas:',40,y); y+=12;
-  (state.debts||[]).forEach(d=>{ doc.text(`${d.creditor} — Total S/${Number(d.total).toLocaleString()} — Pago/m S/${Number(d.monthly).toLocaleString()} — Rem S/${Number(d.remaining).toLocaleString()}`,40,y); y+=10; if(y>740){ doc.addPage(); y=40; }});
-  doc.save('resumen_financiero_'+new Date().toISOString().slice(0,10)+'.pdf');
-  log('PDF generado');
-}
-
-/* ========== Month navigation ========== */
-function goNext(){ const cur = new Date(state.monthISO); const next = new Date(cur.getFullYear(), cur.getMonth()+1, 1); state.monthISO = next.toISOString().slice(0,10); saveLocal(); log('Avanzado mes'); }
-function goPrev(){ const cur = new Date(state.monthISO); const prev = new Date(cur.getFullYear(), cur.getMonth()-1, 1); state.monthISO = prev.toISOString().slice(0,10); saveLocal(); }
-
-/* ========== Auth flow ========== */
-(function initAuth(){
-  document.getElementById('btnLogin').addEventListener('click', async ()=>{
-    const provider = new firebase.auth.GoogleAuthProvider();
-    try{ await auth.signInWithPopup(provider); }catch(e){ log('Popup falló: '+(e.message||e)); try{ await auth.signInWithRedirect(provider); }catch(err){ log('Redirect también falló: '+(err.message||err)); alert('Error login: '+(err.message||err)); } }
-  });
-  document.getElementById('btnLogout').addEventListener('click', ()=> auth.signOut());
-})();
-
-window.addEventListener('load', async ()=>{
-  // If AUTO_SIGNIN and no current user -> redirect (only if you want)
+function testAddExpense(){
   try{
-    await auth.getRedirectResult().catch(()=>{});
-  }catch(e){}
-  if(AUTO_SIGNIN && !auth.currentUser){
-    log('AUTO_SIGNIN activo: intentando signInWithRedirect (si el dominio está autorizado).');
-    const provider = new firebase.auth.GoogleAuthProvider();
-    try{ await auth.signInWithRedirect(provider); }catch(e){ log('AUTO_SIGNIN error: '+(e.message||e)); }
+    const desc = document.getElementById('expDesc').value.trim() || 'Gasto prueba';
+    const amount = Number(document.getElementById('expAmount').value||0);
+    const item = { id: 'e_' + Math.random().toString(36).slice(2,8), date: new Date().toISOString().slice(0,10), desc, amount };
+    STATE.expenses.push(item);
+    saveLocalState();
+    if(UID){
+      rdb.ref(`users/${UID}/expenses`).push(Object.assign({}, item, { createdAt: Date.now() }))
+        .then(ref => log('Gasto enviado a RTDB id=' + ref.key))
+        .catch(e => { log('Error push gasto: ' + e.message); enqueue({ type:'push', path:'expenses', payload: item }); });
+    } else { enqueue({ type:'push', path:'expenses', payload: item }); log('No auth — gasto encolado'); }
+  }catch(e){ log('testAddExpense error: ' + e.message); }
+}
+
+/* ========== View local state (debug) ========== */
+function viewLocal(){
+  alert('Estado local (console)\n\n' + JSON.stringify(STATE, null, 2));
+  console.log('Estado local:', STATE);
+  log('Estado local mostrado en consola');
+}
+
+/* ========== Auth wiring (login/logout) ========== */
+document.getElementById('btnLogin').addEventListener('click', async ()=>{
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try{
+    await auth.signInWithPopup(provider);
+  }catch(e){
+    log('Login popup error: ' + e.message);
+    try{ await auth.signInWithRedirect(provider); } catch(err){ log('Redirect also failed: ' + (err.message||err)); }
   }
 });
+document.getElementById('btnLogout').addEventListener('click', ()=> auth.signOut());
 
-auth.onAuthStateChanged(user=>{
-  const ui = document.getElementById('userInfo');
+auth.onAuthStateChanged(user => {
   if(user){
-    window.__UID = user.uid;
-    ui.innerText = `${user.displayName || user.email} (${user.uid.slice(0,6)})`;
+    UID = user.uid;
+    document.getElementById('userInfo').innerText = (user.displayName || user.email) + ' (' + UID.slice(0,6) + ')';
     document.getElementById('btnLogin').style.display='none';
     document.getElementById('btnLogout').style.display='inline-block';
-    log('Usuario autenticado: ' + (user.email || user.uid));
-    // start realtime listeners & try flush queue
-    startRealtime(user.uid);
+    log('Usuario autenticado: ' + (user.email || UID));
+    // try flush queue
     flushQueue();
-    // push current local state once
-    debounceSaveCloud();
+    // create a listener so remote changes update local
+    rdb.ref(`users/${UID}/state/current`).on('value', snap => {
+      if(!snap.exists()) return;
+      log('Estado remoto detectado (no lo sobrescribimos automáticamente en esta prueba)');
+    });
   } else {
-    window.__UID = null;
-    ui.innerText = 'No autenticado';
+    UID = null;
+    document.getElementById('userInfo').innerText = 'No autenticado';
     document.getElementById('btnLogin').style.display='inline-block';
     document.getElementById('btnLogout').style.display='none';
     log('Sesión cerrada');
-    stopRealtime();
   }
 });
 
-/* ========== Tiny helpers ========== */
-function uid(pref='id'){ return pref + '_' + Math.random().toString(36).slice(2,9); }
-
-/* ========== Init app ========== */
-loadLocal();
-renderAll();
-document.getElementById('input_exp_date').value = new Date().toISOString().slice(0,10);
-log('App inicializada');
-
-/* ========== Exposed for debugging (console) ========== */
-window.__APP = { state, saveLocal, loadLocal, flushQueue, enqueue, rdb, auth };
-
+/* ========== Init: load local state ======== */
+loadLocalState();
+log('Prueba iniciada: prueba botones y revisa LOG/Console.');
 </script>
 </body>
 </html>
