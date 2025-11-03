@@ -6,66 +6,124 @@
 <title>Control Económico — Resumen PDF</title>
 <link href="https://cdn.jsdelivr.net/npm/modern-normalize/modern-normalize.css" rel="stylesheet">
 <style>
-  body { font-family: Inter, system-ui, Arial; background: #f6f7fb; margin: 18px; color: #0f172a; }
-  .card { background: #fff; border-radius: 10px; padding: 16px; box-shadow: 0 6px 18px rgba(12,16,35,0.06); max-width: 900px; margin: auto; }
-  h2 { text-align: center; margin-bottom: 12px; }
-  section { margin-bottom: 24px; }
+  :root{
+    --bg: #f6f7fb;
+    --card: #fff;
+    --muted: #6b7280;
+    --accent: #0f766e;
+    --accent-dark: #055e52;
+    --text: #0f172a;
+  }
+  body { font-family: Inter, system-ui, Arial, sans-serif; background: var(--bg); margin: 18px; color: var(--text); }
+  .card { background: var(--card); border-radius: 10px; padding: 16px; box-shadow: 0 6px 18px rgba(12,16,35,0.06); max-width: 1100px; margin: auto; }
+  h2 { text-align: center; margin-bottom: 6px; font-size: 20px; }
+  h3 { margin: 12px 0 6px; font-size: 16px; }
+  section { margin-bottom: 18px; }
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th, td { padding: 8px; border-bottom: 1px solid #ddd; text-align: left; }
-  th { background: #eefbf9; color: #055e52; }
-  button { cursor: pointer; background: #0f766e; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: 700; }
-  button:hover { background: #055e52; }
-  .muted { color: #6b7280; font-size: 13px; margin-bottom: 8px; text-align: center; }
+  th, td { padding: 8px; border-bottom: 1px solid #eee; text-align: left; vertical-align: middle; }
+  th { background: #eefbf9; color: var(--accent-dark); font-weight: 700; font-size: 13px; }
+  .muted { color: var(--muted); font-size: 13px; margin-bottom: 8px; text-align: center; }
+  .controls { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:12px; }
+  button { cursor: pointer; background: var(--accent); color: white; border: none; padding: 10px 14px; border-radius: 8px; font-weight: 700; }
+  button:hover { background: var(--accent-dark); }
+  .kpi { display:flex; gap:12px; justify-content: center; margin-bottom:10px; flex-wrap:wrap; }
+  .kpi .cardK { background:#ffffff; border-radius:8px; padding:10px 14px; box-shadow:0 3px 8px rgba(12,16,35,0.04); min-width:180px; text-align:center; }
+  .right { text-align:right; }
+  @media print {
+    button, .controls { display:none !important; }
+    body { margin: 8mm; }
+  }
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  .table-wrap { overflow:auto; max-height:360px; }
+  .small { font-size:13px; color:var(--muted); }
 </style>
 </head>
 <body>
 
-<div class="card">
-  <h2>Control Económico — Resumen Financiero</h2>
-  <div class="muted" id="reportDate"></div>
+<div class="card" role="main">
+  <h2 id="title">Control Económico — Resumen Financiero</h2>
+  <div class="muted" id="reportDate" aria-live="polite"></div>
 
-  <section>
-    <h3>Bancos</h3>
-    <table id="tblBanks">
-      <thead><tr><th>Banco</th><th>Saldo</th><th>Tipo</th></tr></thead>
-      <tbody></tbody>
-    </table>
+  <div class="kpi" aria-hidden="false" id="kpiRow">
+    <!-- KPIs se inyectan aquí -->
+  </div>
+
+  <section aria-labelledby="banksHeading">
+    <h3 id="banksHeading">Bancos</h3>
+    <div class="table-wrap" role="region" aria-label="Bancos - saldos">
+      <table id="tblBanks" aria-describedby="banksDesc">
+        <caption id="banksDesc" class="sr-only">Lista de cuentas bancarias y sus saldos</caption>
+        <thead><tr><th>Banco</th><th class="right">Saldo</th><th>Tipo</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </section>
 
-  <section>
-    <h3>Deudas vinculadas a banco</h3>
-    <table id="tblDebts">
-      <thead><tr><th>Acreedor</th><th>Total</th><th>Meses a pagar</th><th>Pago mensual</th><th>Banco asociado</th><th>Saldo pendiente</th></tr></thead>
-      <tbody></tbody>
-    </table>
+  <section aria-labelledby="debtsHeading">
+    <h3 id="debtsHeading">Deudas vinculadas a banco</h3>
+    <div class="table-wrap" role="region" aria-label="Deudas vinculadas a banco">
+      <table id="tblDebts" aria-describedby="debtsDesc">
+        <caption id="debtsDesc" class="sr-only">Detalle de deudas, meses y pagos mensuales</caption>
+        <thead><tr><th>Acreedor</th><th class="right">Total</th><th class="right">Meses</th><th class="right">Pago mensual</th><th>Banco asociado</th><th class="right">Saldo pendiente</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </section>
 
-  <section>
-    <h3>Pasivos (Costo mensual)</h3>
-    <table id="tblLiabs">
-      <thead><tr><th>Concepto</th><th>Cuota mensual</th><th>Banco vinculado</th></tr></thead>
-      <tbody></tbody>
-    </table>
+  <section aria-labelledby="liabsHeading">
+    <h3 id="liabsHeading">Pasivos (Costo mensual)</h3>
+    <div class="table-wrap" role="region" aria-label="Pasivos costo mensual">
+      <table id="tblLiabs" aria-describedby="liabsDesc">
+        <caption id="liabsDesc" class="sr-only">Lista de pasivos con su cuota mensual y banco vinculado</caption>
+        <thead><tr><th>Concepto</th><th class="right">Cuota mensual</th><th>Banco vinculado</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </section>
 
-  <section>
-    <h3>Registro de bienes activos y pasivos</h3>
-    <table id="tblGoods">
-      <thead><tr><th>Bien</th><th>Tipo</th><th>Valor</th><th>Ingreso / Costo mensual</th></tr></thead>
-      <tbody></tbody>
-    </table>
+  <section aria-labelledby="goodsHeading">
+    <h3 id="goodsHeading">Registro de bienes activos y pasivos</h3>
+    <div class="table-wrap" role="region" aria-label="Registro de bienes activos y pasivos">
+      <table id="tblGoods" aria-describedby="goodsDesc">
+        <caption id="goodsDesc" class="sr-only">Listado de bienes con tipo, valor y aporte mensual</caption>
+        <thead><tr><th>Bien</th><th>Tipo</th><th class="right">Valor</th><th class="right">Ingreso / Costo mensual</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </section>
 
-  <div style="text-align:center; margin-top:20px;">
-    <button id="btnGeneratePDF">Generar Reporte PDF</button>
+  <div class="controls" role="toolbar" aria-label="Controles del reporte">
+    <button id="btnGeneratePDF" type="button" aria-label="Generar reporte PDF">Generar Reporte PDF</button>
+    <button id="btnExportCSV" type="button" aria-label="Exportar datos en CSV">Exportar CSV</button>
+    <button id="btnReset" type="button" aria-label="Restablecer datos">Restablecer datos (limpiar)</button>
+  </div>
+
+  <div class="muted small" style="margin-top:10px;">
+    Datos persistidos en el navegador (localStorage). Para un uso profesional conecta un backend para guardar y compartir.
   </div>
 </div>
 
+<!-- Dependencias: jsPDF + AutoTable (incluidas antes del script principal para evitar check issues) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
 <script>
-  // Mock state data for demo - replace or load from your actual data logic
-  const state = {
+/*
+  Versión mejorada del HTML original.
+  Mejores implementaciones:
+  - Intl.NumberFormat para moneda (PEN)
+  - Modularidad: funciones render*
+  - Persistencia en localStorage (cargar/guardar)
+  - KPIs calculados y mostrados arriba
+  - PDF robusto con autoTable verificado, pie de página con números de página
+  - Exportar CSV
+  - Accesibilidad básica (captions, aria)
+  - Evitar innerHTML para inyección de datos (uso textContent)
+*/
+
+(() => {
+  // -------- Estado inicial (mock) ----------
+  const defaultState = {
     banks: [
       {id:'b1', name:'Banco A', balance: 5000, type:'ahorro'},
       {id:'b2', name:'Banco B', balance: 2000, type:'corriente'}
@@ -79,157 +137,434 @@
       {id:'l2', name:'Servicio de internet', monthly: 100, bankId:null}
     ],
     goods: [
+      // monthly: positivos => ingreso, negativos => costo
       {id:'g1', name:'Auto', type:'pasivo', valor:12000, monthly:-300},
       {id:'g2', name:'Departamento', type:'activo', valor:350000, monthly:1500}
     ],
+    updatedAt: new Date().toISOString()
   };
 
-  // Format currency
-  function formatCur(v){ return 'S/ '+Number(v||0).toLocaleString(); }
+  // Key para localStorage
+  const STORAGE_KEY = 'econ_state_v1';
 
-  // Render table
+  // -------- Utilidades ----------
+  const currencyFmt = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN', maximumFractionDigits: 2 });
+
+  function formatCur(v){ return currencyFmt.format(Number(v || 0)); }
+
+  // Sanitizar texto mínimo (evitar inyecciones en atributos)
+  function safeText(t){ return String(t == null ? '' : t); }
+
+  // Cargar/Guardar
+  function loadState(){
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw) {
+        const parsed = JSON.parse(raw);
+        // validaciones mínimas
+        parsed.banks = parsed.banks || [];
+        parsed.debts = parsed.debts || [];
+        parsed.liabs = parsed.liabs || [];
+        parsed.goods = parsed.goods || [];
+        return parsed;
+      }
+    } catch(e) {
+      console.error('Error cargando estado', e);
+    }
+    return JSON.parse(JSON.stringify(defaultState));
+  }
+
+  function saveState(){
+    try {
+      state.updatedAt = new Date().toISOString();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch(e) {
+      console.error('Error guardando estado', e);
+    }
+  }
+
+  // Export CSV
+  function toCSV(obj){
+    // obj: { banks, debts, liabs, goods }
+    const parts = [];
+    function esc(v){ return `"${String(v).replace(/"/g,'""')}"`; }
+
+    parts.push('BANCOS');
+    parts.push(['id','name','balance','type'].join(','));
+    obj.banks.forEach(b => parts.push([esc(b.id), esc(b.name), b.balance, esc(b.type)].join(',')));
+    parts.push('');
+    parts.push('DEUDAS');
+    parts.push(['id','creditor','total','months','monthly','bankId','remaining'].join(','));
+    obj.debts.forEach(d => parts.push([esc(d.id), esc(d.creditor), d.total, d.months, d.monthly, esc(d.bankId), d.remaining].join(',')));
+    parts.push('');
+    parts.push('PASIVOS');
+    parts.push(['id','name','monthly','bankId'].join(','));
+    obj.liabs.forEach(l => parts.push([esc(l.id), esc(l.name), l.monthly, esc(l.bankId)].join(',')));
+    parts.push('');
+    parts.push('BIENES');
+    parts.push(['id','name','type','valor','monthly'].join(','));
+    obj.goods.forEach(g => parts.push([esc(g.id), esc(g.name), esc(g.type), g.valor, g.monthly].join(',')));
+
+    return parts.join('\n');
+  }
+
+  // -------- Cálculos / KPIs ----------
+  function calcTotals(){
+    const totalBanks = state.banks.reduce((s,b)=> s + Number(b.balance||0), 0);
+    const totalDebt = state.debts.reduce((s,d)=> s + Number(d.total||0), 0);
+    const totalDebtMonthly = state.debts.reduce((s,d)=> s + Number(d.monthly||0), 0);
+    const totalLiabs = state.liabs.reduce((s,l)=> s + Number(l.monthly||0), 0);
+    const totalGoodsValue = state.goods.reduce((s,g)=> s + Number(g.valor||0), 0);
+    const cashflowFromGoods = state.goods.reduce((s,g)=> s + Number(g.monthly||0), 0); // positivos ingresos
+    const netMonthly = cashflowFromGoods - totalLiabs - totalDebtMonthly;
+    return { totalBanks, totalDebt, totalDebtMonthly, totalLiabs, totalGoodsValue, cashflowFromGoods, netMonthly };
+  }
+
+  // -------- Renderizado modular ----------
   function renderTable(){
-    const tbBanks = document.querySelector('#tblBanks tbody');
-    tbBanks.innerHTML = '';
+    renderBanks();
+    renderDebts();
+    renderLiabs();
+    renderGoods();
+    renderKPIs();
+    renderDate();
+  }
+
+  function renderBanks(){
+    const tb = document.querySelector('#tblBanks tbody');
+    tb.innerHTML = '';
     state.banks.forEach(b => {
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${b.name}</td><td>${formatCur(b.balance)}</td><td>${b.type}</td>`;
-      tbBanks.appendChild(tr);
+
+      const tdName = document.createElement('td');
+      tdName.textContent = safeText(b.name);
+      tr.appendChild(tdName);
+
+      const tdBal = document.createElement('td');
+      tdBal.className = 'right';
+      tdBal.textContent = formatCur(b.balance);
+      tr.appendChild(tdBal);
+
+      const tdType = document.createElement('td');
+      tdType.textContent = safeText(b.type);
+      tr.appendChild(tdType);
+
+      tb.appendChild(tr);
     });
 
-    const tbDebts = document.querySelector('#tblDebts tbody');
-    tbDebts.innerHTML = '';
+    if(state.banks.length === 0){
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 3;
+      td.className = 'muted';
+      td.textContent = 'Sin cuentas bancarias registradas';
+      tr.appendChild(td);
+      tb.appendChild(tr);
+    }
+  }
+
+  function renderDebts(){
+    const tb = document.querySelector('#tblDebts tbody');
+    tb.innerHTML = '';
     state.debts.forEach(d => {
-      const bankName = state.banks.find(b => b.id === d.bankId)?.name || '';
       const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${d.creditor}</td>
-        <td>${formatCur(d.total)}</td>
-        <td>${d.months}</td>
-        <td>${formatCur(d.monthly)}</td>
-        <td>${bankName}</td>
-        <td>${formatCur(d.remaining)}</td>
-      `;
-      tbDebts.appendChild(tr);
+
+      const tdCred = document.createElement('td');
+      tdCred.textContent = safeText(d.creditor);
+      tr.appendChild(tdCred);
+
+      const tdTotal = document.createElement('td');
+      tdTotal.className = 'right';
+      tdTotal.textContent = formatCur(d.total);
+      tr.appendChild(tdTotal);
+
+      const tdMonths = document.createElement('td');
+      tdMonths.className = 'right';
+      tdMonths.textContent = String(d.months || 0);
+      tr.appendChild(tdMonths);
+
+      const tdMonthly = document.createElement('td');
+      tdMonthly.className = 'right';
+      tdMonthly.textContent = formatCur(d.monthly);
+      tr.appendChild(tdMonthly);
+
+      const tdBank = document.createElement('td');
+      tdBank.textContent = state.banks.find(b => b.id === d.bankId)?.name || '';
+      tr.appendChild(tdBank);
+
+      const tdRem = document.createElement('td');
+      tdRem.className = 'right';
+      tdRem.textContent = formatCur(d.remaining);
+      tr.appendChild(tdRem);
+
+      tb.appendChild(tr);
     });
 
-    const tbLiabs = document.querySelector('#tblLiabs tbody');
-    tbLiabs.innerHTML = '';
+    if(state.debts.length === 0){
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 6;
+      td.className = 'muted';
+      td.textContent = 'Sin deudas registradas';
+      tr.appendChild(td);
+      tb.appendChild(tr);
+    }
+  }
+
+  function renderLiabs(){
+    const tb = document.querySelector('#tblLiabs tbody');
+    tb.innerHTML = '';
     state.liabs.forEach(l => {
-      const bankName = state.banks.find(b => b.id === l.bankId)?.name || '';
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${l.name}</td><td>${formatCur(l.monthly)}</td><td>${bankName}</td>`;
-      tbLiabs.appendChild(tr);
+
+      const tdName = document.createElement('td');
+      tdName.textContent = safeText(l.name);
+      tr.appendChild(tdName);
+
+      const tdMonthly = document.createElement('td');
+      tdMonthly.className = 'right';
+      tdMonthly.textContent = formatCur(l.monthly);
+      tr.appendChild(tdMonthly);
+
+      const tdBank = document.createElement('td');
+      tdBank.textContent = state.banks.find(b => b.id === l.bankId)?.name || '';
+      tr.appendChild(tdBank);
+
+      tb.appendChild(tr);
     });
 
-    const tbGoods = document.querySelector('#tblGoods tbody');
-    tbGoods.innerHTML = '';
+    if(state.liabs.length === 0){
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 3;
+      td.className = 'muted';
+      td.textContent = 'Sin pasivos registrados';
+      tr.appendChild(td);
+      tb.appendChild(tr);
+    }
+  }
+
+  function renderGoods(){
+    const tb = document.querySelector('#tblGoods tbody');
+    tb.innerHTML = '';
     state.goods.forEach(g => {
-      const monthlyStr = g.type === 'activo' ? formatCur(g.monthly) : formatCur(-Math.abs(g.monthly));
-      const tr= document.createElement('tr');
-      tr.innerHTML = `<td>${g.name}</td><td>${g.type}</td><td>${formatCur(g.valor)}</td><td>${monthlyStr}</td>`;
-      tbGoods.appendChild(tr);
+      const tr = document.createElement('tr');
+
+      const tdName = document.createElement('td');
+      tdName.textContent = safeText(g.name);
+      tr.appendChild(tdName);
+
+      const tdType = document.createElement('td');
+      tdType.textContent = safeText(g.type);
+      tr.appendChild(tdType);
+
+      const tdValor = document.createElement('td');
+      tdValor.className = 'right';
+      tdValor.textContent = formatCur(g.valor);
+      tr.appendChild(tdValor);
+
+      const tdMonthly = document.createElement('td');
+      tdMonthly.className = 'right';
+      tdMonthly.textContent = g.monthly >= 0 ? formatCur(g.monthly) : `- ${formatCur(Math.abs(g.monthly))}`;
+      tr.appendChild(tdMonthly);
+
+      tb.appendChild(tr);
     });
 
-    // Set report date
-    const today = new Date();
-    document.getElementById('reportDate').textContent = `Reporte generado el: ${today.toLocaleDateString('es-PE')}`;
+    if(state.goods.length === 0){
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 4;
+      td.className = 'muted';
+      td.textContent = 'Sin bienes registrados';
+      tr.appendChild(td);
+      tb.appendChild(tr);
+    }
   }
 
-  // Generate PDF report using jsPDF
+  function renderKPIs(){
+    const k = calcTotals();
+    const container = document.getElementById('kpiRow');
+    container.innerHTML = '';
+
+    const items = [
+      {label: 'Total en bancos', value: formatCur(k.totalBanks)},
+      {label: 'Total bienes (valor)', value: formatCur(k.totalGoodsValue)},
+      {label: 'Deuda total', value: formatCur(k.totalDebt)},
+      {label: 'Cashflow mensual (bienes)', value: formatCur(k.cashflowFromGoods)},
+      {label: 'Gastos mensuales (pasivos)', value: formatCur(k.totalLiabs)},
+      {label: 'Cashflow neto mensual', value: formatCur(k.netMonthly)}
+    ];
+
+    items.forEach(it => {
+      const div = document.createElement('div');
+      div.className = 'cardK';
+      div.innerHTML = `<div style="font-size:12px;color:var(--muted)">${safeText(it.label)}</div><div style="font-size:16px;font-weight:700;margin-top:6px">${safeText(it.value)}</div>`;
+      container.appendChild(div);
+    });
+  }
+
+  function renderDate(){
+    const dEl = document.getElementById('reportDate');
+    const dt = new Date(state.updatedAt || new Date().toISOString());
+    dEl.textContent = `Reporte generado el: ${dt.toLocaleDateString('es-PE')} ${dt.toLocaleTimeString('es-PE')}`;
+  }
+
+  // -------- PDF Generation ----------
   async function generatePDF(){
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF();
+    try {
+      // Comprobar que jsPDF y autoTable están disponibles
+      if(!window.jspdf || !window.jspdf.autoTable){
+        // Mensaje amigable: incluye instrucción para añadir plugin si falta
+        alert("La librería jsPDF o el plugin autoTable no están disponibles. Asegúrate de incluir ambos scripts.");
+        console.error('jsPDF o autoTable no disponible', window.jspdf);
+        return;
+      }
 
-    let y = 10;
-    pdf.setFontSize(16);
-    pdf.text('Control Económico — Resumen Financiero', 14, y);
-    y += 8;
-    pdf.setFontSize(11);
-    pdf.text(`Fecha: ${new Date().toLocaleDateString('es-PE')}`, 14, y);
-    y += 10;
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF('p','mm','a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
 
-    function addSection(title){
+      const title = 'Control Económico — Resumen Financiero';
       pdf.setFontSize(14);
-      pdf.text(title, 14, y);
-      y += 8;
-    }
-    function addTable(headers, rows){
+      pdf.text(title, 14, 14);
+
+      pdf.setFontSize(10);
+      pdf.text(`Fecha: ${new Date().toLocaleString('es-PE')}`, 14, 20);
+
+      let cursorY = 26;
+
+      // Función auxiliar para tablas
+      function addTable(headers, rows){
+        pdf.autoTable({
+          startY: cursorY,
+          head: [headers],
+          body: rows,
+          theme: 'grid',
+          styles: { fontSize: 9 },
+          margin: { left: 14, right: 14 },
+          didDrawPage: function (data) {
+            cursorY = data.cursor.y + 6; // actualizar y para la siguiente sección
+          }
+        });
+      }
+
+      // Bancos
+      addTable(['Banco', 'Saldo', 'Tipo'], state.banks.map(b => [b.name, formatCur(b.balance), b.type]));
+
+      // Deudas
+      addTable(['Acreedor','Total','Meses','Pago mensual','Banco asociado','Saldo pendiente'],
+        state.debts.map(d => [
+          d.creditor, formatCur(d.total), String(d.months || ''), formatCur(d.monthly),
+          state.banks.find(b => b.id === d.bankId)?.name || '', formatCur(d.remaining)
+        ])
+      );
+
+      // Pasivos
+      addTable(['Concepto','Cuota mensual','Banco vinculado'],
+        state.liabs.map(l => [l.name, formatCur(l.monthly), state.banks.find(b => b.id === l.bankId)?.name || ''])
+      );
+
+      // Bienes
+      addTable(['Bien','Tipo','Valor','Ingreso/Costo mensual'],
+        state.goods.map(g => [g.name, g.type, formatCur(g.valor), g.monthly >= 0 ? formatCur(g.monthly) : `- ${formatCur(Math.abs(g.monthly))}`])
+      );
+
+      // Agregar totales / resumen final
+      const t = calcTotals();
       pdf.setFontSize(11);
-      let startY = y;
+      pdf.text('Resumen', 14, cursorY);
+      cursorY += 6;
+      const resumenRows = [
+        ['Total en bancos', formatCur(t.totalBanks)],
+        ['Valor total bienes', formatCur(t.totalGoodsValue)],
+        ['Deuda total', formatCur(t.totalDebt)],
+        ['Pago mensual total de deudas', formatCur(t.totalDebtMonthly)],
+        ['Gastos mensuales (pasivos)', formatCur(t.totalLiabs)],
+        ['Cashflow neto mensual', formatCur(t.netMonthly)]
+      ];
       pdf.autoTable({
-        startY: y,
-        head: [headers],
-        body: rows,
+        startY: cursorY,
+        head: [['Concepto','Valor']],
+        body: resumenRows,
         theme: 'grid',
-        styles: {fontSize: 9},
-        margin: {left:14, right:14},
-        didDrawPage: function (data) {
-          y = data.cursor.y + 10;
-        }
+        styles: { fontSize: 9 },
+        margin: { left: 14, right: 14 },
+        didDrawPage: function (data) { cursorY = data.cursor.y + 6; }
       });
+
+      // Numeración de páginas (pie de página)
+      const pageCount = pdf.getNumberOfPages();
+      for(let i = 1; i <= pageCount; i++){
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        const pageStr = `Página ${i} / ${pageCount}`;
+        pdf.text(pageStr, pageWidth - 40, pageHeight - 8);
+      }
+
+      const dateStr = new Date().toISOString().slice(0,10);
+      pdf.save(`ControlEconómico_Resumen_${dateStr}.pdf`);
+    } catch(err){
+      console.error('Error generando PDF', err);
+      alert('Ocurrió un error generando el PDF. Revisa la consola para más detalles.');
     }
-
-    // Note: jsPDF requires autotable plugin, include CDN
-    // For simplicity, including CDN here:
-    if(!window.jspdf || !window.jspdf.autoTable){
-      alert("Falta la librería jsPDF autoTable. Incluye este script:\n<script src='https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js'></script>");
-      return;
-    }
-
-    addSection('Bancos');
-    addTable(
-      ['Banco', 'Saldo', 'Tipo'],
-      state.banks.map(b => [b.name, formatCur(b.balance), b.type])
-    );
-
-    addSection('Deudas vinculadas a banco');
-    addTable(
-      ['Acreedor', 'Total', 'Meses a pagar', 'Pago mensual', 'Banco asociado', 'Saldo pendiente'],
-      state.debts.map(d => [
-        d.creditor,
-        formatCur(d.total),
-        d.months.toString(),
-        formatCur(d.monthly),
-        state.banks.find(b => b.id === d.bankId)?.name || '',
-        formatCur(d.remaining)
-      ])
-    );
-
-    addSection('Pasivos (Costo mensual)');
-    addTable(
-      ['Concepto', 'Cuota mensual', 'Banco vinculado'],
-      state.liabs.map(l => [
-        l.name,
-        formatCur(l.monthly),
-        state.banks.find(b => b.id === l.bankId)?.name || ''
-      ])
-    );
-
-    addSection('Registro de bienes activos y pasivos');
-    addTable(
-      ['Bien', 'Tipo', 'Valor', 'Ingreso / Costo mensual'],
-      state.goods.map(g => [
-        g.name,
-        g.type,
-        formatCur(g.valor),
-        g.type === 'activo' ? formatCur(g.monthly) : formatCur(-Math.abs(g.monthly))
-      ])
-    );
-
-    pdf.save(`ControlEconómico_Resumen_${new Date().toISOString().slice(0,10)}.pdf`);
   }
 
-  document.getElementById('btnGeneratePDF').onclick = generatePDF;
+  // -------- Eventos UI ----------
+  function wireEvents(){
+    document.getElementById('btnGeneratePDF').addEventListener('click', () => {
+      generatePDF();
+      // guardamos timestamp
+      saveState();
+      renderDate();
+    });
 
-  // Initial table render
+    document.getElementById('btnExportCSV').addEventListener('click', () => {
+      const csv = toCSV(state);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ControlEconómico_Datos_${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('btnReset').addEventListener('click', () => {
+      if(confirm('¿Seguro que quieres restablecer los datos a los valores por defecto? Esto eliminará los datos guardados en este equipo.')){
+        localStorage.removeItem(STORAGE_KEY);
+        Object.assign(state, JSON.parse(JSON.stringify(defaultState)));
+        saveState();
+        renderTable();
+      }
+    });
+
+    // Guardar automáticamente al cerrar / recargar
+    window.addEventListener('beforeunload', () => {
+      saveState();
+    });
+  }
+
+  // -------- Inicialización ----------
+  let state = loadState();
+  // Si nunca se guardó, copia el default
+  if(!state || typeof state !== 'object') state = JSON.parse(JSON.stringify(defaultState));
+
+  // Render inicial y eventos
   renderTable();
-</script>
+  wireEvents();
 
-<!-- jsPDF autotable needed for tables in PDF -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+  // Exponer estado a consola para depuración rápida (solo en dev)
+  window.__econ_state = state;
+
+})();
+</script>
 
 </body>
 </html>
+
 
 
