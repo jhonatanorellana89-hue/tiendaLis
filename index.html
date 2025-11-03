@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Control Económico — vFINAL (Firebase + PDF)</title>
+<title>Control Económico — Versión Estable</title>
 <link href="https://cdn.jsdelivr.net/npm/modern-normalize/modern-normalize.css" rel="stylesheet">
 <style>
   :root{--bg:#f6f7fb;--card:#fff;--muted:#6b7280;--accent:#0f766e}
   body{font-family:Inter,system-ui,Arial;background:var(--bg);margin:0;color:#0f172a}
   .wrap{max-width:1100px;margin:18px auto;padding:14px}
-  .grid{display:grid;grid-template-columns:260px 1fr;gap:14px}
-  .card{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 8px 26px rgba(12,16,35,0.06)}
+  .grid{display:grid;grid-template-columns:240px 1fr;gap:14px}
+  .card{background:var(--card);border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(12,16,35,0.06)}
   .menu button{display:block;width:100%;text-align:left;padding:10px;border-radius:8px;border:0;background:transparent;cursor:pointer}
   .menu button.active{background:#eefbf9}
   .menu{position:sticky;top:18px}
@@ -24,27 +24,24 @@
   .btn.primary{background:var(--accent);color:#fff}
   .btn.ghost{background:transparent;border:1px solid #e6e9ef}
   .notif{padding:8px;border-radius:8px;background:#fff7ed;border:1px solid #ffe1b8;font-size:13px;margin-top:8px}
-  .time-meter{position:fixed;top:12px;right:12px;background:var(--card);padding:10px;border-radius:12px;box-shadow:0 10px 30px rgba(12,16,35,0.08);z-index:1200;display:flex;gap:8px;align-items:center}
-  .badge{display:inline-block;padding:6px 8px;border-radius:6px;background:#eefbf9;color:#055e52;font-weight:700;margin-right:6px}
+  .time-meter{position:fixed;top:12px;right:12px;background:var(--card);padding:10px;border-radius:10px;box-shadow:0 8px 20px rgba(12,16,35,0.08);z-index:1200;display:flex;gap:8px;align-items:center}
   @media (max-width:880px){.grid{grid-template-columns:1fr}.menu{position:relative}}
 </style>
-<!-- jsPDF CDN for PDF export -->
+
+<!-- jsPDF CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
   <div class="wrap">
     <header class="card" style="display:flex;justify-content:space-between;align-items:center">
-      <div>
-        <div style="font-weight:800">Control Económico — vFINAL</div>
-        <div class="muted">Bancos, Deudas, Pasivos, Bienes, Registro Diario — sincronización automática con Firebase</div>
-      </div>
+      <div><strong>Control Económico — Estable</strong><div class="muted">Interfaz con Firebase y export PDF</div></div>
       <div class="muted">Guardado local + Firestore</div>
     </header>
 
     <div class="time-meter" id="timeMeter">
       <button class="btn" id="btnPrev">◀</button>
-      <div style="min-width:180px;text-align:center">
-        <div id="monthName" style="font-weight:800;letter-spacing:1px">--</div>
+      <div style="min-width:160px;text-align:center">
+        <div id="monthName" style="font-weight:700">--</div>
         <div id="monthYear" class="muted">----</div>
       </div>
       <button class="btn primary" id="btnNext">▶</button>
@@ -52,7 +49,7 @@
       <button class="btn" id="btnSyncNow">Sincronizar</button>
     </div>
 
-    <div class="grid" style="margin-top:16px">
+    <div class="grid" style="margin-top:14px">
       <aside class="card menu">
         <button id="mDashboard" class="active">Dashboard</button>
         <button id="mBanks">Bancos</button>
@@ -62,133 +59,88 @@
         <button id="mDiary">Registro Diario</button>
         <button id="mAssets">Activos</button>
         <button id="mIncomes">Ingresos</button>
-        <div style="margin-top:10px"><small class="muted">Usuario:</small><div id="fbUser" class="muted">No autenticado</div></div>
+        <div style="margin-top:12px"><small class="muted">Usuario:</small><div id="fbUser" class="muted">No autenticado</div></div>
       </aside>
 
       <main>
-        <!-- Dashboard -->
         <section id="sDashboard" class="card">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div><h3 style="margin:0">Resumen</h3><div class="muted">Visión rápida</div></div>
             <div class="row"><div class="muted">Mes: <span id="currentMonth"></span></div><button class="btn primary" id="btnAdvance">Avanzar mes</button></div>
           </div>
-
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px">
             <div class="card"><div class="muted">Balance</div><div id="kBalance" style="font-weight:700">S/ 0</div></div>
-            <div class="card"><div class="muted">Ahorros (bancos)</div><div id="kBanks" style="font-weight:700">S/ 0</div></div>
+            <div class="card"><div class="muted">Ahorros</div><div id="kBanks" style="font-weight:700">S/ 0</div></div>
             <div class="card"><div class="muted">Deuda mensual</div><div id="kDebtMonthly" style="font-weight:700">S/ 0</div></div>
             <div class="card"><div class="muted">Activos valor</div><div id="kAssetsVal" style="font-weight:700">S/ 0</div></div>
           </div>
-
           <div id="notifications" style="margin-top:12px"></div>
         </section>
 
         <!-- Banks -->
         <section id="sBanks" class="card" style="display:none">
           <h3>Bancos</h3>
-          <div class="muted">Registra cuentas bancarias</div>
-          <div style="display:flex;gap:12px;margin-top:10px">
-            <div style="flex:1">
-              <label>Nombre banco</label><input id="bankName">
-              <label>Saldo inicial</label><input id="bankInit" type="number">
-              <label>Tipo</label><select id="bankType"><option value="ahorro">Ahorro</option><option value="corriente">Corriente</option></select>
-              <div style="margin-top:8px"><button class="btn primary" id="btnAddBank">Agregar banco</button></div>
-            </div>
-            <div style="flex:1;overflow:auto;height:240px"><table id="tblBanks"><thead><tr><th>Banco</th><th>Saldo</th><th>Tipo</th><th></th></tr></thead><tbody></tbody></table></div>
-          </div>
+          <label>Nombre banco</label><input id="bankName">
+          <label>Saldo inicial</label><input id="bankInit" type="number">
+          <label>Tipo</label><select id="bankType"><option value="ahorro">Ahorro</option><option value="corriente">Corriente</option></select>
+          <div style="margin-top:8px"><button class="btn primary" id="btnAddBank">Agregar banco</button></div>
+          <div style="margin-top:12px;overflow:auto;height:220px"><table id="tblBanks"><thead><tr><th>Banco</th><th>Saldo</th><th>Tipo</th><th></th></tr></thead><tbody></tbody></table></div>
         </section>
 
         <!-- Debts -->
         <section id="sDebts" class="card" style="display:none">
           <h3>Deudas</h3>
-          <div class="muted">Registra deudas con total, meses a pagar y banco</div>
-          <div style="display:flex;gap:12px;margin-top:10px">
-            <div style="flex:1">
-              <label>Acreedor</label><input id="debtCred">
-              <label>Total deuda</label><input id="debtTotal" type="number">
-              <label>Meses a pagar</label><input id="debtMonths" type="number" value="12">
-              <label>Banco (opcional)</label><select id="debtBank"></select>
-              <label>Mes inicio</label><input id="debtStart" type="month">
-              <div style="margin-top:8px"><button class="btn primary" id="btnAddDebt">Agregar deuda</button></div>
-            </div>
-            <div style="flex:1;overflow:auto;height:240px"><table id="tblDebts"><thead><tr><th>Acreedor</th><th>Total</th><th>Meses</th><th>Pago/m</th><th>Banco</th><th>Remanente</th><th></th></tr></thead><tbody></tbody></table></div>
-          </div>
+          <label>Acreedor</label><input id="debtCred"><label>Total deuda</label><input id="debtTotal" type="number"><label>Meses a pagar</label><input id="debtMonths" type="number" value="12"><label>Banco (opcional)</label><select id="debtBank"></select><label>Mes inicio</label><input id="debtStart" type="month">
+          <div style="margin-top:8px"><button class="btn primary" id="btnAddDebt">Agregar deuda</button></div>
+          <div style="margin-top:12px;overflow:auto;height:220px"><table id="tblDebts"><thead><tr><th>Acreedor</th><th>Total</th><th>Meses</th><th>Pago/m</th><th>Banco</th><th>Remanente</th><th></th></tr></thead><tbody></tbody></table></div>
         </section>
 
         <!-- Liabs -->
         <section id="sLiabs" class="card" style="display:none">
-          <h3>Pasivos (cuota mensual)</h3>
-          <div class="muted">Registra cuota mensual</div>
-          <div style="display:flex;gap:12px;margin-top:10px">
-            <div style="flex:1">
-              <label>Concepto</label><input id="liabName">
-              <label>Cuota mensual</label><input id="liabMonthly" type="number">
-              <label>Banco (opcional)</label><select id="liabBank"></select>
-              <div style="margin-top:8px"><button class="btn primary" id="btnAddLiab">Agregar pasivo</button></div>
-            </div>
-            <div style="flex:1;overflow:auto;height:240px"><table id="tblLiabs"><thead><tr><th>Concepto</th><th>Cuota/m</th><th>Banco</th><th></th></tr></thead><tbody></tbody></table></div>
-          </div>
+          <h3>Pasivos</h3>
+          <label>Concepto</label><input id="liabName"><label>Cuota mensual</label><input id="liabMonthly" type="number"><label>Banco (opcional)</label><select id="liabBank"></select>
+          <div style="margin-top:8px"><button class="btn primary" id="btnAddLiab">Agregar pasivo</button></div>
+          <div style="margin-top:12px;overflow:auto;height:220px"><table id="tblLiabs"><thead><tr><th>Concepto</th><th>Cuota/m</th><th>Banco</th><th></th></tr></thead><tbody></tbody></table></div>
         </section>
 
         <!-- Goods -->
         <section id="sBienes" class="card" style="display:none">
           <h3>Bienes</h3>
-          <div class="muted">Clasifica bien como Activo o Pasivo</div>
-          <div style="display:flex;gap:12px;margin-top:10px">
-            <div style="flex:1">
-              <label>Nombre bien</label><input id="goodName">
-              <label>Tipo</label><select id="goodType"><option value="activo">Activo</option><option value="pasivo">Pasivo</option></select>
-              <label>Valor (S/)</label><input id="goodValue" type="number">
-              <label>Ingreso/Costo mensual</label><input id="goodMonthly" type="number">
-              <div style="margin-top:8px"><button class="btn primary" id="btnAddGood">Agregar bien</button></div>
-            </div>
-            <div style="flex:1;overflow:auto;height:240px"><table id="tblGoods"><thead><tr><th>Bien</th><th>Tipo</th><th>Valor</th><th>Mensual</th><th></th></tr></thead><tbody></tbody></table></div>
-          </div>
+          <label>Nombre bien</label><input id="goodName"><label>Tipo</label><select id="goodType"><option value="activo">Activo</option><option value="pasivo">Pasivo</option></select><label>Valor</label><input id="goodValue" type="number"><label>Ingreso/Costo mensual</label><input id="goodMonthly" type="number">
+          <div style="margin-top:8px"><button class="btn primary" id="btnAddGood">Agregar bien</button></div>
+          <div style="margin-top:12px;overflow:auto;height:220px"><table id="tblGoods"><thead><tr><th>Bien</th><th>Tipo</th><th>Valor</th><th>Mensual</th><th></th></tr></thead><tbody></tbody></table></div>
         </section>
 
         <!-- Diary -->
         <section id="sDiary" class="card" style="display:none">
           <h3>Registro diario</h3>
-          <div class="muted">Registra gastos (afecta banco si asignas)</div>
-          <div style="display:flex;gap:12px;margin-top:10px">
-            <div style="flex:1">
-              <label>Fecha</label><input id="dDate" type="date">
-              <label>Descripción</label><input id="dDesc">
-              <label>Monto</label><input id="dAmount" type="number">
-              <label>Banco (opcional)</label><select id="dBank"></select>
-              <div style="margin-top:8px"><button class="btn primary" id="btnAddDiary">Registrar gasto</button></div>
-            </div>
-            <div style="flex:1;overflow:auto;height:240px"><table id="tblDiary"><thead><tr><th>Fecha</th><th>Desc</th><th>Monto</th><th>Banco</th><th></th></tr></thead><tbody></tbody></table></div>
-          </div>
+          <label>Fecha</label><input id="dDate" type="date"><label>Descripción</label><input id="dDesc"><label>Monto</label><input id="dAmount" type="number"><label>Banco (opcional)</label><select id="dBank"></select>
+          <div style="margin-top:8px"><button class="btn primary" id="btnAddDiary">Registrar gasto</button></div>
+          <div style="margin-top:12px;overflow:auto;height:220px"><table id="tblDiary"><thead><tr><th>Fecha</th><th>Desc</th><th>Monto</th><th>Banco</th><th></th></tr></thead><tbody></tbody></table></div>
         </section>
 
         <!-- Assets -->
         <section id="sAssets" class="card" style="display:none">
           <h3>Activos</h3>
-          <div class="muted">Activos con ingreso mensual</div>
-          <div style="display:flex;gap:12px;margin-top:10px">
-            <div style="flex:1"><label>Nombre</label><input id="aName"><label>Ingreso mensual</label><input id="aIncome" type="number"><div style="margin-top:8px"><button class="btn primary" id="btnAddAsset">Agregar</button></div></div>
-            <div style="flex:1;overflow:auto;height:160px"><table id="tblAssets"><thead><tr><th>Activo</th><th>Ingreso/m</th><th></th></tr></thead><tbody></tbody></table></div>
-          </div>
+          <label>Nombre</label><input id="aName"><label>Ingreso mensual</label><input id="aIncome" type="number">
+          <div style="margin-top:8px"><button class="btn primary" id="btnAddAsset">Agregar activo</button></div>
+          <div style="margin-top:12px;overflow:auto;height:160px"><table id="tblAssets"><thead><tr><th>Activo</th><th>Ingreso/m</th><th></th></tr></thead><tbody></tbody></table></div>
         </section>
 
         <!-- Incomes -->
         <section id="sIncomes" class="card" style="display:none">
           <h3>Ingresos</h3>
-          <div class="muted">Registrar ingresos</div>
-          <div style="display:flex;gap:12px;margin-top:10px">
-            <div style="flex:1"><label>Concepto</label><input id="iName"><label>Monto</label><input id="iAmount" type="number"><label>Frecuencia</label><select id="iFreq"><option value="mensual">Mensual</option><option value="unica">Única</option></select><label>Banco</label><select id="iBank"></select><div style="margin-top:8px"><button class="btn primary" id="btnAddIncome">Agregar ingreso</button></div></div>
-            <div style="flex:1;overflow:auto;height:160px"><table id="tblIncomes"><thead><tr><th>Ingreso</th><th>Monto</th><th>Freq</th><th>Banco</th><th></th></tr></thead><tbody></tbody></table></div>
-          </div>
+          <label>Concepto</label><input id="iName"><label>Monto</label><input id="iAmount" type="number"><label>Frecuencia</label><select id="iFreq"><option value="mensual">Mensual</option><option value="unica">Única</option></select><label>Banco</label><select id="iBank"></select>
+          <div style="margin-top:8px"><button class="btn primary" id="btnAddIncome">Agregar ingreso</button></div>
+          <div style="margin-top:12px;overflow:auto;height:160px"><table id="tblIncomes"><thead><tr><th>Ingreso</th><th>Monto</th><th>Freq</th><th>Banco</th><th></th></tr></thead><tbody></tbody></table></div>
         </section>
 
       </main>
     </div>
   </div>
 
-<!-- MAIN SCRIPT: app logic + firebase integration -->
 <script type="module">
-/* ================== FIREBASE CONFIG (TU PROPIA CONFIG) ================== */
+/* ================= FIREBASE CONFIG (TU CONFIG) ================= */
 const firebaseConfig = {
   apiKey: "AIzaSyBVppNAicRPFXEUdErmHd24se_9bjXiqcM",
   authDomain: "jhona-1b398.firebaseapp.com",
@@ -199,7 +151,7 @@ const firebaseConfig = {
   measurementId: "G-NVGKL0XGER"
 };
 
-/* ---------- Imports Firebase modular ---------- */
+/* ---------- Imports Firebase (modular) ---------- */
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js';
 import { getFirestore, doc, setDoc, collection, addDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js';
@@ -209,147 +161,8 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* ---------- Small auth UI (buttons) ---------- */
-function createAuthUI() {
-  if (document.getElementById('btnFirebaseLogin')) return;
-  const bar = document.createElement('div');
-  bar.style.position = 'fixed';
-  bar.style.bottom = '12px';
-  bar.style.left = '12px';
-  bar.style.zIndex = 9999;
-  bar.innerHTML = `
-    <button id="btnFirebaseLogin" style="margin-right:8px;padding:8px;border-radius:6px;background:#0f766e;color:#fff;border:0;cursor:pointer">Ingresar con Google</button>
-    <button id="btnFirebaseLogout" style="padding:8px;border-radius:6px;display:none;background:#e5e7eb;border:0;cursor:pointer">Salir</button>
-  `;
-  document.body.appendChild(bar);
-  document.getElementById('btnFirebaseLogin').onclick = () => signInGoogle();
-  document.getElementById('btnFirebaseLogout').onclick = () => signOut(auth);
-}
-
-/* ---------- Auth helpers ---------- */
-async function signInGoogle() {
-  try {
-    const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
-  } catch (err) {
-    console.error('Error login Firebase:', err);
-    alert('Error al iniciar sesión: ' + (err.message || err));
-  }
-}
-
-/* ---------- onAuthStateChanged ---------- */
-createAuthUI();
-onAuthStateChanged(auth, user => {
-  const fbUserEl = document.getElementById('fbUser');
-  if (user) {
-    window.__FB_UID = user.uid;
-    if (fbUserEl) fbUserEl.innerText = `${user.displayName || user.email} (${user.uid.slice(0,6)})`;
-    document.getElementById('btnFirebaseLogin').style.display = 'none';
-    document.getElementById('btnFirebaseLogout').style.display = 'inline-block';
-    // flush pending ops queued while offline/not-authenticated
-    flushFbQueue();
-  } else {
-    window.__FB_UID = null;
-    if (fbUserEl) fbUserEl.innerText = 'No autenticado';
-    document.getElementById('btnFirebaseLogin').style.display = 'inline-block';
-    document.getElementById('btnFirebaseLogout').style.display = 'none';
-  }
-});
-
-/* ---------- Firestore helpers exposed in window.fb ---------- */
-let _saveTimer = null;
-async function saveStateAuto(uid, stateObj, delay = 900) {
-  if (!uid) {
-    console.warn('saveStateAuto: no UID');
-    return;
-  }
-  clearTimeout(_saveTimer);
-  _saveTimer = setTimeout(async () => {
-    try {
-      const ref = doc(db, 'users', uid, 'state', 'current');
-      await setDoc(ref, { state: stateObj, updatedAt: new Date().toISOString() }, { merge: true });
-      console.log('Guardado en Firestore ->', `users/${uid}/state/current`);
-    } catch (err) {
-      console.error('Error guardando estado en Firestore:', err);
-      // enqueue to retry
-      enqueueFbOp({ type: 'state', payload: stateObj });
-    }
-  }, delay);
-}
-
-async function addSubcollectionItem(uid, subcol, itemObj) {
-  if (!uid) throw new Error('addSubcollectionItem: uid requerido');
-  try {
-    const colRef = collection(db, 'users', uid, subcol);
-    const docRef = await addDoc(colRef, { ...itemObj, createdAt: new Date().toISOString() });
-    console.log(`Documento creado en users/${uid}/${subcol}/${docRef.id}`);
-    return docRef.id;
-  } catch (err) {
-    console.error('Error addSubcollectionItem:', err);
-    throw err;
-  }
-}
-
-function listenToSubcollection(uid, subcol, callback) {
-  if (!uid) { console.warn('listenToSubcollection: uid requerido'); return () => {}; }
-  const colRef = collection(db, 'users', uid, subcol);
-  const unsub = onSnapshot(colRef, snapshot => {
-    const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-    callback(docs);
-  }, err => { console.error('listen error', err); });
-  return unsub;
-}
-
-window.fb = { saveStateAuto, addSubcollectionItem, listenToSubcollection };
-
-/* ========== QUEUE (cola local para envíos automáticos) ========== */
-window.__FB_PENDING_KEY = window.__FB_PENDING_KEY || 'fb_pending_queue_v1';
-
-function enqueueFbOp(op) {
-  try {
-    const raw = localStorage.getItem(window.__FB_PENDING_KEY);
-    const arr = raw ? JSON.parse(raw) : [];
-    arr.push(op);
-    localStorage.setItem(window.__FB_PENDING_KEY, JSON.stringify(arr));
-    console.log('Operacion FB encolada', op.type || op.subcol);
-  } catch (e) { console.error('enqueue error', e); }
-}
-
-async function flushFbQueue() {
-  try {
-    const raw = localStorage.getItem(window.__FB_PENDING_KEY);
-    if (!raw) return;
-    const arr = JSON.parse(raw);
-    if (!arr || arr.length === 0) return;
-    if (!window.__FB_UID || !window.fb || !window.fb.addSubcollectionItem || !window.fb.saveStateAuto) {
-      console.log('flushFbQueue: falta autenticacion o helpers');
-      return;
-    }
-    for (const op of arr) {
-      try {
-        if (op.type === 'state') {
-          await window.fb.saveStateAuto(window.__FB_UID, op.payload, 0);
-        } else if (op.type === 'subcol') {
-          await window.fb.addSubcollectionItem(window.__FB_UID, op.subcol, op.payload);
-        } else {
-          console.warn('Operacion desconocida en cola:', op);
-        }
-      } catch (e) {
-        console.warn('Error enviando op FB (deteniendo):', e);
-        return;
-      }
-    }
-    localStorage.removeItem(window.__FB_PENDING_KEY);
-    console.log('Cola Firestore vaciada correctamente');
-    notify('Sincronización completada');
-  } catch (e) { console.error('flushFbQueue error', e); }
-}
-
-/* reintentar al volver online */
-window.addEventListener('online', () => { if (window.__FB_UID) flushFbQueue(); });
-
-/* ========== APP STATE (simplificado y completo) ========== */
-const STORAGE_KEY = 'ce_vfinal_v1';
+/* ========== APP STATE & HELPERS ========== */
+const STORAGE_KEY = 'ce_stable_v1';
 let state = {
   currentDate: new Date().toISOString().slice(0,10),
   balance: 0,
@@ -360,22 +173,73 @@ let state = {
   diary: [],
   assets: [],
   incomes: [],
-  goals: [],
   history: []
 };
+function uid(pref='id'){ return pref + '_' + Math.random().toString(36).slice(2,9); }
+const MONTHS_ES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SETIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+function formatCur(v){ return 'S/ '+Number(v||0).toLocaleString(); }
+function notify(msg,ttl=5000){ const container = document.getElementById('notifications'); if(!container) return; const n=document.createElement('div'); n.className='notif'; n.innerText=msg; container.prepend(n); setTimeout(()=>n.remove(),ttl); }
 
-function uid(p='id'){return p+'_'+Math.random().toString(36).slice(2,9)}
+/* ---------- Firebase helpers (exposed in window.fb) ---------- */
+let _saveTimer = null;
+async function saveStateAuto(uid, stateObj, delay = 900){
+  if(!uid) return;
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(async ()=>{
+    try{
+      const ref = doc(db, 'users', uid, 'state', 'current');
+      await setDoc(ref, { state: stateObj, updatedAt: new Date().toISOString() }, { merge: true });
+      console.log('Guardado en Firestore users/' + uid + '/state/current');
+    }catch(e){ console.error('saveStateAuto error', e); enqueueFbOp({ type:'state', payload: stateObj }); }
+  }, delay);
+}
+async function addSubcollectionItem(uid, subcol, payload){
+  const colRef = collection(db, 'users', uid, subcol);
+  const docRef = await addDoc(colRef, { ...payload, createdAt: new Date().toISOString() });
+  return docRef.id;
+}
+function listenToSubcollection(uid, subcol, cb){
+  const colRef = collection(db, 'users', uid, subcol);
+  return onSnapshot(colRef, snap => cb(snap.docs.map(d=>({id:d.id,...d.data()}))), err=>console.error('listen error',err));
+}
+window.fb = { saveStateAuto, addSubcollectionItem, listenToSubcollection };
+
+/* ========== Queue for pending ops ========== */
+window.__FB_PENDING_KEY = window.__FB_PENDING_KEY || 'fb_pending_queue_v1';
+function enqueueFbOp(op){
+  try{
+    const raw = localStorage.getItem(window.__FB_PENDING_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    arr.push(op);
+    localStorage.setItem(window.__FB_PENDING_KEY, JSON.stringify(arr));
+    console.log('Encolado op FB', op);
+  }catch(e){ console.error(e); }
+}
+async function flushFbQueue(){
+  try{
+    const raw = localStorage.getItem(window.__FB_PENDING_KEY);
+    if(!raw) return;
+    const arr = JSON.parse(raw);
+    if(!arr.length) return;
+    if(!window.__FB_UID) return console.log('No UID para flush');
+    for(const op of arr){
+      try{
+        if(op.type === 'state'){ await window.fb.saveStateAuto(window.__FB_UID, op.payload, 0); }
+        else if(op.type === 'subcol'){ await window.fb.addSubcollectionItem(window.__FB_UID, op.subcol, op.payload); }
+      }catch(e){ console.warn('Error en op cola, se detiene', e); return; }
+    }
+    localStorage.removeItem(window.__FB_PENDING_KEY);
+    notify('Sincronización completada');
+  }catch(e){ console.error('flushFbQueue', e); }
+}
+window.addEventListener('online', ()=>{ if(window.__FB_UID) flushFbQueue(); });
+
+/* ========== Storage local ========== */
 function loadLocal(){ const raw = localStorage.getItem(STORAGE_KEY); if(raw) state = JSON.parse(raw); renderAll(); }
 function saveLocal(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); renderAll(); }
 
-// notify small
-function notify(t,ttl=5000){ const n=document.createElement('div'); n.className='notif'; n.innerText=t; document.getElementById('notifications').prepend(n); setTimeout(()=>n.remove(),ttl); }
-
-/* ---------- Renderers ---------- */
-const MONTHS_ES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SETIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
-function setMonthUI(iso){ const d=new Date(iso); document.getElementById('monthName').innerText = MONTHS_ES[d.getMonth()]; document.getElementById('monthYear').innerText = d.getFullYear(); document.getElementById('currentMonth').innerText = `${MONTHS_ES[d.getMonth()]} ${d.getFullYear()}`; }
-function formatCur(v){ return 'S/ '+Number(v||0).toLocaleString(); }
-
+/* ========== Render & helpers ========== */
+function setMonthUI(iso){ const d = new Date(iso); document.getElementById('monthName').innerText = MONTHS_ES[d.getMonth()]; document.getElementById('monthYear').innerText = d.getFullYear(); document.getElementById('currentMonth').innerText = `${MONTHS_ES[d.getMonth()]} ${d.getFullYear()}`; }
 function renderAll(){
   setMonthUI(state.currentDate);
   document.getElementById('kBalance').innerText = formatCur(state.balance);
@@ -383,172 +247,123 @@ function renderAll(){
   document.getElementById('kDebtMonthly').innerText = formatCur(state.debts.reduce((s,d)=>s+Number(d.monthly||0),0));
   document.getElementById('kAssetsVal').innerText = formatCur(state.goods.filter(g=>g.type==='activo').reduce((s,g)=>s+Number(g.valor||0),0));
 
-  // Banks table & selects
-  const tbBanks = document.querySelector('#tblBanks tbody'); tbBanks.innerHTML=''; state.banks.forEach(b=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${b.name}</td><td>${formatCur(b.balance)}</td><td>${b.type}</td><td><button class="btn ghost" data-id="${b.id}">Eliminar</button></td>`; tbBanks.appendChild(tr); });
-  document.querySelectorAll('#tblBanks button[data-id]').forEach(btn=>btn.onclick=()=>{ const id=btn.dataset.id; state.banks=state.banks.filter(x=>x.id!==id); save(); }));
-
-  ['debtBank','liabBank','dBank','iBank'].forEach(id=>{ const sel=document.getElementById(id); if(!sel) return; const prev=sel.value; sel.innerHTML='<option value=\"\">-- Ninguno --</option>'; state.banks.forEach(b=>{ const o=document.createElement('option'); o.value=b.id; o.textContent=`${b.name} (S/ ${Number(b.balance||0).toLocaleString()})`; sel.appendChild(o); }); sel.value = prev||''; });
-
-  // Debts table
-  const tbDebt = document.querySelector('#tblDebts tbody'); tbDebt.innerHTML=''; state.debts.forEach(d=>{ const b = state.banks.find(x=>x.id===d.bankId); const bn=b?b.name:''; const tr=document.createElement('tr'); tr.innerHTML=`<td>${d.creditor}</td><td>${formatCur(d.total)}</td><td>${d.months}</td><td>${formatCur(d.monthly)}</td><td>${bn}</td><td>${formatCur(d.remaining)}</td><td><button class="btn ghost" data-id="${d.id}">Eliminar</button></td>`; tbDebt.appendChild(tr); });
-  document.querySelectorAll('#tblDebts button[data-id]').forEach(b=>b.onclick=()=>{ state.debts=state.debts.filter(x=>x.id!==b.dataset.id); save(); });
-
+  // banks
+  const tbBanks = document.querySelector('#tblBanks tbody'); tbBanks.innerHTML='';
+  state.banks.forEach(b=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${b.name}</td><td>${formatCur(b.balance)}</td><td>${b.type}</td><td><button class="btn ghost del-bank" data-id="${b.id}">Eliminar</button></td>`; tbBanks.appendChild(tr); });
+  // debts
+  const tbDebts = document.querySelector('#tblDebts tbody'); tbDebts.innerHTML='';
+  state.debts.forEach(d=>{ const b = state.banks.find(x=>x.id===d.bankId); const bn = b?b.name:''; const tr=document.createElement('tr'); tr.innerHTML = `<td>${d.creditor}</td><td>${formatCur(d.total)}</td><td>${d.months}</td><td>${formatCur(d.monthly)}</td><td>${bn}</td><td>${formatCur(d.remaining)}</td><td><button class="btn ghost del-debt" data-id="${d.id}">Eliminar</button></td>`; tbDebts.appendChild(tr); });
   // liabs
-  const tbLiab = document.querySelector('#tblLiabs tbody'); tbLiab.innerHTML=''; state.liabs.forEach(l=>{ const b=state.banks.find(x=>x.id===l.bankId); const bn=b?b.name:''; const tr=document.createElement('tr'); tr.innerHTML=`<td>${l.name}</td><td>${formatCur(l.monthly)}</td><td>${bn}</td><td><button class="btn ghost" data-id="${l.id}">Eliminar</button></td>`; tbLiab.appendChild(tr); });
-  document.querySelectorAll('#tblLiabs button[data-id]').forEach(b=>b.onclick=()=>{ state.liabs=state.liabs.filter(x=>x.id!==b.dataset.id); save(); });
-
+  const tbLiab = document.querySelector('#tblLiabs tbody'); tbLiab.innerHTML='';
+  state.liabs.forEach(l=>{ const b = state.banks.find(x=>x.id===l.bankId); const bn=b?b.name:''; const tr=document.createElement('tr'); tr.innerHTML = `<td>${l.name}</td><td>${formatCur(l.monthly)}</td><td>${bn}</td><td><button class="btn ghost del-liab" data-id="${l.id}">Eliminar</button></td>`; tbLiab.appendChild(tr); });
   // goods
-  const tbGoods = document.querySelector('#tblGoods tbody'); tbGoods.innerHTML=''; state.goods.forEach(g=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${g.name}</td><td>${g.type}</td><td>${formatCur(g.valor)}</td><td>${formatCur(g.monthly)}</td><td><button class="btn ghost" data-id="${g.id}">Eliminar</button></td>`; tbGoods.appendChild(tr); });
-  document.querySelectorAll('#tblGoods button[data-id]').forEach(b=>b.onclick=()=>{ state.goods=state.goods.filter(x=>x.id!==b.dataset.id); save(); });
-
+  const tbGoods = document.querySelector('#tblGoods tbody'); tbGoods.innerHTML='';
+  state.goods.forEach(g=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${g.name}</td><td>${g.type}</td><td>${formatCur(g.valor)}</td><td>${formatCur(g.monthly)}</td><td><button class="btn ghost del-good" data-id="${g.id}">Eliminar</button></td>`; tbGoods.appendChild(tr); });
   // diary
-  const tbD = document.querySelector('#tblDiary tbody'); tbD.innerHTML=''; state.diary.slice().reverse().forEach(e=>{ const b = state.banks.find(x=>x.id===e.bankId); const bn=b?b.name:''; const tr=document.createElement('tr'); tr.innerHTML=`<td>${e.date}</td><td>${e.desc}</td><td>${formatCur(e.amount)}</td><td>${bn}</td><td><button class="btn ghost" data-id="${e.id}">Eliminar</button></td>`; tbD.appendChild(tr); });
-  document.querySelectorAll('#tblDiary button[data-id]').forEach(btn=>btn.onclick=()=>{ const id=btn.dataset.id; const ent=state.diary.find(x=>x.id===id); if(ent){ state.balance+=Number(ent.amount); if(ent.bankId){ const b=state.banks.find(x=>x.id===ent.bankId); if(b) b.balance = Number(b.balance) + Number(ent.amount); } } state.diary = state.diary.filter(x=>x.id!==id); save(); });
-
+  const tbDiary = document.querySelector('#tblDiary tbody'); tbDiary.innerHTML='';
+  state.diary.slice().reverse().forEach(e=>{ const b = state.banks.find(x=>x.id===e.bankId); const bn = b?b.name:''; const tr=document.createElement('tr'); tr.innerHTML = `<td>${e.date}</td><td>${e.desc}</td><td>${formatCur(e.amount)}</td><td>${bn}</td><td><button class="btn ghost del-diary" data-id="${e.id}">Eliminar</button></td>`; tbDiary.appendChild(tr); });
   // assets
-  const tA = document.querySelector('#tblAssets tbody'); tA.innerHTML=''; state.assets.forEach(a=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${a.name}</td><td>${formatCur(a.income)}</td><td><button class="btn ghost" data-id="${a.id}">Eliminar</button></td>`; tA.appendChild(tr); });
-  document.querySelectorAll('#tblAssets button[data-id]').forEach(b=>b.onclick=()=>{ state.assets=state.assets.filter(x=>x.id!==b.dataset.id); save(); });
-
+  const tbAssets = document.querySelector('#tblAssets tbody'); tbAssets.innerHTML='';
+  state.assets.forEach(a=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${a.name}</td><td>${formatCur(a.income)}</td><td><button class="btn ghost del-asset" data-id="${a.id}">Eliminar</button></td>`; tbAssets.appendChild(tr); });
   // incomes
-  const tI = document.querySelector('#tblIncomes tbody'); tI.innerHTML=''; state.incomes.forEach(i=>{ const b=state.banks.find(x=>x.id===i.bankId); const bn=b?b.name:''; const tr=document.createElement('tr'); tr.innerHTML=`<td>${i.name}</td><td>${formatCur(i.amount)}</td><td>${i.freq}</td><td>${bn}</td><td><button class="btn ghost" data-id="${i.id}">Eliminar</button></td>`; tI.appendChild(tr); });
-  document.querySelectorAll('#tblIncomes button[data-id]').forEach(b=>b.onclick=()=>{ state.incomes=state.incomes.filter(x=>x.id!==b.dataset.id); save(); });
+  const tbIncomes = document.querySelector('#tblIncomes tbody'); tbIncomes.innerHTML='';
+  state.incomes.forEach(i=>{ const b = state.banks.find(x=>x.id===i.bankId); const bn = b?b.name:''; const tr=document.createElement('tr'); tr.innerHTML = `<td>${i.name}</td><td>${formatCur(i.amount)}</td><td>${i.freq}</td><td>${bn}</td><td><button class="btn ghost del-income" data-id="${i.id}">Eliminar</button></td>`; tbIncomes.appendChild(tr); });
 
-  // KPIs badges (optional)
-  const notes = [];
-  if (state.banks.reduce((s,b)=>s+Number(b.balance||0),0) > 1000) notes.push('Ahorro > S/1,000');
-  document.getElementById('notifications').innerHTML = notes.map(x=>`<div class="notif">${x}</div>`).join('');
+  // update selects for bank references
+  ['debtBank','liabBank','dBank','iBank'].forEach(selId=>{
+    const sel = document.getElementById(selId); if(!sel) return; const prev = sel.value; sel.innerHTML = '<option value="">-- Ninguno --</option>'; state.banks.forEach(b=>{ const o=document.createElement('option'); o.value = b.id; o.textContent = `${b.name} (S/ ${Number(b.balance||0).toLocaleString()})`; sel.appendChild(o); }); sel.value = prev || '';
+  });
 }
 
-/* ========== ACTIONS & CRUD (wired) ========== */
-function save(){
-  // push history
-  try { state.history = state.history || []; state.history.push(JSON.stringify(state)); if(state.history.length>72) state.history.shift(); } catch(e){}
-  saveLocal();
-  // auto-sync: save state to Firestore (debounced) or enqueue
-  if (window.__FB_UID && window.fb && window.fb.saveStateAuto) {
-    window.fb.saveStateAuto(window.__FB_UID, state);
-  } else {
-    enqueueFbOp({ type:'state', payload: state });
-  }
-}
-
-// Banks
-document.getElementById('btnAddBank').addEventListener('click', async ()=>{
-  const n = document.getElementById('bankName').value.trim(); const b = Number(document.getElementById('bankInit').value)||0; const t = document.getElementById('bankType').value;
-  if(!n) return alert('Nombre requerido');
-  const obj = { id: uid('b'), name: n, balance: b, type: t };
-  state.banks.push(obj); document.getElementById('bankName').value=''; document.getElementById('bankInit').value='';
-  save();
-  // subcollection save
-  const payload = { name: obj.name, balance: obj.balance, type: obj.type };
-  if (window.__FB_UID && window.fb && window.fb.addSubcollectionItem) {
-    try{ await window.fb.addSubcollectionItem(window.__FB_UID, 'banks', payload); } catch(e){ enqueueFbOp({ type:'subcol', subcol:'banks', payload }); }
-  } else { enqueueFbOp({ type:'subcol', subcol:'banks', payload }); }
-  notify('Banco agregado');
-});
-
-// Debt
-document.getElementById('btnAddDebt').addEventListener('click', async ()=>{
-  const cred = document.getElementById('debtCred').value.trim(); const total = Number(document.getElementById('debtTotal').value)||0; const months = Number(document.getElementById('debtMonths').value)||1; const bankId = document.getElementById('debtBank').value||null; const start = document.getElementById('debtStart').value || state.currentDate.slice(0,7);
-  if(!cred || total<=0 || months<=0) return alert('Completa campos válidos');
-  const monthly = +(total/months).toFixed(2);
-  const obj = { id: uid('d'), creditor: cred, total, months, monthly, bankId, startMonth: start, remaining: total, paidMonths: 0 };
-  state.debts.push(obj); document.getElementById('debtCred').value=''; document.getElementById('debtTotal').value=''; document.getElementById('debtMonths').value='12'; document.getElementById('debtStart').value='';
-  save();
-  const payload = { creditor: obj.creditor, total: obj.total, months: obj.months, monthly: obj.monthly, bankId: obj.bankId, startMonth: obj.startMonth };
-  if (window.__FB_UID && window.fb && window.fb.addSubcollectionItem) {
-    try{ await window.fb.addSubcollectionItem(window.__FB_UID, 'debts', payload); } catch(e){ enqueueFbOp({ type:'subcol', subcol:'debts', payload }); }
-  } else { enqueueFbOp({ type:'subcol', subcol:'debts', payload }); }
-  notify('Deuda agregada');
-});
-
-// Liab (pasivos monthly)
-document.getElementById('btnAddLiab').addEventListener('click', async ()=>{
-  const name = document.getElementById('liabName').value.trim(); const mon = Number(document.getElementById('liabMonthly').value)||0; const bankId = document.getElementById('liabBank').value||null;
-  if(!name || mon<=0) return alert('Nombre y cuota validos');
-  const obj = { id: uid('l'), name, monthly: mon, bankId };
-  state.liabs.push(obj); document.getElementById('liabName').value=''; document.getElementById('liabMonthly').value='';
-  save();
-  const payload = { name: obj.name, monthly: obj.monthly, bankId: obj.bankId };
-  if (window.__FB_UID && window.fb && window.fb.addSubcollectionItem) {
-    try{ await window.fb.addSubcollectionItem(window.__FB_UID, 'liabs', payload); } catch(e){ enqueueFbOp({ type:'subcol', subcol:'liabs', payload }); }
-  } else { enqueueFbOp({ type:'subcol', subcol:'liabs', payload }); }
-  notify('Pasivo agregado');
-});
-
-// Goods (bienes)
-document.getElementById('btnAddGood').addEventListener('click', async ()=>{
-  const name = document.getElementById('goodName').value.trim(); const type = document.getElementById('goodType').value; const val = Number(document.getElementById('goodValue').value)||0; const mon = Number(document.getElementById('goodMonthly').value)||0;
-  if(!name) return alert('Nombre requerido');
-  const obj = { id: uid('g'), name, type, valor: val, monthly: mon };
-  state.goods.push(obj); document.getElementById('goodName').value=''; document.getElementById('goodValue').value=''; document.getElementById('goodMonthly').value='';
-  save();
-  const payload = { name: obj.name, type: obj.type, valor: obj.valor, monthly: obj.monthly };
-  if (window.__FB_UID && window.fb && window.fb.addSubcollectionItem) {
-    try{ await window.fb.addSubcollectionItem(window.__FB_UID, 'goods', payload); } catch(e){ enqueueFbOp({ type:'subcol', subcol:'goods', payload }); }
-  } else { enqueueFbOp({ type:'subcol', subcol:'goods', payload }); }
-  notify('Bien agregado');
-});
-
-// Diary
-document.getElementById('btnAddDiary').addEventListener('click', async ()=>{
-  const date = document.getElementById('dDate').value || new Date().toISOString().slice(0,10);
-  const desc = document.getElementById('dDesc').value || ''; const amt = Number(document.getElementById('dAmount').value)||0; const bankId = document.getElementById('dBank').value||null;
-  if(amt<=0) return alert('Monto mayor que 0');
-  const obj = { id: uid('di'), date, desc, amount: amt, bankId };
-  state.diary.push(obj); document.getElementById('dDesc').value=''; document.getElementById('dAmount').value='';
-  state.balance -= amt; if(bankId){ const b=state.banks.find(x=>x.id===bankId); if(b) b.balance = Number(b.balance) - amt; }
-  save();
-  const payload = { date: obj.date, desc: obj.desc, amount: obj.amount, bankId: obj.bankId };
-  if (window.__FB_UID && window.fb && window.fb.addSubcollectionItem) {
-    try{ await window.fb.addSubcollectionItem(window.__FB_UID, 'diary', payload); } catch(e){ enqueueFbOp({ type:'subcol', subcol:'diary', payload }); }
-  } else { enqueueFbOp({ type:'subcol', subcol:'diary', payload }); }
-  notify('Gasto registrado');
-});
-
-// Assets (activos)
-document.getElementById('btnAddAsset').addEventListener('click', async ()=>{
-  const n = document.getElementById('aName').value.trim(); const inc = Number(document.getElementById('aIncome').value)||0;
-  if(!n) return alert('Nombre requerido');
-  const obj = { id: uid('a'), name: n, income: inc };
-  state.assets.push(obj); document.getElementById('aName').value=''; document.getElementById('aIncome').value='';
-  save();
-  const payload = { name: obj.name, income: obj.income };
-  if (window.__FB_UID && window.fb && window.fb.addSubcollectionItem) {
-    try{ await window.fb.addSubcollectionItem(window.__FB_UID, 'assets', payload); } catch(e){ enqueueFbOp({ type:'subcol', subcol:'assets', payload }); }
-  } else { enqueueFbOp({ type:'subcol', subcol:'assets', payload }); }
-  notify('Activo agregado');
-});
-
-// Incomes
-document.getElementById('btnAddIncome').addEventListener('click', async ()=>{
-  const n = document.getElementById('iName').value.trim(); const amt = Number(document.getElementById('iAmount').value)||0; const freq = document.getElementById('iFreq').value; const bankId = document.getElementById('iBank').value||null;
-  if(!n) return alert('Nombre requerido');
-  const obj = { id: uid('in'), name: n, amount: amt, freq, bankId };
-  state.incomes.push(obj); document.getElementById('iName').value=''; document.getElementById('iAmount').value='';
-  // deposit immediately to bank if selected otherwise to balance
-  if(bankId){ const b = state.banks.find(x=>x.id===bankId); if(b) b.balance = Number(b.balance) + amt; } else state.balance += amt;
-  save();
-  const payload = { name: obj.name, amount: obj.amount, freq: obj.freq, bankId: obj.bankId };
-  if (window.__FB_UID && window.fb && window.fb.addSubcollectionItem) {
-    try{ await window.fb.addSubcollectionItem(window.__FB_UID, 'incomes', payload); } catch(e){ enqueueFbOp({ type:'subcol', subcol:'incomes', payload }); }
-  } else { enqueueFbOp({ type:'subcol', subcol:'incomes', payload }); }
-  notify('Ingreso agregado');
-});
-
-/* ========== Month advance logic ========== */
+/* ========== Core actions ========== */
 function pushHistory(){ state.history = state.history || []; state.history.push(JSON.stringify(state)); if(state.history.length>72) state.history.shift(); }
-function undoHistory(){ if(!state.history||state.history.length===0){ notify('No hay historial'); return } const s = state.history.pop(); state = JSON.parse(s); saveLocal(); notify('Deshecho'); }
+function undoHistory(){ if(!state.history || state.history.length===0){ notify('No hay historial'); return; } state = JSON.parse(state.history.pop()); saveLocal(); notify('Deshecho'); }
 
+function save(){
+  pushHistory();
+  saveLocal();
+  if(window.__FB_UID && window.fb && window.fb.saveStateAuto) window.fb.saveStateAuto(window.__FB_UID, state);
+  else enqueueFbOp({ type:'state', payload: state });
+}
+
+/* ========== CRUD actions: executed via event delegation ========== */
+function addBankLocal(name, balance, type){
+  const o = { id: uid('b'), name, balance: Number(balance||0), type };
+  state.banks.push(o);
+  save();
+  // firebase
+  const payload = { name: o.name, balance: o.balance, type: o.type };
+  if(window.__FB_UID) window.fb.addSubcollectionItem(window.__FB_UID,'banks',payload).catch(()=>enqueueFbOp({type:'subcol',subcol:'banks',payload}));
+  else enqueueFbOp({type:'subcol',subcol:'banks',payload});
+  notify('Banco agregado');
+}
+function addDebtLocal(creditor,total,months,bankId,startMonth){
+  const monthly = +(total/months).toFixed(2);
+  const o = { id: uid('d'), creditor, total:Number(total), months:Number(months), monthly, bankId:bankId||null, startMonth:startMonth||state.currentDate.slice(0,7), remaining: Number(total), paidMonths:0 };
+  state.debts.push(o); save();
+  const payload = { creditor:o.creditor, total:o.total, months:o.months, monthly:o.monthly, bankId:o.bankId, startMonth:o.startMonth };
+  if(window.__FB_UID) window.fb.addSubcollectionItem(window.__FB_UID,'debts',payload).catch(()=>enqueueFbOp({type:'subcol',subcol:'debts',payload}));
+  else enqueueFbOp({type:'subcol',subcol:'debts',payload});
+  notify('Deuda agregada');
+}
+function addLiabLocal(name,monthly,bankId){
+  const o = { id: uid('l'), name, monthly:Number(monthly), bankId:bankId||null };
+  state.liabs.push(o); save();
+  const payload = { name:o.name, monthly:o.monthly, bankId:o.bankId };
+  if(window.__FB_UID) window.fb.addSubcollectionItem(window.__FB_UID,'liabs',payload).catch(()=>enqueueFbOp({type:'subcol',subcol:'liabs',payload}));
+  else enqueueFbOp({type:'subcol',subcol:'liabs',payload});
+  notify('Pasivo agregado');
+}
+function addGoodLocal(name,type,valor,monthly){
+  const o = { id: uid('g'), name, type, valor:Number(valor), monthly:Number(monthly) };
+  state.goods.push(o); save();
+  const payload = { name:o.name, type:o.type, valor:o.valor, monthly:o.monthly };
+  if(window.__FB_UID) window.fb.addSubcollectionItem(window.__FB_UID,'goods',payload).catch(()=>enqueueFbOp({type:'subcol',subcol:'goods',payload}));
+  else enqueueFbOp({type:'subcol',subcol:'goods',payload});
+  notify('Bien agregado');
+}
+function addDiaryLocal(date,desc,amount,bankId){
+  const o = { id: uid('di'), date, desc, amount:Number(amount), bankId:bankId||null };
+  state.diary.push(o);
+  // update balances
+  state.balance -= Number(o.amount);
+  if(o.bankId){ const b = state.banks.find(x=>x.id===o.bankId); if(b) b.balance = Number(b.balance) - Number(o.amount); }
+  save();
+  const payload = { date:o.date, desc:o.desc, amount:o.amount, bankId:o.bankId };
+  if(window.__FB_UID) window.fb.addSubcollectionItem(window.__FB_UID,'diary',payload).catch(()=>enqueueFbOp({type:'subcol',subcol:'diary',payload}));
+  else enqueueFbOp({type:'subcol',subcol:'diary',payload});
+  notify('Gasto registrado');
+}
+function addAssetLocal(name,income){
+  const o = { id: uid('a'), name, income:Number(income) };
+  state.assets.push(o); save();
+  const payload = { name:o.name, income:o.income };
+  if(window.__FB_UID) window.fb.addSubcollectionItem(window.__FB_UID,'assets',payload).catch(()=>enqueueFbOp({type:'subcol',subcol:'assets',payload}));
+  else enqueueFbOp({type:'subcol',subcol:'assets',payload});
+  notify('Activo agregado');
+}
+function addIncomeLocal(name,amount,freq,bankId){
+  const o = { id: uid('in'), name, amount:Number(amount), freq, bankId:bankId||null };
+  state.incomes.push(o);
+  if(o.bankId){ const b = state.banks.find(x=>x.id===o.bankId); if(b) b.balance = Number(b.balance) + Number(o.amount); } else state.balance += Number(o.amount);
+  save();
+  const payload = { name:o.name, amount:o.amount, freq:o.freq, bankId:o.bankId };
+  if(window.__FB_UID) window.fb.addSubcollectionItem(window.__FB_UID,'incomes',payload).catch(()=>enqueueFbOp({type:'subcol',subcol:'incomes',payload}));
+  else enqueueFbOp({type:'subcol',subcol:'incomes',payload});
+  notify('Ingreso agregado');
+}
+
+/* ========== Month advance ========== */
 function advanceMonth(){
   pushHistory();
-  const cur = new Date(state.currentDate); const next = new Date(cur.getFullYear(), cur.getMonth()+1, 1); state.currentDate = next.toISOString().slice(0,10);
-  // debts
+  const cur = new Date(state.currentDate); const next = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
+  state.currentDate = next.toISOString().slice(0,10);
   const curYm = state.currentDate.slice(0,7);
+  // debts
   state.debts.forEach(d=>{
-    if (d.remaining>0 && d.startMonth <= curYm){
+    if(d.remaining>0 && d.startMonth <= curYm){
       const pay = Number(d.monthly||0);
-      if(d.bankId){ const b = state.banks.find(x=>x.id===d.bankId); if(b && Number(b.balance)>=pay){ b.balance = Number(b.balance) - pay; d.remaining = Math.max(0, Number(d.remaining)-pay); d.paidMonths = (d.paidMonths||0)+1; } else { const taken = b ? Math.min(Number(b.balance),pay) : 0; if(b) b.balance = Number(b.balance) - taken; const rest = pay - taken; state.balance -= rest; d.remaining = Math.max(0, Number(d.remaining)-pay); d.paidMonths=(d.paidMonths||0)+1; } } else { state.balance -= pay; d.remaining = Math.max(0, Number(d.remaining)-pay); d.paidMonths=(d.paidMonths||0)+1; }
+      if(d.bankId){ const b = state.banks.find(x=>x.id===d.bankId); if(b && Number(b.balance)>=pay){ b.balance = Number(b.balance) - pay; d.remaining = Math.max(0, Number(d.remaining)-pay); d.paidMonths=(d.paidMonths||0)+1; } else { const taken = b ? Math.min(Number(b.balance),pay) : 0; if(b) b.balance = Number(b.balance) - taken; const rest = pay - taken; state.balance -= rest; d.remaining = Math.max(0, Number(d.remaining)-pay); d.paidMonths=(d.paidMonths||0)+1; } } else { state.balance -= pay; d.remaining = Math.max(0, Number(d.remaining)-pay); d.paidMonths=(d.paidMonths||0)+1; }
     }
   });
   // liabs
@@ -556,76 +371,121 @@ function advanceMonth(){
     const pay = Number(l.monthly||0);
     if(l.bankId){ const b = state.banks.find(x=>x.id===l.bankId); if(b && Number(b.balance)>=pay){ b.balance = Number(b.balance) - pay; } else { const taken = b ? Math.min(Number(b.balance),pay) : 0; if(b) b.balance = Number(b.balance) - taken; const rest = pay - taken; state.balance -= rest; } } else { state.balance -= pay; }
   });
-  // income from assets/goods
+  // income from goods activos
   const incomeFromGoods = state.goods.filter(g=>g.type==='activo').reduce((s,g)=>s+Number(g.monthly||0),0);
   state.balance += incomeFromGoods;
   if(incomeFromGoods>0) notify(`Ingresos por bienes: S/ ${incomeFromGoods.toFixed(2)}`);
   save();
-  // attempt immediate flush of queue after advancing month
   if(window.__FB_UID) flushFbQueue();
 }
 
-/* ========== PDF Generation ========== */
+/* ========== PDF generation ========== */
 function generatePDF(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({unit:'pt',format:'a4'});
-  const left = 40; let y = 40;
-  doc.setFontSize(16); doc.text('Resumen Control Económico', left, y); y+=20;
+  let y = 40; const left = 40;
+  doc.setFontSize(14); doc.text('Resumen Control Económico', left, y); y+=20;
   doc.setFontSize(10); doc.text(`Fecha: ${new Date().toLocaleString()}`, left, y); y+=18;
-  // KPIs
   doc.setFontSize(12); doc.text('KPIs', left, y); y+=14; doc.setFontSize(10);
   doc.text(`Balance: ${formatCur(state.balance)}`, left, y); y+=12;
-  doc.text(`Ahorros (bancos): ${formatCur(state.banks.reduce((s,b)=>s+Number(b.balance||0),0))}`, left, y); y+=12;
+  doc.text(`Ahorros: ${formatCur(state.banks.reduce((s,b)=>s+Number(b.balance||0),0))}`, left, y); y+=12;
   doc.text(`Deuda mensual: ${formatCur(state.debts.reduce((s,d)=>s+Number(d.monthly||0),0))}`, left, y); y+=18;
-  // Banks
+  // sections (short)
   doc.setFontSize(12); doc.text('Bancos', left, y); y+=14; doc.setFontSize(10);
-  if(state.banks.length===0){ doc.text('- No hay bancos -', left, y); y+=14; } else {
-    state.banks.forEach(b=>{ doc.text(`${b.name} — ${formatCur(b.balance)}`, left, y); y+=12; if(y>740){ doc.addPage(); y=40; } });
-  }
-  // Deudas
+  state.banks.forEach(b=>{ doc.text(`${b.name} — ${formatCur(b.balance)}`, left, y); y+=12; if(y>740){ doc.addPage(); y=40; } });
   doc.setFontSize(12); doc.text('Deudas', left, y); y+=14; doc.setFontSize(10);
-  if(state.debts.length===0){ doc.text('- No hay deudas -', left, y); y+=14; } else {
-    state.debts.forEach(d=>{ doc.text(`${d.creditor} — Total ${formatCur(d.total)} — Pago/m ${formatCur(d.monthly)} — Remanente ${formatCur(d.remaining)}`, left, y); y+=12; if(y>740){ doc.addPage(); y=40; } });
+  state.debts.forEach(d=>{ doc.text(`${d.creditor} — Total ${formatCur(d.total)} — Pago/m ${formatCur(d.monthly)} — Rem ${formatCur(d.remaining)}`, left, y); y+=12; if(y>740){ doc.addPage(); y=40; } });
+  doc.save(`resumen_${new Date().toISOString().slice(0,10)}.pdf`);
+  notify('PDF generado y descargado');
+}
+
+/* ========== Event wiring: attach after DOM ready ========== */
+document.addEventListener('DOMContentLoaded', ()=>{
+
+  // menu
+  const menuMap = { mDashboard:'sDashboard', mBanks:'sBanks', mDebts:'sDebts', mLiabs:'sLiabs', mBienes:'sBienes', mDiary:'sDiary', mAssets:'sAssets', mIncomes:'sIncomes' };
+  Object.keys(menuMap).forEach(btnId=>{
+    const el = document.getElementById(btnId);
+    if(el) el.addEventListener('click', ()=>{ document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('active')); el.classList.add('active'); document.querySelectorAll('main section.card').forEach(s=>s.style.display='none'); document.getElementById(menuMap[btnId]).style.display='block'; });
+  });
+
+  // simple UI helper: set today's date
+  document.getElementById('dDate').value = new Date().toISOString().slice(0,10);
+
+  // static buttons
+  document.getElementById('btnExportPDF').addEventListener('click', ()=> generatePDF());
+  document.getElementById('btnAdvance').addEventListener('click', ()=> { advanceMonth(); save(); });
+  document.getElementById('btnNext').addEventListener('click', ()=> { advanceMonth(); save(); });
+  document.getElementById('btnPrev').addEventListener('click', ()=> { if(confirm('Deshacer último avance?')) undoHistory(); });
+  document.getElementById('btnSyncNow').addEventListener('click', ()=> { if(window.__FB_UID) flushFbQueue(); else alert('Inicia sesión para sincronizar'); });
+
+  // Delegated listeners for add buttons
+  document.getElementById('btnAddBank').addEventListener('click', ()=> addBankLocal(document.getElementById('bankName').value.trim(), document.getElementById('bankInit').value, document.getElementById('bankType').value));
+  document.getElementById('btnAddDebt').addEventListener('click', ()=> addDebtLocal(document.getElementById('debtCred').value.trim(), Number(document.getElementById('debtTotal').value||0), Number(document.getElementById('debtMonths').value||1), document.getElementById('debtBank').value||null, document.getElementById('debtStart').value||state.currentDate.slice(0,7)));
+  document.getElementById('btnAddLiab').addEventListener('click', ()=> addLiabLocal(document.getElementById('liabName').value.trim(), Number(document.getElementById('liabMonthly').value||0), document.getElementById('liabBank').value||null));
+  document.getElementById('btnAddGood').addEventListener('click', ()=> addGoodLocal(document.getElementById('goodName').value.trim(), document.getElementById('goodType').value, Number(document.getElementById('goodValue').value||0), Number(document.getElementById('goodMonthly').value||0)));
+  document.getElementById('btnAddDiary').addEventListener('click', ()=> addDiaryLocal(document.getElementById('dDate').value, document.getElementById('dDesc').value.trim(), Number(document.getElementById('dAmount').value||0), document.getElementById('dBank').value||null));
+  document.getElementById('btnAddAsset').addEventListener('click', ()=> addAssetLocal(document.getElementById('aName').value.trim(), Number(document.getElementById('aIncome').value||0)));
+  document.getElementById('btnAddIncome').addEventListener('click', ()=> addIncomeLocal(document.getElementById('iName').value.trim(), Number(document.getElementById('iAmount').value||0), document.getElementById('iFreq').value, document.getElementById('iBank').value||null));
+
+  // Event delegation for delete buttons in tables
+  document.body.addEventListener('click', (e)=>{
+    const delBank = e.target.closest('button.del-bank');
+    if(delBank){ const id = delBank.dataset.id; state.banks = state.banks.filter(b=>b.id!==id); save(); notify('Banco eliminado'); return; }
+    const delDebt = e.target.closest('button.del-debt');
+    if(delDebt){ const id = delDebt.dataset.id; state.debts = state.debts.filter(d=>d.id!==id); save(); notify('Deuda eliminada'); return; }
+    const delLiab = e.target.closest('button.del-liab');
+    if(delLiab){ const id = delLiab.dataset.id; state.liabs = state.liabs.filter(l=>l.id!==id); save(); notify('Pasivo eliminado'); return; }
+    const delGood = e.target.closest('button.del-good');
+    if(delGood){ const id = delGood.dataset.id; state.goods = state.goods.filter(g=>g.id!==id); save(); notify('Bien eliminado'); return; }
+    const delDiary = e.target.closest('button.del-diary');
+    if(delDiary){ const id = delDiary.dataset.id; const ent = state.diary.find(x=>x.id===id); if(ent){ state.balance += Number(ent.amount); if(ent.bankId){ const b = state.banks.find(x=>x.id===ent.bankId); if(b) b.balance = Number(b.balance) + Number(ent.amount); } } state.diary = state.diary.filter(d=>d.id!==id); save(); notify('Registro diario eliminado'); return; }
+    const delAsset = e.target.closest('button.del-asset');
+    if(delAsset){ const id = delAsset.dataset.id; state.assets = state.assets.filter(a=>a.id!==id); save(); notify('Activo eliminado'); return; }
+    const delIncome = e.target.closest('button.del-income');
+    if(delIncome){ const id = delIncome.dataset.id; state.incomes = state.incomes.filter(i=>i.id!==id); save(); notify('Ingreso eliminado'); return; }
+  });
+
+  // initial load & render
+  loadLocal();
+
+});
+
+/* ========== Auth UI minimal + onAuthStateChanged flush queue ========== */
+// small auth UI (bottom-left)
+(function createAuthUI(){
+  if(document.getElementById('btnFirebaseLogin')) return;
+  const bar = document.createElement('div');
+  bar.style.position='fixed'; bar.style.bottom='12px'; bar.style.left='12px'; bar.style.zIndex=9999;
+  bar.innerHTML = `<button id="btnFirebaseLogin" style="margin-right:8px;padding:8px;border-radius:6px;background:#0f766e;color:#fff;border:0;cursor:pointer">Ingresar con Google</button>
+                   <button id="btnFirebaseLogout" style="padding:8px;border-radius:6px;display:none;background:#e5e7eb;border:0;cursor:pointer">Salir</button>`;
+  document.body.appendChild(bar);
+  document.getElementById('btnFirebaseLogin').addEventListener('click', async ()=>{
+    try{ const provider = new GoogleAuthProvider(); await signInWithPopup(auth, provider); } catch(e){ console.error(e); alert('Error login: '+e.message); }
+  });
+  document.getElementById('btnFirebaseLogout').addEventListener('click', ()=> signOut(auth));
+})();
+
+onAuthStateChanged(auth, user=>{
+  const fbUserEl = document.getElementById('fbUser');
+  const loginBtn = document.getElementById('btnFirebaseLogin');
+  const logoutBtn = document.getElementById('btnFirebaseLogout');
+  if(user){
+    window.__FB_UID = user.uid;
+    if(fbUserEl) fbUserEl.innerText = `${user.displayName || user.email} (${user.uid.slice(0,6)})`;
+    if(loginBtn) loginBtn.style.display='none';
+    if(logoutBtn) logoutBtn.style.display='inline-block';
+    // try to flush pending operations
+    flushFbQueue();
+    // also push immediate state
+    if(window.fb && window.fb.saveStateAuto) window.fb.saveStateAuto(window.__FB_UID, state, 200);
+  } else {
+    window.__FB_UID = null;
+    if(fbUserEl) fbUserEl.innerText = 'No autenticado';
+    if(loginBtn) loginBtn.style.display='inline-block';
+    if(logoutBtn) logoutBtn.style.display='none';
   }
-  // Pasivos
-  doc.setFontSize(12); doc.text('Pasivos (mensual)', left, y); y+=14; doc.setFontSize(10);
-  state.liabs.forEach(l=>{ doc.text(`${l.name} — ${formatCur(l.monthly)}`, left, y); y+=12; if(y>740){ doc.addPage(); y=40; } });
-  // Bienes
-  doc.setFontSize(12); doc.text('Bienes', left, y); y+=14; doc.setFontSize(10);
-  state.goods.forEach(g=>{ doc.text(`${g.name} (${g.type}) — Valor ${formatCur(g.valor)} — Mensual ${formatCur(g.monthly)}`, left, y); y+=12; if(y>740){ doc.addPage(); y=40; } });
-  // Diario (ultimos 20)
-  doc.setFontSize(12); doc.text('Registro diario (últimos 20)', left, y); y+=14; doc.setFontSize(10);
-  const lastDiary = state.diary.slice(-20);
-  lastDiary.forEach(e=>{ doc.text(`${e.date} • ${e.desc} • ${formatCur(e.amount)}`, left, y); y+=12; if(y>740){ doc.addPage(); y=40; } });
-  doc.save(`resumen_control_economico_${new Date().toISOString().slice(0,10)}.pdf`);
-  notify('PDF generado (descargado)');
-}
-
-/* ========== UI wiring (menu + buttons) ========== */
-function showSection(id){
-  ['sDashboard','sBanks','sDebts','sLiabs','sBienes','sDiary','sAssets','sIncomes'].forEach(s=>document.getElementById(s).style.display = (s===id? 'block':'none'));
-  document.querySelectorAll('.menu button').forEach(btn=>btn.classList.remove('active'));
-  const map = { sDashboard:'mDashboard', sBanks:'mBanks', sDebts:'mDebts', sLiabs:'mLiabs', sBienes:'mBienes', sDiary:'mDiary', sAssets:'mAssets', sIncomes:'mIncomes' };
-  const btnId = map[id]; if(btnId) document.getElementById(btnId).classList.add('active');
-}
-document.getElementById('mDashboard').onclick = ()=> showSection('sDashboard');
-document.getElementById('mBanks').onclick = ()=> showSection('sBanks');
-document.getElementById('mDebts').onclick = ()=> showSection('sDebts');
-document.getElementById('mLiabs').onclick = ()=> showSection('sLiabs');
-document.getElementById('mBienes').onclick = ()=> showSection('sBienes');
-document.getElementById('mDiary').onclick = ()=> showSection('sDiary');
-document.getElementById('mAssets').onclick = ()=> showSection('sAssets');
-document.getElementById('mIncomes').onclick = ()=> showSection('sIncomes');
-
-document.getElementById('btnExportPDF').onclick = ()=> generatePDF();
-document.getElementById('btnAdvance').onclick = ()=> { advanceMonth(); save(); };
-document.getElementById('btnNext').onclick = ()=> { advanceMonth(); save(); if(window.__FB_UID) flushFbQueue(); };
-document.getElementById('btnPrev').onclick = ()=> { if(confirm('Deshacer último cambio?')) undoHistory(); };
-document.getElementById('btnSyncNow').onclick = ()=> { if(window.__FB_UID) flushFbQueue(); else alert('Inicia sesión para sincronizar'); };
-
-/* ========== Init ========== */
-window.addEventListener('DOMContentLoaded', ()=>{ loadLocal(); showSection('sDashboard'); document.getElementById('dDate').value = new Date().toISOString().slice(0,10); });
-window.addEventListener('beforeunload', ()=> saveLocal());
+});
 
 </script>
 </body>
