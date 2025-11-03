@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Control Económico — Sync Automática</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Control Económico — RealtimeDB + AutoSign</title>
 <style>
   body{font-family:Arial,Helvetica,sans-serif;background:#f4f6f8;margin:0;color:#0b1220}
   .wrap{max-width:1100px;margin:18px auto;padding:14px}
@@ -12,7 +12,6 @@
   .menu button{display:block;width:100%;text-align:left;padding:10px;border:0;background:transparent;cursor:pointer}
   .menu button.active{background:#eefbf9}
   input,select{width:100%;padding:8px;border-radius:6px;border:1px solid #e6e9ef;margin-top:6px}
-  .row{display:flex;gap:8px}
   .btn{padding:8px 10px;border-radius:8px;border:0;cursor:pointer}
   .btn.primary{background:#0f766e;color:#fff}
   table{width:100%;border-collapse:collapse;font-size:13px}
@@ -25,16 +24,15 @@
 <!-- jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-<!-- Firebase compat (no modules) -->
+<!-- Firebase compat (Realtime DB) -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 </head>
 <body>
   <div class="wrap">
-
     <header class="card" style="display:flex;justify-content:space-between;align-items:center">
-      <div><strong>Control Económico — Sync Automática</strong><div style="font-size:13px;color:#6b7280">Sincroniza automáticamente con Firestore</div></div>
+      <div><strong>Control Económico — RealtimeDB</strong><div style="font-size:13px;color:#6b7280">Sincronización automática con Realtime Database</div></div>
       <div id="userDisplay" style="font-size:13px;color:#6b7280">No autenticado</div>
     </header>
 
@@ -93,7 +91,6 @@
           <label>Acreedor</label><input id="debt_cred">
           <label>Total</label><input id="debt_total" type="number">
           <label>Meses</label><input id="debt_months" type="number" value="12">
-          <label>Banco (opcional)</label><select id="debt_bank"><option value="">-- Ninguno --</option></select>
           <div style="margin-top:8px"><button class="btn primary" onclick="addDebtUI()">Agregar deuda</button></div>
           <div style="margin-top:12px"><table id="tblDebts"><thead><tr><th>Acreedor</th><th>Total</th><th>Pago/m</th><th>Remanente</th><th></th></tr></thead><tbody></tbody></table></div>
         </section>
@@ -103,7 +100,6 @@
           <h3>Pasivos (cuota mensual)</h3>
           <label>Concepto</label><input id="liab_name">
           <label>Cuota mensual</label><input id="liab_monthly" type="number">
-          <label>Banco (opcional)</label><select id="liab_bank"><option value="">-- Ninguno --</option></select>
           <div style="margin-top:8px"><button class="btn primary" onclick="addLiabUI()">Agregar pasivo</button></div>
           <div style="margin-top:12px"><table id="tblLiabs"><thead><tr><th>Concepto</th><th>Cuota/m</th><th></th></tr></thead><tbody></tbody></table></div>
         </section>
@@ -125,7 +121,6 @@
           <label>Fecha</label><input id="d_date" type="date">
           <label>Descripción</label><input id="d_desc">
           <label>Monto</label><input id="d_amount" type="number">
-          <label>Banco (opcional)</label><select id="d_bank"><option value="">-- Ninguno --</option></select>
           <div style="margin-top:8px"><button class="btn primary" onclick="addDiaryUI()">Registrar gasto</button></div>
           <div style="margin-top:12px"><table id="tblDiary"><thead><tr><th>Fecha</th><th>Desc</th><th>Monto</th><th></th></tr></thead><tbody></tbody></table></div>
         </section>
@@ -145,7 +140,6 @@
           <label>Concepto</label><input id="i_name">
           <label>Monto</label><input id="i_amount" type="number">
           <label>Frecuencia</label><select id="i_freq"><option value="mensual">Mensual</option><option value="unica">Única</option></select>
-          <label>Banco</label><select id="i_bank"><option value="">-- Ninguno --</option></select>
           <div style="margin-top:8px"><button class="btn primary" onclick="addIncomeUI()">Agregar ingreso</button></div>
           <div style="margin-top:12px"><table id="tblIncomes"><thead><tr><th>Ingreso</th><th>Monto</th><th>Freq</th><th></th></tr></thead><tbody></tbody></table></div>
         </section>
@@ -155,10 +149,12 @@
   </div>
 
 <script>
-/* ========== Config Firebase (tu proyecto JHONA) ========== */
+/* ================== CONFIG ================== */
+/* Tu firebaseConfig ya mostrado */
 const firebaseConfig = {
   apiKey: "AIzaSyBVppNAicRPFXEUdErmHd24se_9bjXiqcM",
   authDomain: "jhona-1b398.firebaseapp.com",
+  databaseURL: "https://jhona-1b398-default-rtdb.firebaseio.com", // Asegúrate de que tu Realtime DB exista y usa su URL
   projectId: "jhona-1b398",
   storageBucket: "jhona-1b398.firebasestorage.app",
   messagingSenderId: "981136306223",
@@ -166,13 +162,16 @@ const firebaseConfig = {
   measurementId: "G-NVGKL0XGER"
 };
 
-/* ---------- Init Firebase (compat) ---------- */
+/* ---------- AUTO signin (si quieres automático set true) ---------- */
+const AUTO_SIGNIN = true; // si NO quieres redirect automático cambia a false
+
+/* ---------- Init Firebase compat ---------- */
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
-const db = firebase.firestore();
+const rdb  = firebase.database();
 
 /* ========== Estado local ========== */
-const STORAGE_KEY = 'auto_sync_ce_v1';
+const STORAGE_KEY = 'auto_sync_realtime_v1';
 let state = {
   currentMonthISO: new Date().toISOString().slice(0,10),
   balance: 0,
@@ -185,137 +184,118 @@ let state = {
   incomes: []
 };
 
-/* ========== Debug log UI ========== */
+/* ========== UI log ========== */
 function logUI(msg){
   const el = document.getElementById('log');
   const time = new Date().toLocaleTimeString();
   el.innerHTML = `[${time}] ${msg}<br>` + el.innerHTML;
-  // also console.log
   console.log(msg);
 }
 
-/* ========== Utilities ========== */
-function uid(pref='id'){return pref + '_' + Math.random().toString(36).slice(2,8);}
+/* ========== Utils ========== */
+function uid(pref='id'){return pref+'_'+Math.random().toString(36).slice(2,8);}
 function formatCur(v){ return 'S/ ' + Number(v||0).toLocaleString(); }
-function show(sectionId){
-  ['dashboard','banks','debts','liabs','goods','diary','assets','incomes'].forEach(s=>document.getElementById(s).style.display = (s===sectionId?'block':'none'));
-  document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('active'));
-  const el = document.getElementById('m_' + sectionId);
-  if(el) el.classList.add('active');
-}
+function show(sectionId){ ['dashboard','banks','debts','liabs','goods','diary','assets','incomes'].forEach(s=>document.getElementById(s).style.display=(s===sectionId?'block':'none')); document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('active')); const el=document.getElementById('m_'+sectionId); if(el) el.classList.add('active'); }
 
 /* ========== Local storage load/save ========== */
-function loadLocal(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw) state = JSON.parse(raw);
-    renderAll();
-    logUI('Estado local cargado');
-  }catch(e){ console.error(e); logUI('Error cargando local'); }
-}
-function saveLocal(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  renderAll();
-  // push state to Cloud (debounced)
-  if(window.__FB_UID) debounceSaveStateCloud(window.__FB_UID, state);
-  else enqueueOp({type:'state', payload:state});
+function loadLocal(){ try{ const raw = localStorage.getItem(STORAGE_KEY); if(raw) state = JSON.parse(raw); renderAll(); logUI('Estado local cargado'); }catch(e){ logUI('Error cargando local: '+e.message); } }
+function saveLocal(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); renderAll(); localSaveToCloudIfPossible(); }
+
+/* ========== Cloud: save state + items to Realtime DB ========== */
+let _debTimer = null;
+function localSaveToCloudIfPossible(){
+  if(!window.__FB_UID) { enqueueOp({type:'state', payload:state}); logUI('No auth: state encolado'); return; }
+  clearTimeout(_debTimer);
+  _debTimer = setTimeout(()=>{
+    try{
+      rdb.ref(`users/${window.__FB_UID}/state/current`).set({ state: state, updatedAt: new Date().toISOString() });
+      logUI('Estado guardado en Realtime DB');
+    }catch(e){ logUI('Error push state: '+e.message); enqueueOp({type:'state', payload:state}); }
+  }, 700);
 }
 
-/* ========== Debounced state save to Firestore ========== */
-let _debTimer = null;
-function debounceSaveStateCloud(uid, st, delay=800){
-  clearTimeout(_debTimer);
-  _debTimer = setTimeout(()=>{ try{ db.collection('users').doc(uid).collection('state').doc('current').set({ state: st, updatedAt: new Date().toISOString() }); logUI('Estado push a Firestore'); }catch(e){ logUI('Error push state: '+e.message); enqueueOp({type:'state', payload:st}); } }, delay);
+async function addCloudItem(uid, path, payload){
+  try{
+    const newRef = await rdb.ref(`users/${uid}/${path}`).push(Object.assign({}, payload, { createdAt: new Date().toISOString() }));
+    logUI(`Cloud ${path} creado id:${newRef.key}`);
+    return newRef.key;
+  }catch(e){
+    logUI('Error push cloud item: '+ e.message);
+    enqueueOp({type:'subcol', subcol: path, payload});
+    return null;
+  }
 }
 
 /* ========== Queue offline ops ========== */
-const PENDING_KEY = 'auto_sync_queue_v1';
+const PENDING_KEY = 'rtdb_pending_ops_v1';
 function enqueueOp(op){
   try{
     const raw = localStorage.getItem(PENDING_KEY);
     const arr = raw ? JSON.parse(raw) : [];
     arr.push(op);
     localStorage.setItem(PENDING_KEY, JSON.stringify(arr));
-    logUI('Operación encolada: ' + (op.type || op.subcol));
+    logUI('Op encolada: ' + (op.type || op.subcol));
   }catch(e){ console.error(e); }
 }
 async function flushQueue(){
   try{
-    const raw = localStorage.getItem(PENDING_KEY);
-    if(!raw) { logUI('Cola vacía'); return; }
-    const arr = JSON.parse(raw);
-    if(!arr.length) { logUI('Cola vacía'); localStorage.removeItem(PENDING_KEY); return; }
-    const uid = window.__FB_UID;
-    if(!uid) { logUI('No autenticado: no puedo vaciar cola'); return; }
+    const raw = localStorage.getItem(PENDING_KEY); if(!raw) { logUI('Cola vacía'); return; }
+    const arr = JSON.parse(raw); if(!arr.length) { localStorage.removeItem(PENDING_KEY); logUI('Cola vacía'); return; }
+    const uid = window.__FB_UID; if(!uid) { logUI('No auth: no puedo vaciar cola'); return; }
     for(const op of arr){
       try{
-        if(op.type === 'state'){ await db.collection('users').doc(uid).collection('state').doc('current').set({ state: op.payload, updatedAt: new Date().toISOString() }); }
-        else if(op.type === 'subcol'){ await db.collection('users').doc(uid).collection(op.subcol).add(Object.assign({}, op.payload, { createdAt: new Date().toISOString() })); }
+        if(op.type==='state') await rdb.ref(`users/${uid}/state/current`).set({ state: op.payload, updatedAt: new Date().toISOString() });
+        else if(op.type==='subcol') await rdb.ref(`users/${uid}/${op.subcol}`).push(Object.assign({}, op.payload, { createdAt: new Date().toISOString() }));
         logUI('Op enviada: ' + (op.type || op.subcol));
-      }catch(e){ logUI('Error enviando op: '+e.message); return; }
+      }catch(e){ logUI('Error enviando op: '+ e.message); return; }
     }
     localStorage.removeItem(PENDING_KEY);
-    logUI('Cola sincronizada con éxito');
-  }catch(e){ console.error(e); logUI('Error flush queue: '+e.message); }
+    logUI('Cola sincronizada correctamente');
+  }catch(e){ console.error(e); logUI('flushQueue error: '+ e.message); }
 }
 
-/* ========== Firestore helpers (add item) ========== */
-async function addCloudItem(uid, subcol, payload){
-  try{
-    const docRef = await db.collection('users').doc(uid).collection(subcol).add(Object.assign({}, payload, { createdAt: new Date().toISOString() }));
-    logUI(`Cloud ${subcol} creado (id: ${docRef.id})`);
-    return docRef.id;
-  }catch(e){
-    logUI('Error crear subcol en cloud: ' + e.message);
-    enqueueOp({ type:'subcol', subcol, payload });
-    return null;
-  }
-}
-
-/* ========== Real-time listeners (start after login) ========== */
-let unsubscribers = [];
+/* ========== Realtime listeners (start on login) ========== */
+let listeners = [];
 function startRealtime(uid){
-  stopRealtime(); // clean previous
+  stopRealtime();
   try{
     // state/current
-    const sUnsub = db.collection('users').doc(uid).collection('state').doc('current')
-      .onSnapshot(doc => {
-        if(!doc.exists) return;
-        const remote = doc.data().state;
-        // merge remote into local but prefer latest fields (simple)
-        state = Object.assign({}, remote);
-        saveLocal();
-        logUI('Estado remoto recibido (sync)');
-      }, err => logUI('Error listening state: ' + err.message));
-    unsubscribers.push(sUnsub);
+    const sRef = rdb.ref(`users/${uid}/state/current`);
+    const sListener = sRef.on('value', snap => {
+      if(!snap.exists()) return;
+      const remote = snap.val().state;
+      // adopt remote as authoritative
+      state = remote;
+      saveLocal(); // will re-render
+      logUI('Estado remoto recibido y aplicado');
+    }, err => logUI('Error listening state: '+ err.message));
+    listeners.push({ ref: sRef, ev: 'value' });
 
-    // subcollections: banks, debts, liabs, goods, diary, assets, incomes
-    ['banks','debts','liabs','goods','diary','assets','incomes'].forEach(sub=>{
-      const u = db.collection('users').doc(uid).collection(sub)
-        .onSnapshot(snapshot=>{
-          // rebuild local array from cloud
-          const arr = snapshot.docs.map(d => {
-            const data = d.data();
-            data._remoteId = d.id;
-            return data;
-          });
-          state[sub] = arr;
-          saveLocal();
-          logUI(`Subcolección remota '${sub}' actualizada (${arr.length})`);
-        }, err => logUI('Error listening '+sub+': '+err.message));
-      unsubscribers.push(u);
+    // collections: banks, debts, liabs, goods, diary, assets, incomes
+    ['banks','debts','liabs','goods','diary','assets','incomes'].forEach(path=>{
+      const ref = rdb.ref(`users/${uid}/${path}`);
+      const listener = ref.on('value', snap=>{
+        const arr = [];
+        snap.forEach(child => { const d = child.val(); d._remoteId = child.key; arr.push(d); });
+        state[path] = arr;
+        saveLocal();
+        logUI(`Subcolección remota '${path}' sincronizada (${arr.length})`);
+      }, err=> logUI('Error listening '+path+': '+err.message));
+      listeners.push({ ref, ev: 'value' });
     });
 
-    logUI('Listeners en vivo iniciados');
-  }catch(e){ logUI('startRealtime error: '+e.message); }
+    logUI('Realtime listeners iniciados');
+  }catch(e){ logUI('startRealtime error: '+ e.message); }
 }
 function stopRealtime(){
-  unsubscribers.forEach(u=>{ try{ u(); } catch(e){} });
-  unsubscribers = [];
-  logUI('Listeners detenidos');
+  try{
+    listeners.forEach(l=> l.ref.off(l.ev));
+    listeners = [];
+    logUI('Realtime listeners detenidos');
+  }catch(e){ console.error(e); }
 }
 
-/* ========== UI render ========== */
+/* ========== Render ========= */
 function renderAll(){
   // KPIs
   document.getElementById('s_balance').innerText = formatCur(state.balance);
@@ -323,80 +303,60 @@ function renderAll(){
   document.getElementById('s_deuda').innerText = formatCur(state.debts.reduce((s,d)=>s+Number(d.monthly||0),0));
   document.getElementById('s_activos').innerText = formatCur(state.goods.filter(g=>g.type==='activo').reduce((s,g)=>s+Number(g.valor||0),0));
 
-  // banks table
-  const tbB = document.querySelector('#tblBanks tbody'); if(tbB){ tbB.innerHTML=''; state.banks.forEach(b=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${b.name}</td><td>${formatCur(b.balance)}</td><td>${b.type}</td><td><button onclick="delBank('${b.id}')" class="btn">Eliminar</button></td>`; tbB.appendChild(tr); }); }
-  // debts
-  const tbD = document.querySelector('#tblDebts tbody'); if(tbD){ tbD.innerHTML=''; state.debts.forEach(d=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${d.creditor}</td><td>${formatCur(d.total)}</td><td>${formatCur(d.monthly)}</td><td>${formatCur(d.remaining)}</td><td><button onclick="delDebt('${d.id}')" class="btn">Eliminar</button></td>`; tbD.appendChild(tr); }); }
-  // liabs
-  const tbL = document.querySelector('#tblLiabs tbody'); if(tbL){ tbL.innerHTML=''; state.liabs.forEach(l=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${l.name}</td><td>${formatCur(l.monthly)}</td><td><button onclick="delLiab('${l.id}')" class="btn">Eliminar</button></td>`; tbL.appendChild(tr); }); }
-  // goods
-  const tbG = document.querySelector('#tblGoods tbody'); if(tbG){ tbG.innerHTML=''; state.goods.forEach(g=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${g.name}</td><td>${g.type}</td><td>${formatCur(g.valor)}</td><td>${formatCur(g.monthly)}</td><td><button onclick="delGood('${g.id}')" class="btn">Eliminar</button></td>`; tbG.appendChild(tr); }); }
-  // diary
-  const tbDi = document.querySelector('#tblDiary tbody'); if(tbDi){ tbDi.innerHTML=''; state.diary.slice().reverse().forEach(e=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${e.date}</td><td>${e.desc}</td><td>${formatCur(e.amount)}</td><td><button onclick="delDiary('${e.id}')" class="btn">Eliminar</button></td>`; tbDi.appendChild(tr); }); }
-  // assets
-  const tbA = document.querySelector('#tblAssets tbody'); if(tbA){ tbA.innerHTML=''; state.assets.forEach(a=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${a.name}</td><td>${formatCur(a.income)}</td><td><button onclick="delAsset('${a.id}')" class="btn">Eliminar</button></td>`; tbA.appendChild(tr); }); }
-  // incomes
-  const tbI = document.querySelector('#tblIncomes tbody'); if(tbI){ tbI.innerHTML=''; state.incomes.forEach(i=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${i.name}</td><td>${formatCur(i.amount)}</td><td>${i.freq}</td><td><button onclick="delIncome('${i.id}')" class="btn">Eliminar</button></td>`; tbI.appendChild(tr); }); }
-
-  // update selects for bank references
-  ['debt_bank','liab_bank','d_bank','i_bank'].forEach(selId=>{
-    const sel = document.getElementById(selId);
-    if(!sel) return;
-    const prev = sel.value;
-    sel.innerHTML = '<option value="">-- Ninguno --</option>';
-    state.banks.forEach(b=>{ const o = document.createElement('option'); o.value = b.id; o.textContent = `${b.name} (S/ ${Number(b.balance||0).toLocaleString()})`; sel.appendChild(o); });
-    sel.value = prev || '';
-  });
+  // tables
+  const tbB = document.querySelector('#tblBanks tbody'); if(tbB){ tbB.innerHTML=''; state.banks.forEach(b=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${b.name}</td><td>${formatCur(b.balance)}</td><td>${b.type}</td><td><button onclick="delBank('${b.id}')" class="btn">Eliminar</button></td>`; tbB.appendChild(tr); }); }
+  const tbD = document.querySelector('#tblDebts tbody'); if(tbD){ tbD.innerHTML=''; state.debts.forEach(d=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${d.creditor}</td><td>${formatCur(d.total)}</td><td>${formatCur(d.monthly)}</td><td>${formatCur(d.remaining)}</td><td><button onclick="delDebt('${d.id}')" class="btn">Eliminar</button></td>`; tbD.appendChild(tr); }); }
+  const tbL = document.querySelector('#tblLiabs tbody'); if(tbL){ tbL.innerHTML=''; state.liabs.forEach(l=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${l.name}</td><td>${formatCur(l.monthly)}</td><td><button onclick="delLiab('${l.id}')" class="btn">Eliminar</button></td>`; tbL.appendChild(tr); }); }
+  const tbG = document.querySelector('#tblGoods tbody'); if(tbG){ tbG.innerHTML=''; state.goods.forEach(g=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${g.name}</td><td>${g.type}</td><td>${formatCur(g.valor)}</td><td>${formatCur(g.monthly)}</td><td><button onclick="delGood('${g.id}')" class="btn">Eliminar</button></td>`; tbG.appendChild(tr); }); }
+  const tbDi = document.querySelector('#tblDiary tbody'); if(tbDi){ tbDi.innerHTML=''; state.diary.slice().reverse().forEach(e=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${e.date}</td><td>${e.desc}</td><td>${formatCur(e.amount)}</td><td><button onclick="delDiary('${e.id}')" class="btn">Eliminar</button></td>`; tbDi.appendChild(tr); }); }
+  const tbA = document.querySelector('#tblAssets tbody'); if(tbA){ tbA.innerHTML=''; state.assets.forEach(a=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${a.name}</td><td>${formatCur(a.income)}</td><td><button onclick="delAsset('${a.id}')" class="btn">Eliminar</button></td>`; tbA.appendChild(tr); }); }
+  const tbI = document.querySelector('#tblIncomes tbody'); if(tbI){ tbI.innerHTML=''; state.incomes.forEach(i=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${i.name}</td><td>${formatCur(i.amount)}</td><td>${i.freq}</td><td><button onclick="delIncome('${i.id}')" class="btn">Eliminar</button></td>`; tbI.appendChild(tr); }); }
 
   // month UI
   const d = new Date(state.currentMonthISO);
-  const MONTHS = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SETIEMBRE','OCTUBRE','NOVIEMBRE','DICIembre'];
+  const MONTHS = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SETIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
   document.getElementById('monthName').innerText = MONTHS[d.getMonth()];
   document.getElementById('monthYear').innerText = d.getFullYear();
 }
 
-/* ========== CRUD UI functions (called by onclicks) ========== */
+/* ========== CRUD UI functions (do NOT clear inputs) ========== */
 function addBankUI(){
   const name = document.getElementById('bank_name').value.trim();
-  const bal = Number(document.getElementById('bank_init').value||0);
+  const bal  = Number(document.getElementById('bank_init').value||0);
   const type = document.getElementById('bank_type').value;
-  if(!name) { alert('Ingrese nombre banco'); return; }
+  if(!name) return alert('Nombre requerido');
   const o = { id: uid('b'), name, balance: bal, type };
   state.banks.push(o);
   saveLocal();
-  // push to cloud
-  if(window.__FB_UID) addCloudItem(window.__FB_UID, 'banks', o).then(remoteId => { if(remoteId) o._remoteId = remoteId; saveLocal(); }).catch(()=>enqueueOp({type:'subcol',subcol:'banks',payload:o}));
-  else enqueueOp({type:'subcol', subcol:'banks', payload:o});
-  document.getElementById('bank_name').value=''; document.getElementById('bank_init').value='';
-  logUI('Banco agregado localmente');
+  if(window.__FB_UID) addCloudItem(window.__FB_UID,'banks', o).catch(()=>enqueueOp({type:'subcol',subcol:'banks',payload:o}));
+  else enqueueOp({type:'subcol',subcol:'banks',payload:o});
+  logUI('Banco agregado (local) — inputs NO se vaciaron');
 }
 
 function addDebtUI(){
   const cred = document.getElementById('debt_cred').value.trim();
   const total = Number(document.getElementById('debt_total').value||0);
   const months = Number(document.getElementById('debt_months').value||1);
-  if(!cred || total<=0 || months<=0){ alert('Completa campos de deuda'); return; }
+  if(!cred || total<=0 || months<=0) return alert('Completa campos válidos');
   const monthly = +(total/months).toFixed(2);
-  const o = { id: uid('d'), creditor: cred, total, months, monthly, remaining: total };
+  const o = { id:uid('d'), creditor:cred, total, months, monthly, remaining: total };
   state.debts.push(o);
   saveLocal();
-  if(window.__FB_UID) addCloudItem(window.__FB_UID,'debts',o).then(id=>{ if(id) o._remoteId=id; saveLocal(); }).catch(()=>enqueueOp({type:'subcol',subcol:'debts',payload:o}));
-  else enqueueOp({type:'subcol',subcol:'debts', payload:o});
-  document.getElementById('debt_cred').value=''; document.getElementById('debt_total').value='';
-  logUI('Deuda agregada localmente');
+  if(window.__FB_UID) addCloudItem(window.__FB_UID,'debts', o).catch(()=>enqueueOp({type:'subcol',subcol:'debts',payload:o}));
+  else enqueueOp({type:'subcol',subcol:'debts',payload:o});
+  logUI('Deuda agregada (local)');
 }
 
 function addLiabUI(){
   const name = document.getElementById('liab_name').value.trim();
   const monthly = Number(document.getElementById('liab_monthly').value||0);
-  if(!name || monthly<=0){ alert('Datos inválidos'); return; }
-  const o = { id: uid('l'), name, monthly };
+  if(!name || monthly<=0) return alert('Datos invalidos');
+  const o = { id:uid('l'), name, monthly };
   state.liabs.push(o);
   saveLocal();
-  if(window.__FB_UID) addCloudItem(window.__FB_UID,'liabs',o).catch(()=>enqueueOp({type:'subcol',subcol:'liabs',payload:o}));
+  if(window.__FB_UID) addCloudItem(window.__FB_UID,'liabs', o).catch(()=>enqueueOp({type:'subcol',subcol:'liabs',payload:o}));
   else enqueueOp({type:'subcol',subcol:'liabs',payload:o});
-  document.getElementById('liab_name').value=''; document.getElementById('liab_monthly').value='';
-  logUI('Pasivo agregado localmente');
+  logUI('Pasivo agregado (local)');
 }
 
 function addGoodUI(){
@@ -405,13 +365,12 @@ function addGoodUI(){
   const valor = Number(document.getElementById('good_value').value||0);
   const monthly = Number(document.getElementById('good_monthly').value||0);
   if(!name) return alert('Nombre requerido');
-  const o = { id: uid('g'), name, type, valor, monthly };
+  const o = { id:uid('g'), name, type, valor, monthly };
   state.goods.push(o);
   saveLocal();
-  if(window.__FB_UID) addCloudItem(window.__FB_UID,'goods',o).catch(()=>enqueueOp({type:'subcol',subcol:'goods',payload:o}));
+  if(window.__FB_UID) addCloudItem(window.__FB_UID,'goods', o).catch(()=>enqueueOp({type:'subcol',subcol:'goods',payload:o}));
   else enqueueOp({type:'subcol',subcol:'goods',payload:o});
-  document.getElementById('good_name').value=''; document.getElementById('good_value').value=''; document.getElementById('good_monthly').value='';
-  logUI('Bien agregado localmente');
+  logUI('Bien agregado (local)');
 }
 
 function addDiaryUI(){
@@ -419,103 +378,106 @@ function addDiaryUI(){
   const desc = document.getElementById('d_desc').value.trim();
   const amount = Number(document.getElementById('d_amount').value||0);
   if(amount<=0) return alert('Monto > 0');
-  const o = { id: uid('di'), date, desc, amount };
+  const o = { id:uid('di'), date, desc, amount };
   state.diary.push(o);
   state.balance -= amount;
   saveLocal();
-  if(window.__FB_UID) addCloudItem(window.__FB_UID,'diary',o).catch(()=>enqueueOp({type:'subcol',subcol:'diary',payload:o}));
+  if(window.__FB_UID) addCloudItem(window.__FB_UID,'diary', o).catch(()=>enqueueOp({type:'subcol',subcol:'diary',payload:o}));
   else enqueueOp({type:'subcol',subcol:'diary',payload:o});
-  document.getElementById('d_desc').value=''; document.getElementById('d_amount').value='';
-  logUI('Registro diario agregado localmente');
+  logUI('Registro diario agregado (local)');
 }
 
 function addAssetUI(){
   const name = document.getElementById('a_name').value.trim();
   const income = Number(document.getElementById('a_income').value||0);
   if(!name) return alert('Nombre requerido');
-  const o = { id: uid('a'), name, income };
+  const o = { id:uid('a'), name, income };
   state.assets.push(o);
   saveLocal();
-  if(window.__FB_UID) addCloudItem(window.__FB_UID,'assets',o).catch(()=>enqueueOp({type:'subcol',subcol:'assets',payload:o}));
+  if(window.__FB_UID) addCloudItem(window.__FB_UID,'assets', o).catch(()=>enqueueOp({type:'subcol',subcol:'assets',payload:o}));
   else enqueueOp({type:'subcol',subcol:'assets',payload:o});
-  document.getElementById('a_name').value=''; document.getElementById('a_income').value='';
-  logUI('Activo agregado localmente');
+  logUI('Activo agregado (local)');
 }
 
 function addIncomeUI(){
   const name = document.getElementById('i_name').value.trim();
   const amount = Number(document.getElementById('i_amount').value||0);
   const freq = document.getElementById('i_freq').value;
-  if(!name || amount<=0) return alert('Datos inválidos');
-  const o = { id: uid('in'), name, amount, freq };
+  if(!name || amount<=0) return alert('Datos invalidos');
+  const o = { id:uid('in'), name, amount, freq };
   state.incomes.push(o);
   state.balance += amount;
   saveLocal();
-  if(window.__FB_UID) addCloudItem(window.__FB_UID,'incomes',o).catch(()=>enqueueOp({type:'subcol',subcol:'incomes',payload:o}));
+  if(window.__FB_UID) addCloudItem(window.__FB_UID,'incomes', o).catch(()=>enqueueOp({type:'subcol',subcol:'incomes',payload:o}));
   else enqueueOp({type:'subcol',subcol:'incomes',payload:o});
-  document.getElementById('i_name').value=''; document.getElementById('i_amount').value='';
-  logUI('Ingreso agregado localmente');
+  logUI('Ingreso agregado (local)');
 }
 
 /* ========== Delete helpers ========== */
-function delBank(id){ state.banks = state.banks.filter(b=>b.id!==id); saveLocal(); logUI('Banco eliminado localmente'); }
-function delDebt(id){ state.debts = state.debts.filter(d=>d.id!==id); saveLocal(); logUI('Deuda eliminada localmente'); }
-function delLiab(id){ state.liabs = state.liabs.filter(l=>l.id!==id); saveLocal(); logUI('Pasivo eliminado localmente'); }
-function delGood(id){ state.goods = state.goods.filter(g=>g.id!==id); saveLocal(); logUI('Bien eliminado localmente'); }
-function delDiary(id){ const ent = state.diary.find(x=>x.id===id); if(ent){ state.balance += Number(ent.amount);} state.diary = state.diary.filter(d=>d.id!==id); saveLocal(); logUI('Registro diario eliminado localmente'); }
-function delAsset(id){ state.assets = state.assets.filter(a=>a.id!==id); saveLocal(); logUI('Activo eliminado localmente'); }
-function delIncome(id){ state.incomes = state.incomes.filter(i=>i.id!==id); saveLocal(); logUI('Ingreso eliminado localmente'); }
+function delBank(id){ state.banks = state.banks.filter(b=>b.id!==id); saveLocal(); logUI('Banco eliminado (local)'); }
+function delDebt(id){ state.debts = state.debts.filter(d=>d.id!==id); saveLocal(); logUI('Deuda eliminada (local)'); }
+function delLiab(id){ state.liabs = state.liabs.filter(l=>l.id!==id); saveLocal(); logUI('Pasivo eliminado (local)'); }
+function delGood(id){ state.goods = state.goods.filter(g=>g.id!==id); saveLocal(); logUI('Bien eliminado (local)'); }
+function delDiary(id){ const e = state.diary.find(x=>x.id===id); if(e) state.balance += Number(e.amount); state.diary = state.diary.filter(d=>d.id!==id); saveLocal(); logUI('Registro diario eliminado (local)'); }
+function delAsset(id){ state.assets = state.assets.filter(a=>a.id!==id); saveLocal(); logUI('Activo eliminado (local)'); }
+function delIncome(id){ state.incomes = state.incomes.filter(i=>i.id!==id); saveLocal(); logUI('Ingreso eliminado (local)'); }
 
-/* ========== Month navigation & advance ========== */
-function goNextMonth(){ const cur = new Date(state.currentMonthISO); const next = new Date(cur.getFullYear(), cur.getMonth()+1, 1); state.currentMonthISO = next.toISOString().slice(0,10); // you can apply monthly payments here
-  saveLocal(); logUI('Avanzado mes'); }
+/* ========== Month navigation ========== */
+function goNextMonth(){ const cur = new Date(state.currentMonthISO); const next = new Date(cur.getFullYear(), cur.getMonth()+1, 1); state.currentMonthISO = next.toISOString().slice(0,10); saveLocal(); logUI('Mes avanzado'); }
 function goPrevMonth(){ const cur = new Date(state.currentMonthISO); const prev = new Date(cur.getFullYear(), cur.getMonth()-1, 1); state.currentMonthISO = prev.toISOString().slice(0,10); saveLocal(); }
 
-/* ========== PDF export ========== */
-function exportPDF(){
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({unit:'pt',format:'a4'}); let y=40;
-  doc.setFontSize(14); doc.text('Resumen Control Económico',40,y); y+=20;
-  doc.setFontSize(10); doc.text('Balance: ' + formatCur(state.balance),40,y); y+=14;
-  doc.save('resumen_ce_' + new Date().toISOString().slice(0,10) + '.pdf');
-  logUI('PDF generado');
-}
+/* ========== Export PDF ========== */
+function exportPDF(){ const { jsPDF } = window.jspdf; const doc = new jsPDF({unit:'pt',format:'a4'}); let y=40; doc.setFontSize(14); doc.text('Resumen Control Económico',40,y); y+=20; doc.setFontSize(10); doc.text('Balance: ' + formatCur(state.balance),40,y); doc.save('resumen_ce_'+ new Date().toISOString().slice(0,10)+'.pdf'); logUI('PDF generado'); }
 
-/* ========== Manual trigger flush ========== */
-function triggerFlush(){ if(window.__FB_UID) { flushQueue(); logUI('Intentando vaciar cola'); } else alert('Inicia sesión para sincronizar'); }
+/* ========== Manual flush trigger ========== */
+function triggerFlush(){ if(window.__FB_UID) { flushQueue(); } else alert('Inicia sesión para sincronizar'); }
 
-/* ========== Auth handling ========== */
-(function initAuth(){
-  // quick UI buttons in the page footer for login
-  const authDiv = document.createElement('div');
-  authDiv.style.position='fixed'; authDiv.style.bottom='12px'; authDiv.style.right='12px'; authDiv.style.zIndex=9999;
-  authDiv.innerHTML = '<button id="btnLogin" class="btn primary">Ingresar Google</button> <button id="btnLogout" class="btn" style="display:none">Salir</button>';
-  document.body.appendChild(authDiv);
+/* ========== Auth logic: auto sign-in & handling ========== */
+(function authInit(){
+  // small auth buttons
+  const div = document.createElement('div'); div.style.position='fixed'; div.style.bottom='12px'; div.style.right='12px'; div.style.zIndex=9999;
+  div.innerHTML = '<button id="btnLogin" class="btn primary">Ingresar Google</button> <button id="btnLogout" class="btn" style="display:none">Salir</button>';
+  document.body.appendChild(div);
   document.getElementById('btnLogin').addEventListener('click', async ()=>{
     const provider = new firebase.auth.GoogleAuthProvider();
-    try{
-      await auth.signInWithPopup(provider);
-    }catch(e){
-      logUI('Popup login falló, intentando redirect: ' + (e.message || e));
-      try{ await auth.signInWithRedirect(provider); } catch(err){ logUI('signIn redirect error: '+(err.message||err)); alert('Error login: ' + (err.message||err)); }
-    }
+    try{ await auth.signInWithPopup(provider); }catch(e){ logUI('Popup falló: '+(e.message||e)); try{ await auth.signInWithRedirect(provider); }catch(err){ logUI('Redirect también falló: '+(err.message||err)); } }
   });
   document.getElementById('btnLogout').addEventListener('click', ()=> auth.signOut());
 })();
 
+// Try automatic redirect result handling + optional auto redirect sign-in
+// If AUTO_SIGNIN true and no current user, we'll start redirect sign-in automatically.
+window.addEventListener('load', async ()=>{
+  // handle redirect result (if coming back from Google)
+  try{
+    const result = await auth.getRedirectResult();
+    if(result && result.user) logUI('Redirect sign-in finalizado: ' + (result.user.email || result.user.uid));
+  }catch(e){ logUI('getRedirectResult error: ' + (e.message||e)); }
+
+  // If user already signed in, onAuthStateChanged will handle; else optionally auto sign in
+  if(AUTO_SIGNIN && !auth.currentUser){
+    // If you prefer NOT auto-redirect, set AUTO_SIGNIN=false at top of file
+    logUI('AUTO_SIGNIN activo — intentaremos signInWithRedirect si no hay sesión');
+    const provider = new firebase.auth.GoogleAuthProvider();
+    try{ await auth.signInWithRedirect(provider); }catch(e){ logUI('Auto redirect fallo: '+(e.message||e)); }
+  }
+});
+
 auth.onAuthStateChanged(user=>{
   const ud = document.getElementById('userDisplay');
-  const loginBtn = document.getElementById('btnLogin'), logoutBtn = document.getElementById('btnLogout');
+  const loginBtn = document.getElementById('btnLogin');
+  const logoutBtn = document.getElementById('btnLogout');
   if(user){
     window.__FB_UID = user.uid;
     ud.innerText = (user.displayName || user.email) + ' (' + user.uid.slice(0,6) + ')';
     if(loginBtn) loginBtn.style.display='none';
     if(logoutBtn) logoutBtn.style.display='inline-block';
-    logUI('Usuario autenticado: ' + user.email);
-    // start realtime listeners for this uid
+    logUI('Usuario autenticado: ' + (user.email || user.uid));
+    // start listeners & flush
     startRealtime(user.uid);
-    // try flush queue
     flushQueue();
+    // push current local state to cloud once
+    localSaveToCloudIfPossible();
   } else {
     window.__FB_UID = null;
     ud.innerText = 'No autenticado';
@@ -526,18 +488,14 @@ auth.onAuthStateChanged(user=>{
   }
 });
 
-/* ========== Start/Init ========= */
+/* ========== Start app ========== */
 loadLocal();
 renderAll();
 document.getElementById('d_date').value = new Date().toISOString().slice(0,10);
-logUI('App lista — prueba: agrega banco, deuda, gasto y observa LOG y Firestore');
-
-/* ========== Expose some helpers for debugging in console ========== */
-window._APP = { state, saveLocal, loadLocal, flushQueue, enqueueOp, addCloudItem };
+logUI('App lista. Si tu dominio GitHub está agregado como dominio autorizado y AUTO_SIGNIN=true, la app intentará iniciar sesión automáticamente (redirect).');
 
 </script>
 </body>
 </html>
-
 
 
