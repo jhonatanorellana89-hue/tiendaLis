@@ -3,259 +3,322 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Prueba botones — Sync RTDB</title>
+<title>Control Financiero — Firestore Sync</title>
 <style>
-  body{font-family:Arial,Helvetica,sans-serif;background:#f4f6f8;margin:0;color:#111}
-  .wrap{max-width:980px;margin:18px auto;padding:14px}
-  .card{background:#fff;padding:12px;border-radius:10px;box-shadow:0 8px 20px rgba(12,16,35,0.06)}
-  label{display:block;margin-top:8px;color:#555}
-  input,select{width:100%;padding:8px;border-radius:6px;border:1px solid #ddd;margin-top:6px}
-  .btn{padding:8px 10px;border-radius:8px;border:0;cursor:pointer;background:#0f766e;color:#fff;margin-top:8px}
-  .btn.secondary{background:#6b7280}
-  #log{height:160px;overflow:auto;background:#0b1220;color:#fff;padding:8px;border-radius:6px;margin-top:12px;font-size:13px}
-  .row{display:flex;gap:12px}
-  .col{flex:1}
+  body{font-family:Arial,Helvetica,sans-serif;background:#f5f7fb;margin:0;color:#0b1220}
+  .wrap{max-width:1100px;margin:18px auto;padding:18px}
+  .card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(12,16,35,0.06)}
+  .grid{display:grid;grid-template-columns:260px 1fr;gap:14px}
+  .menu button{display:block;width:100%;text-align:left;padding:10px;border:0;background:transparent;cursor:pointer}
+  .menu button.active{background:#eefbf9}
+  label{display:block;font-size:13px;color:#6b7280;margin-top:8px}
+  input,select{width:100%;padding:8px;border-radius:8px;border:1px solid #e6e9ef;margin-top:6px}
+  .btn{padding:8px 10px;border-radius:8px;border:0;cursor:pointer}
+  .btn.primary{background:#0f766e;color:#fff}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:8px;border-bottom:1px solid #f1f3f6;text-align:left}
+  .log{height:140px;overflow:auto;background:#0b1220;color:#fff;padding:8px;border-radius:8px;font-size:12px}
+  .timebar{position:fixed;top:12px;right:12px;background:#fff;padding:10px;border-radius:12px;box-shadow:0 12px 36px rgba(12,16,35,0.08);z-index:1200;display:flex;gap:8px;align-items:center}
+  @media (max-width:980px){.grid{grid-template-columns:1fr} .timebar{position:static;margin-bottom:12px}}
 </style>
 
-<!-- Firebase compat -->
+<!-- jsPDF (PDF export) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- Firebase compat libs (Firestore + Auth) -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
   <div class="wrap">
-    <h2>Prueba funcional — botones y sincronización</h2>
-
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <strong id="userInfo">No autenticado</strong><br><small style="color:#666">Prueba simple</small>
-        </div>
-        <div>
-          <button id="btnLogin" class="btn">Ingresar Google</button>
-          <button id="btnLogout" class="btn secondary" style="display:none">Salir</button>
+    <header class="card" style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <strong>Control Financiero — Firestore</strong>
+        <div style="font-size:13px;color:#6b7280">Sincronización automática con Cloud Firestore</div>
+      </div>
+      <div style="text-align:right">
+        <div id="userInfo" style="font-size:13px;color:#6b7280">No autenticado</div>
+        <div style="margin-top:6px">
+          <button id="btnLogin" class="btn primary">Ingresar con Google</button>
+          <button id="btnLogout" class="btn" style="display:none">Salir</button>
         </div>
       </div>
+    </header>
 
-      <hr style="margin:12px 0">
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="card">
-          <h4>Bancos</h4>
-          <label>Nombre banco</label><input id="bankName" placeholder="Ej. BCP">
-          <label>Saldo inicial</label><input id="bankBalance" type="number" value="0">
-          <button onclick="testAddBank()" class="btn">Guardar banco</button>
-        </div>
-
-        <div class="card">
-          <h4>Deudas</h4>
-          <label>Acreedor</label><input id="debtCred" placeholder="Ej. Banco X">
-          <label>Total S/</label><input id="debtTotal" type="number" value="0">
-          <label>Meses</label><input id="debtMonths" type="number" value="12">
-          <button onclick="testAddDebt()" class="btn">Guardar deuda</button>
-        </div>
+    <div class="timebar card">
+      <button class="btn" onclick="prevMonth()">◀</button>
+      <div style="text-align:center;min-width:160px">
+        <div id="monthLabel" style="font-weight:700">--</div>
+        <div id="yearLabel" style="font-size:12px;color:#6b7280">----</div>
       </div>
+      <button class="btn primary" onclick="nextMonth()">▶</button>
+      <button class="btn" onclick="exportPDF()">Exportar PDF</button>
+      <button class="btn" onclick="flushQueue()">Forzar sync</button>
+    </div>
 
-      <div style="display:flex;gap:12px;margin-top:12px">
-        <div style="flex:1" class="card">
-          <h4>Gastos</h4>
-          <label>Descripción</label><input id="expDesc" placeholder="Desayuno">
-          <label>Monto</label><input id="expAmount" type="number" value="0">
-          <button onclick="testAddExpense()" class="btn">Registrar gasto</button>
-        </div>
-        <div style="width:220px" class="card">
-          <h4>Controles</h4>
-          <button onclick="viewLocal()" class="btn secondary">Ver estado local</button>
-          <button onclick="flushQueue()" class="btn secondary">Forzar sincronización</button>
-        </div>
-      </div>
+    <div style="height:12px"></div>
 
-      <div id="log" aria-live="polite"></div>
+    <div class="grid">
+      <aside class="card menu">
+        <button id="m_dashboard" class="active" onclick="show('dashboard')">Dashboard</button>
+        <button id="m_banks" onclick="show('banks')">Bancos</button>
+        <button id="m_debts" onclick="show('debts')">Deudas</button>
+        <button id="m_expenses" onclick="show('expenses')">Gastos</button>
+        <div style="margin-top:12px;font-size:13px;color:#6b7280">LOG</div>
+        <div id="log" class="log card"></div>
+      </aside>
+
+      <main>
+        <section id="dashboard" class="card">
+          <h3>Resumen</h3>
+          <div style="display:flex;gap:12px">
+            <div style="flex:1" class="card"><div style="color:#6b7280">Balance</div><div id="k_balance" style="font-weight:700">S/ 0</div></div>
+            <div style="flex:1" class="card"><div style="color:#6b7280">Ahorros (bancos)</div><div id="k_savings" style="font-weight:700">S/ 0</div></div>
+            <div style="flex:1" class="card"><div style="color:#6b7280">Deuda mensual</div><div id="k_debt" style="font-weight:700">S/ 0</div></div>
+          </div>
+        </section>
+
+        <section id="banks" class="card" style="display:none">
+          <h3>Bancos</h3>
+          <label>Nombre</label><input id="bank_name">
+          <label>Saldo (S/)</label><input id="bank_balance" type="number" value="0">
+          <label>Tipo</label><select id="bank_type"><option value="ahorro">Ahorro</option><option value="corriente">Corriente</option></select>
+          <div style="margin-top:8px"><button class="btn primary" onclick="addBank()">Guardar banco</button></div>
+          <div style="margin-top:12px"><table id="tblBanks"><thead><tr><th>Banco</th><th>Saldo</th><th>Tipo</th><th></th></tr></thead><tbody></tbody></table></div>
+        </section>
+
+        <section id="debts" class="card" style="display:none">
+          <h3>Deudas</h3>
+          <label>Acreedor</label><input id="debt_creditor">
+          <label>Total (S/)</label><input id="debt_total" type="number">
+          <label>Meses</label><input id="debt_months" type="number" value="12">
+          <div style="margin-top:8px"><button class="btn primary" onclick="addDebt()">Guardar deuda</button></div>
+          <div style="margin-top:12px"><table id="tblDebts"><thead><tr><th>Acreedor</th><th>Total</th><th>Pago/m</th><th>Remanente</th><th></th></tr></thead><tbody></tbody></table></div>
+        </section>
+
+        <section id="expenses" class="card" style="display:none">
+          <h3>Gastos (registro)</h3>
+          <label>Fecha</label><input id="exp_date" type="date">
+          <label>Descripción</label><input id="exp_desc">
+          <label>Monto (S/)</label><input id="exp_amount" type="number">
+          <div style="margin-top:8px"><button class="btn primary" onclick="addExpense()">Registrar gasto</button></div>
+          <div style="margin-top:12px"><div id="expenseList" style="font-size:13px;color:#6b7280"></div></div>
+        </section>
+
+      </main>
     </div>
   </div>
 
 <script>
-/* ============ CONFIG FIREBASE ============
- Replace databaseURL if your Realtime DB URL is different.
- You must create a Realtime Database in Firebase console.
-=========================================== */
+/* ================= FIREBASE CONFIG (usa tu config proporcionada) ================= */
 const firebaseConfig = {
   apiKey: "AIzaSyBVppNAicRPFXEUdErmHd24se_9bjXiqcM",
   authDomain: "jhona-1b398.firebaseapp.com",
-  databaseURL: "https://jhona-1b398-default-rtdb.firebaseio.com",
   projectId: "jhona-1b398",
-  storageBucket: "jhona-1b398.firebasestorage.app",
+  storageBucket: "jhona-1398.firebasestorage.app",
   messagingSenderId: "981136306223",
   appId: "1:981136306223:web:52a7b67c22c274efcc56da",
   measurementId: "G-NVGKL0XGER"
 };
-
+/* ---------- Inicializar Firebase (compat) ---------- */
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
-const rdb = firebase.database();
+const db = firebase.firestore();
 
-const LOCAL_KEY = 'test_buttons_state_v1';
-const QUEUE_KEY = 'test_buttons_queue_v1';
+/* ========== APP STATE ========== */
+const STORAGE_KEY = 'cf_firestore_v1';
+let state = { balance:0, banks:[], debts:[], expenses:[], monthISO: new Date().toISOString().slice(0,10) };
 
-let STATE = { banks: [], debts: [], expenses: [] };
-let UID = null;
-
-/* ========== Logging helper ========== */
-function log(msg){
-  const el = document.getElementById('log');
-  const t = new Date().toLocaleTimeString();
-  el.innerHTML = `[${t}] ${msg}<br>` + el.innerHTML;
-  console.log(msg);
-}
-
-/* ========== Global error capture ========== */
-window.onerror = function(msg, src, line, col, err){
-  log('ERROR: ' + msg + (err && err.stack ? ' — ' + err.stack : ''));
-};
-
-/* ========== Local save/load ========== */
-function saveLocalState(){
-  localStorage.setItem(LOCAL_KEY, JSON.stringify(STATE));
-  log('Estado guardado localmente');
-}
-function loadLocalState(){
-  const raw = localStorage.getItem(LOCAL_KEY);
-  if(raw) STATE = JSON.parse(raw);
-  log('Estado cargado desde local');
-}
-
-/* ========== Queue operations ========== */
-function enqueue(op){
-  const raw = localStorage.getItem(QUEUE_KEY);
-  const arr = raw ? JSON.parse(raw) : [];
-  arr.push(op);
-  localStorage.setItem(QUEUE_KEY, JSON.stringify(arr));
-  log('Operación encolada: ' + op.type);
-}
+/* ========== COLA OFFLINE ========== */
+const PENDING_KEY = 'cf_pending_ops_v1';
+function enqueue(op){ const raw = localStorage.getItem(PENDING_KEY); const arr = raw?JSON.parse(raw):[]; arr.push(op); localStorage.setItem(PENDING_KEY, JSON.stringify(arr)); log('Op encolada'); }
 async function flushQueue(){
-  const raw = localStorage.getItem(QUEUE_KEY);
-  if(!raw){ log('Cola vacía'); return; }
-  const arr = JSON.parse(raw);
-  if(!arr.length){ localStorage.removeItem(QUEUE_KEY); log('Cola vacía'); return; }
-  if(!UID){ log('No autenticado: no puedo vaciar cola'); return; }
+  const raw = localStorage.getItem(PENDING_KEY); if(!raw) { log('Cola vacía'); return; }
+  const arr = JSON.parse(raw); if(!arr.length){ localStorage.removeItem(PENDING_KEY); log('Cola vacía'); return; }
+  if(!window.__UID) { log('No autenticado: no puedo vaciar cola'); return; }
   for(const op of arr){
     try{
-      if(op.type === 'push'){
-        await rdb.ref(`users/${UID}/${op.path}`).push(Object.assign({}, op.payload, { createdAt: Date.now() }));
-        log('Op enviada a cloud: ' + op.path);
-      } else if(op.type === 'state'){
-        await rdb.ref(`users/${UID}/state/current`).set({ state: op.payload, updatedAt: Date.now() });
-        log('Estado enviado a cloud');
-      }
-    } catch(e){
-      log('Error enviando op: ' + e.message);
-      return;
-    }
+      if(op.type==='state') await db.collection('users').doc(window.__UID).collection('state').doc('current').set({ state: op.payload, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
+      else if(op.type==='subcol') await db.collection('users').doc(window.__UID).collection(op.path).add(Object.assign({}, op.payload, { createdAt: firebase.firestore.FieldValue.serverTimestamp() }));
+      log('Op enviada: ' + (op.type||op.path));
+    }catch(e){ log('Error en flushQueue: '+ e.message); return; }
   }
-  localStorage.removeItem(QUEUE_KEY);
-  log('Cola sincronizada correctamente');
+  localStorage.removeItem(PENDING_KEY);
+  log('Cola sincronizada');
 }
 
-/* ========== Test actions called by buttons (guaranteed global) ========== */
-function testAddBank(){
-  try{
-    const name = document.getElementById('bankName').value.trim() || 'Banco prueba';
-    const balance = Number(document.getElementById('bankBalance').value||0);
-    const item = { id: 'b_' + Math.random().toString(36).slice(2,8), name, balance };
-    STATE.banks.push(item);
-    saveLocalState();
-    // try cloud push
-    if(UID){
-      rdb.ref(`users/${UID}/banks`).push(Object.assign({}, item, { createdAt: Date.now() }))
-        .then(ref => { log('Banco enviado a RTDB id=' + ref.key); })
-        .catch(e => { log('Error push banco: ' + e.message); enqueue({ type:'push', path:'banks', payload: item }); });
-    } else {
-      enqueue({ type:'push', path:'banks', payload: item });
-      log('No auth — banco encolado');
-    }
-  }catch(e){ log('testAddBank error: ' + e.message); }
+/* ========== UI log ========== */
+function log(msg){
+  const el = document.getElementById('log'); const t = new Date().toLocaleTimeString(); el.innerHTML = `[${t}] ${msg}<br>` + el.innerHTML; console.log(msg);
 }
 
-function testAddDebt(){
-  try{
-    const creditor = document.getElementById('debtCred').value.trim() || 'Acreedor prueba';
-    const total = Number(document.getElementById('debtTotal').value||0);
-    const months = Number(document.getElementById('debtMonths').value||1);
-    const monthly = +(total / months).toFixed(2);
-    const item = { id: 'd_' + Math.random().toString(36).slice(2,8), creditor, total, months, monthly, remaining: total };
-    STATE.debts.push(item);
-    saveLocalState();
-    if(UID){
-      rdb.ref(`users/${UID}/debts`).push(Object.assign({}, item, { createdAt: Date.now() }))
-        .then(ref => log('Deuda enviada a RTDB id=' + ref.key))
-        .catch(e => { log('Error push deuda: ' + e.message); enqueue({ type:'push', path:'debts', payload: item }); });
-    } else { enqueue({ type:'push', path:'debts', payload: item }); log('No auth — deuda encolada'); }
-  }catch(e){ log('testAddDebt error: ' + e.message); }
+/* ========== Load / Save local ========= */
+function loadLocal(){ const raw = localStorage.getItem(STORAGE_KEY); if(raw) state = JSON.parse(raw); renderAll(); log('Estado local cargado'); }
+function saveLocal(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); renderAll(); // try push state to Firestore
+  if(window.__UID) { db.collection('users').doc(window.__UID).collection('state').doc('current').set({ state: state, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true }).then(()=>log('Estado push a Firestore')).catch(e=>{ log('Push state error: '+e.message); enqueue({ type:'state', payload: state }); }); }
+  else enqueue({ type:'state', payload: state });
 }
 
-function testAddExpense(){
-  try{
-    const desc = document.getElementById('expDesc').value.trim() || 'Gasto prueba';
-    const amount = Number(document.getElementById('expAmount').value||0);
-    const item = { id: 'e_' + Math.random().toString(36).slice(2,8), date: new Date().toISOString().slice(0,10), desc, amount };
-    STATE.expenses.push(item);
-    saveLocalState();
-    if(UID){
-      rdb.ref(`users/${UID}/expenses`).push(Object.assign({}, item, { createdAt: Date.now() }))
-        .then(ref => log('Gasto enviado a RTDB id=' + ref.key))
-        .catch(e => { log('Error push gasto: ' + e.message); enqueue({ type:'push', path:'expenses', payload: item }); });
-    } else { enqueue({ type:'push', path:'expenses', payload: item }); log('No auth — gasto encolado'); }
-  }catch(e){ log('testAddExpense error: ' + e.message); }
+/* ========== Real-time listeners (cuando haya sesión) ========== */
+let unsubscribers = [];
+function startRealtime(uid){
+  stopRealtime();
+  // listen state/current
+  const stateDoc = db.collection('users').doc(uid).collection('state').doc('current');
+  const sUnsub = stateDoc.onSnapshot(doc => { if(!doc.exists) return; const remote = doc.data().state; if(JSON.stringify(remote)!==JSON.stringify(state)) { state = remote; saveLocal(); log('Estado remoto aplicado'); } }, err=>log('Listen state err: '+err.message));
+  unsubscribers.push(sUnsub);
+
+  // listen subcollections
+  ['banks','debts','expenses'].forEach(path=>{
+    const col = db.collection('users').doc(uid).collection(path);
+    const u = col.onSnapshot(snap=>{
+      const arr = snap.docs.map(d=>({ _remoteId: d.id, ...d.data() }));
+      state[path] = arr.map(item => {
+        // convert serverTimestamp to readable if present
+        if(item.createdAt && item.createdAt.toDate) item._createdAt = item.createdAt.toDate().toISOString();
+        return item;
+      });
+      saveLocal();
+      log(`Subcolección ${path} sincronizada (${arr.length})`);
+    }, err=>log('Listen '+path+' err: '+err.message));
+    unsubscribers.push(u);
+  });
+
+  log('Realtime listeners iniciados');
+}
+function stopRealtime(){ unsubscribers.forEach(u=>u()); unsubscribers = []; log('Realtime listeners detenidos'); }
+
+/* ========== Render UI ========== */
+function renderAll(){
+  // labels
+  const d = new Date(state.monthISO);
+  const MONTHS = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SETIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+  document.getElementById('monthLabel').innerText = MONTHS[d.getMonth()];
+  document.getElementById('yearLabel').innerText = d.getFullYear();
+
+  document.getElementById('k_balance').innerText = 'S/ ' + Number(state.balance||0).toLocaleString();
+  document.getElementById('k_savings').innerText = 'S/ ' + (state.banks.reduce((s,b)=>s+Number(b.balance||0),0)||0).toLocaleString();
+  document.getElementById('k_debt').innerText = 'S/ ' + (state.debts.reduce((s,d)=>s+Number(d.monthly||0),0)||0).toLocaleString();
+
+  // tables
+  const tbB = document.querySelector('#tblBanks tbody'); if(tbB){ tbB.innerHTML=''; (state.banks||[]).forEach(b=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${b.name}</td><td>S/ ${Number(b.balance||0).toLocaleString()}</td><td>${b.type||''}</td><td><button onclick="removeBank('${b.id}')" class="btn">Eliminar</button></td>`; tbB.appendChild(tr); }); }
+  const tbD = document.querySelector('#tblDebts tbody'); if(tbD){ tbD.innerHTML=''; (state.debts||[]).forEach(d=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${d.creditor}</td><td>S/ ${Number(d.total||0).toLocaleString()}</td><td>S/ ${Number(d.monthly||0).toLocaleString()}</td><td>S/ ${Number(d.remaining||0).toLocaleString()}</td><td><button onclick="removeDebt('${d.id}')" class="btn">Eliminar</button></td>`; tbD.appendChild(tr); }); }
+  const elExp = document.getElementById('expenseList'); if(elExp){ elExp.innerHTML = (state.expenses||[]).slice(-12).reverse().map(e=>`${e.date} • ${e.desc} • S/ ${Number(e.amount).toLocaleString()}`).join('<br>') || '<span style="color:#6b7280">Sin gastos</span>'; }
 }
 
-/* ========== View local state (debug) ========== */
-function viewLocal(){
-  alert('Estado local (console)\n\n' + JSON.stringify(STATE, null, 2));
-  console.log('Estado local:', STATE);
-  log('Estado local mostrado en consola');
+/* ========== CRUD (botones globales usados por onclick) ========== */
+function addBank(){
+  const name = document.getElementById('bank_name').value.trim();
+  const balance = Number(document.getElementById('bank_balance').value||0);
+  const type = document.getElementById('bank_type').value;
+  if(!name) return alert('Ingrese nombre banco');
+  const item = { id: uid('b'), name, balance, type };
+  state.banks.push(item);
+  saveLocal();
+  // push to Firestore subcollection (must have createdAt timestamp)
+  if(window.__UID){
+    db.collection('users').doc(window.__UID).collection('banks').add(Object.assign({}, item, { createdAt: firebase.firestore.FieldValue.serverTimestamp() }))
+      .then(ref=>log('Banco creado en Firestore id:' + ref.id))
+      .catch(e=>{ log('Error push bank: '+e.message); enqueue({ type:'subcol', path:'banks', payload: item }); });
+  } else {
+    enqueue({ type:'subcol', path:'banks', payload: item });
+  }
+  log('Banco agregado localmente');
 }
 
-/* ========== Auth wiring (login/logout) ========== */
+function removeBank(id){ state.banks = (state.banks||[]).filter(b=>b.id!==id); saveLocal(); log('Banco eliminado localmente'); }
+
+function addDebt(){
+  const creditor = document.getElementById('debt_creditor').value.trim();
+  const total = Number(document.getElementById('debt_total').value||0);
+  const months = Number(document.getElementById('debt_months').value||1);
+  if(!creditor || total<=0 || months<=0) return alert('Completa datos de deuda');
+  const monthly = +(total/months).toFixed(2);
+  const item = { id: uid('d'), creditor, total, months, monthly, remaining: total };
+  state.debts.push(item);
+  saveLocal();
+  if(window.__UID){
+    db.collection('users').doc(window.__UID).collection('debts').add(Object.assign({}, item, { createdAt: firebase.firestore.FieldValue.serverTimestamp() }))
+      .then(r=>log('Deuda creada en Firestore id:' + r.id)).catch(e=>{ log('Error push debt: '+e.message); enqueue({ type:'subcol', path:'debts', payload: item }); });
+  } else enqueue({ type:'subcol', path:'debts', payload: item });
+  log('Deuda agregada localmente');
+}
+
+function removeDebt(id){ state.debts = state.debts.filter(d=>d.id!==id); saveLocal(); log('Deuda eliminada'); }
+
+function addExpense(){
+  const date = document.getElementById('exp_date').value || new Date().toISOString().slice(0,10);
+  const desc = document.getElementById('exp_desc').value.trim();
+  const amount = Number(document.getElementById('exp_amount').value||0);
+  if(amount<=0) return alert('Monto > 0');
+  const item = { id: uid('e'), date, desc, amount };
+  state.expenses.push(item);
+  state.balance = Number(state.balance || 0) - amount;
+  saveLocal();
+  if(window.__UID){
+    db.collection('users').doc(window.__UID).collection('expenses').add(Object.assign({}, item, { createdAt: firebase.firestore.FieldValue.serverTimestamp() }))
+      .then(r=>log('Gasto creado en Firestore id:' + r.id)).catch(e=>{ log('Error push expense: '+e.message); enqueue({ type:'subcol', path:'expenses', payload: item }); });
+  } else enqueue({ type:'subcol', path:'expenses', payload: item });
+  log('Gasto registrado localmente');
+}
+
+/* ========== Month controls, PDF ========== */
+function nextMonth(){ const d = new Date(state.monthISO); const n = new Date(d.getFullYear(), d.getMonth()+1, 1); state.monthISO = n.toISOString().slice(0,10); saveLocal(); }
+function prevMonth(){ const d = new Date(state.monthISO); const p = new Date(d.getFullYear(), d.getMonth()-1, 1); state.monthISO = p.toISOString().slice(0,10); saveLocal(); }
+
+function exportPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt',format:'a4'}); let y=40;
+  doc.setFontSize(14); doc.text('Resumen Control Financiero',40,y); y+=18;
+  doc.setFontSize(10); doc.text('Balance: S/ ' + Number(state.balance||0).toLocaleString(),40,y); y+=14;
+  doc.text('Bancos:',40,y); y+=12;
+  (state.banks||[]).forEach(b=>{ doc.text(`${b.name} — S/ ${Number(b.balance||0).toLocaleString()}`,40,y); y+=10; if(y>740){ doc.addPage(); y=40; } });
+  doc.save('resumen_ce_' + new Date().toISOString().slice(0,10) + '.pdf'); log('PDF generado');
+}
+
+/* ========== Auth (Google) ========== */
 document.getElementById('btnLogin').addEventListener('click', async ()=>{
   const provider = new firebase.auth.GoogleAuthProvider();
-  try{
-    await auth.signInWithPopup(provider);
-  }catch(e){
-    log('Login popup error: ' + e.message);
-    try{ await auth.signInWithRedirect(provider); } catch(err){ log('Redirect also failed: ' + (err.message||err)); }
-  }
+  try{ await auth.signInWithPopup(provider); }catch(e){ log('Login popup error: '+ (e.message||e)); try{ await auth.signInWithRedirect(provider); }catch(err){ log('Redirect also failed: '+ (err.message||err)); alert('Error login: '+ (err.message||err)); } }
 });
 document.getElementById('btnLogout').addEventListener('click', ()=> auth.signOut());
 
-auth.onAuthStateChanged(user => {
+auth.onAuthStateChanged(user=>{
+  const ui = document.getElementById('userInfo');
   if(user){
-    UID = user.uid;
-    document.getElementById('userInfo').innerText = (user.displayName || user.email) + ' (' + UID.slice(0,6) + ')';
+    window.__UID = user.uid;
+    ui.innerText = `${user.displayName || user.email} (${user.uid.slice(0,6)})`;
     document.getElementById('btnLogin').style.display='none';
     document.getElementById('btnLogout').style.display='inline-block';
-    log('Usuario autenticado: ' + (user.email || UID));
-    // try flush queue
+    log('Usuario autenticado: ' + (user.email||user.uid));
+    // start realtime listeners and flush queue & push state
+    startRealtime(user.uid);
     flushQueue();
-    // create a listener so remote changes update local
-    rdb.ref(`users/${UID}/state/current`).on('value', snap => {
-      if(!snap.exists()) return;
-      log('Estado remoto detectado (no lo sobrescribimos automáticamente en esta prueba)');
-    });
+    // push current state once (must include state map + updatedAt timestamp)
+    db.collection('users').doc(user.uid).collection('state').doc('current')
+      .set({ state: state, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true })
+      .then(()=>log('Estado enviado a Firestore al login'))
+      .catch(e=>{ log('Push state al login falló: '+ e.message); enqueue({ type:'state', payload: state }); });
   } else {
-    UID = null;
-    document.getElementById('userInfo').innerText = 'No autenticado';
+    window.__UID = null;
+    ui.innerText = 'No autenticado';
     document.getElementById('btnLogin').style.display='inline-block';
     document.getElementById('btnLogout').style.display='none';
     log('Sesión cerrada');
+    stopRealtime();
   }
 });
 
-/* ========== Init: load local state ======== */
-loadLocalState();
-log('Prueba iniciada: prueba botones y revisa LOG/Console.');
+/* ========== Helpers y arranque ========= */
+function uid(pref='id'){ return pref + '_' + Math.random().toString(36).slice(2,9); }
+function show(id){ ['dashboard','banks','debts','expenses'].forEach(s=>document.getElementById(s).style.display = (s===id?'block':'none')); document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('active')); const btn = document.getElementById('m_' + id); if(btn) btn.classList.add('active'); }
+loadLocal(); log('App lista (Firestore)');
+
 </script>
 </body>
 </html>
+
 
 
 
