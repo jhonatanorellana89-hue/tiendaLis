@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Control Económico — Versión Estable</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Control Económico — Código Estable (Compat)</title>
 <link href="https://cdn.jsdelivr.net/npm/modern-normalize/modern-normalize.css" rel="stylesheet">
 <style>
   :root{--bg:#f6f7fb;--card:#fff;--muted:#6b7280;--accent:#0f766e}
@@ -28,14 +28,20 @@
   @media (max-width:880px){.grid{grid-template-columns:1fr}.menu{position:relative}}
 </style>
 
-<!-- jsPDF CDN -->
+<!-- jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- Firebase compat libraries (non-modular, avoid module import issues) -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
 </head>
 <body>
   <div class="wrap">
     <header class="card" style="display:flex;justify-content:space-between;align-items:center">
-      <div><strong>Control Económico — Estable</strong><div class="muted">Interfaz con Firebase y export PDF</div></div>
-      <div class="muted">Guardado local + Firestore</div>
+      <div><strong>Control Económico — Estable (Compat)</strong><div class="muted">Reparado: botones listos</div></div>
+      <div class="muted">Local + Firestore</div>
     </header>
 
     <div class="time-meter" id="timeMeter">
@@ -68,12 +74,14 @@
             <div><h3 style="margin:0">Resumen</h3><div class="muted">Visión rápida</div></div>
             <div class="row"><div class="muted">Mes: <span id="currentMonth"></span></div><button class="btn primary" id="btnAdvance">Avanzar mes</button></div>
           </div>
+
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px">
             <div class="card"><div class="muted">Balance</div><div id="kBalance" style="font-weight:700">S/ 0</div></div>
             <div class="card"><div class="muted">Ahorros</div><div id="kBanks" style="font-weight:700">S/ 0</div></div>
             <div class="card"><div class="muted">Deuda mensual</div><div id="kDebtMonthly" style="font-weight:700">S/ 0</div></div>
             <div class="card"><div class="muted">Activos valor</div><div id="kAssetsVal" style="font-weight:700">S/ 0</div></div>
           </div>
+
           <div id="notifications" style="margin-top:12px"></div>
         </section>
 
@@ -139,8 +147,8 @@
     </div>
   </div>
 
-<script type="module">
-/* ================= FIREBASE CONFIG (TU CONFIG) ================= */
+<script>
+/* ========= FIREBASE CONFIG (TU CONFIG) ========= */
 const firebaseConfig = {
   apiKey: "AIzaSyBVppNAicRPFXEUdErmHd24se_9bjXiqcM",
   authDomain: "jhona-1b398.firebaseapp.com",
@@ -151,18 +159,13 @@ const firebaseConfig = {
   measurementId: "G-NVGKL0XGER"
 };
 
-/* ---------- Imports Firebase (modular) ---------- */
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js';
-import { getFirestore, doc, setDoc, collection, addDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js';
+/* ---------- Inicializar Firebase (compat) ---------- */
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-/* ---------- Init Firebase ---------- */
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-/* ========== APP STATE & HELPERS ========== */
-const STORAGE_KEY = 'ce_stable_v1';
+/* ========== APP STATE ========== */
+const STORAGE_KEY = 'ce_stable_compat_v1';
 let state = {
   currentDate: new Date().toISOString().slice(0,10),
   balance: 0,
@@ -175,36 +178,28 @@ let state = {
   incomes: [],
   history: []
 };
-function uid(pref='id'){ return pref + '_' + Math.random().toString(36).slice(2,9); }
+function uid(pref='id'){return pref+'_'+Math.random().toString(36).slice(2,9);}
 const MONTHS_ES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SETIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
 function formatCur(v){ return 'S/ '+Number(v||0).toLocaleString(); }
-function notify(msg,ttl=5000){ const container = document.getElementById('notifications'); if(!container) return; const n=document.createElement('div'); n.className='notif'; n.innerText=msg; container.prepend(n); setTimeout(()=>n.remove(),ttl); }
+function notify(txt,ttl=5000){ const n=document.createElement('div'); n.className='notif'; n.innerText=txt; document.getElementById('notifications').prepend(n); setTimeout(()=>n.remove(),ttl); }
 
-/* ---------- Firebase helpers (exposed in window.fb) ---------- */
+/* ========== Firestore helpers (compat) ========== */
 let _saveTimer = null;
-async function saveStateAuto(uid, stateObj, delay = 900){
+function saveStateAuto(uid, stateObj, delay=900){
   if(!uid) return;
   clearTimeout(_saveTimer);
-  _saveTimer = setTimeout(async ()=>{
+  _saveTimer = setTimeout(()=>{
     try{
-      const ref = doc(db, 'users', uid, 'state', 'current');
-      await setDoc(ref, { state: stateObj, updatedAt: new Date().toISOString() }, { merge: true });
-      console.log('Guardado en Firestore users/' + uid + '/state/current');
-    }catch(e){ console.error('saveStateAuto error', e); enqueueFbOp({ type:'state', payload: stateObj }); }
+      db.collection('users').doc(uid).collection('state').doc('current').set({ state: stateObj, updatedAt: new Date().toISOString() }, { merge: true });
+      console.log('Saved state to Firestore users/'+uid+'/state/current');
+    }catch(e){ console.error(e); enqueueFbOp({type:'state', payload:stateObj}); }
   }, delay);
 }
-async function addSubcollectionItem(uid, subcol, payload){
-  const colRef = collection(db, 'users', uid, subcol);
-  const docRef = await addDoc(colRef, { ...payload, createdAt: new Date().toISOString() });
-  return docRef.id;
+function addSubcollectionItem(uid, subcol, payload){
+  return db.collection('users').doc(uid).collection(subcol).add(Object.assign({}, payload, { createdAt: new Date().toISOString() }));
 }
-function listenToSubcollection(uid, subcol, cb){
-  const colRef = collection(db, 'users', uid, subcol);
-  return onSnapshot(colRef, snap => cb(snap.docs.map(d=>({id:d.id,...d.data()}))), err=>console.error('listen error',err));
-}
-window.fb = { saveStateAuto, addSubcollectionItem, listenToSubcollection };
 
-/* ========== Queue for pending ops ========== */
+/* ========== Queue (pending ops) ========== */
 window.__FB_PENDING_KEY = window.__FB_PENDING_KEY || 'fb_pending_queue_v1';
 function enqueueFbOp(op){
   try{
@@ -212,34 +207,31 @@ function enqueueFbOp(op){
     const arr = raw ? JSON.parse(raw) : [];
     arr.push(op);
     localStorage.setItem(window.__FB_PENDING_KEY, JSON.stringify(arr));
-    console.log('Encolado op FB', op);
+    console.log('Queued FB op', op);
   }catch(e){ console.error(e); }
 }
 async function flushFbQueue(){
   try{
-    const raw = localStorage.getItem(window.__FB_PENDING_KEY);
-    if(!raw) return;
-    const arr = JSON.parse(raw);
-    if(!arr.length) return;
-    if(!window.__FB_UID) return console.log('No UID para flush');
+    const raw = localStorage.getItem(window.__FB_PENDING_KEY); if(!raw) return;
+    const arr = JSON.parse(raw); if(!arr.length) return;
+    const uid = window.__FB_UID; if(!uid) { console.log('No UID for flush'); return; }
     for(const op of arr){
       try{
-        if(op.type === 'state'){ await window.fb.saveStateAuto(window.__FB_UID, op.payload, 0); }
-        else if(op.type === 'subcol'){ await window.fb.addSubcollectionItem(window.__FB_UID, op.subcol, op.payload); }
-      }catch(e){ console.warn('Error en op cola, se detiene', e); return; }
+        if(op.type === 'state'){ await db.collection('users').doc(uid).collection('state').doc('current').set({ state: op.payload, updatedAt: new Date().toISOString() }, { merge:true }); }
+        else if(op.type === 'subcol'){ await db.collection('users').doc(uid).collection(op.subcol).add(Object.assign({}, op.payload, { createdAt: new Date().toISOString() })); }
+      }catch(e){ console.warn('Error sending op, aborting queue flush', e); return; }
     }
-    localStorage.removeItem(window.__FB_PENDING_KEY);
-    notify('Sincronización completada');
-  }catch(e){ console.error('flushFbQueue', e); }
+    localStorage.removeItem(window.__FB_PENDING_KEY); notify('Cola sincronizada');
+  }catch(e){ console.error('flushFbQueue error', e); }
 }
 window.addEventListener('online', ()=>{ if(window.__FB_UID) flushFbQueue(); });
 
-/* ========== Storage local ========== */
+/* ========== Local storage ========== */
 function loadLocal(){ const raw = localStorage.getItem(STORAGE_KEY); if(raw) state = JSON.parse(raw); renderAll(); }
 function saveLocal(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); renderAll(); }
 
-/* ========== Render & helpers ========== */
-function setMonthUI(iso){ const d = new Date(iso); document.getElementById('monthName').innerText = MONTHS_ES[d.getMonth()]; document.getElementById('monthYear').innerText = d.getFullYear(); document.getElementById('currentMonth').innerText = `${MONTHS_ES[d.getMonth()]} ${d.getFullYear()}`; }
+/* ========== Render UI ========== */
+function setMonthUI(iso){ const d=new Date(iso); document.getElementById('monthName').innerText = MONTHS_ES[d.getMonth()]; document.getElementById('monthYear').innerText = d.getFullYear(); document.getElementById('currentMonth').innerText = `${MONTHS_ES[d.getMonth()]} ${d.getFullYear()}`; }
 function renderAll(){
   setMonthUI(state.currentDate);
   document.getElementById('kBalance').innerText = formatCur(state.balance);
@@ -247,108 +239,112 @@ function renderAll(){
   document.getElementById('kDebtMonthly').innerText = formatCur(state.debts.reduce((s,d)=>s+Number(d.monthly||0),0));
   document.getElementById('kAssetsVal').innerText = formatCur(state.goods.filter(g=>g.type==='activo').reduce((s,g)=>s+Number(g.valor||0),0));
 
-  // banks
+  // banks table
   const tbBanks = document.querySelector('#tblBanks tbody'); tbBanks.innerHTML='';
   state.banks.forEach(b=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${b.name}</td><td>${formatCur(b.balance)}</td><td>${b.type}</td><td><button class="btn ghost del-bank" data-id="${b.id}">Eliminar</button></td>`; tbBanks.appendChild(tr); });
+
+  // update bank selects
+  ['debtBank','liabBank','dBank','iBank'].forEach(selId=>{
+    const sel = document.getElementById(selId); if(!sel) return; const prev = sel.value; sel.innerHTML = '<option value="">-- Ninguno --</option>'; state.banks.forEach(b=>{ const o = document.createElement('option'); o.value=b.id; o.textContent = `${b.name} (S/ ${Number(b.balance||0).toLocaleString()})`; sel.appendChild(o); }); sel.value = prev || '';
+  });
+
   // debts
   const tbDebts = document.querySelector('#tblDebts tbody'); tbDebts.innerHTML='';
   state.debts.forEach(d=>{ const b = state.banks.find(x=>x.id===d.bankId); const bn = b?b.name:''; const tr=document.createElement('tr'); tr.innerHTML = `<td>${d.creditor}</td><td>${formatCur(d.total)}</td><td>${d.months}</td><td>${formatCur(d.monthly)}</td><td>${bn}</td><td>${formatCur(d.remaining)}</td><td><button class="btn ghost del-debt" data-id="${d.id}">Eliminar</button></td>`; tbDebts.appendChild(tr); });
+
   // liabs
   const tbLiab = document.querySelector('#tblLiabs tbody'); tbLiab.innerHTML='';
   state.liabs.forEach(l=>{ const b = state.banks.find(x=>x.id===l.bankId); const bn=b?b.name:''; const tr=document.createElement('tr'); tr.innerHTML = `<td>${l.name}</td><td>${formatCur(l.monthly)}</td><td>${bn}</td><td><button class="btn ghost del-liab" data-id="${l.id}">Eliminar</button></td>`; tbLiab.appendChild(tr); });
+
   // goods
   const tbGoods = document.querySelector('#tblGoods tbody'); tbGoods.innerHTML='';
   state.goods.forEach(g=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${g.name}</td><td>${g.type}</td><td>${formatCur(g.valor)}</td><td>${formatCur(g.monthly)}</td><td><button class="btn ghost del-good" data-id="${g.id}">Eliminar</button></td>`; tbGoods.appendChild(tr); });
+
   // diary
   const tbDiary = document.querySelector('#tblDiary tbody'); tbDiary.innerHTML='';
   state.diary.slice().reverse().forEach(e=>{ const b = state.banks.find(x=>x.id===e.bankId); const bn = b?b.name:''; const tr=document.createElement('tr'); tr.innerHTML = `<td>${e.date}</td><td>${e.desc}</td><td>${formatCur(e.amount)}</td><td>${bn}</td><td><button class="btn ghost del-diary" data-id="${e.id}">Eliminar</button></td>`; tbDiary.appendChild(tr); });
+
   // assets
   const tbAssets = document.querySelector('#tblAssets tbody'); tbAssets.innerHTML='';
   state.assets.forEach(a=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${a.name}</td><td>${formatCur(a.income)}</td><td><button class="btn ghost del-asset" data-id="${a.id}">Eliminar</button></td>`; tbAssets.appendChild(tr); });
+
   // incomes
   const tbIncomes = document.querySelector('#tblIncomes tbody'); tbIncomes.innerHTML='';
-  state.incomes.forEach(i=>{ const b = state.banks.find(x=>x.id===i.bankId); const bn = b?b.name:''; const tr=document.createElement('tr'); tr.innerHTML = `<td>${i.name}</td><td>${formatCur(i.amount)}</td><td>${i.freq}</td><td>${bn}</td><td><button class="btn ghost del-income" data-id="${i.id}">Eliminar</button></td>`; tbIncomes.appendChild(tr); });
-
-  // update selects for bank references
-  ['debtBank','liabBank','dBank','iBank'].forEach(selId=>{
-    const sel = document.getElementById(selId); if(!sel) return; const prev = sel.value; sel.innerHTML = '<option value="">-- Ninguno --</option>'; state.banks.forEach(b=>{ const o=document.createElement('option'); o.value = b.id; o.textContent = `${b.name} (S/ ${Number(b.balance||0).toLocaleString()})`; sel.appendChild(o); }); sel.value = prev || '';
-  });
+  state.incomes.forEach(i=>{ const b=state.banks.find(x=>x.id===i.bankId); const bn=b?b.name:''; const tr=document.createElement('tr'); tr.innerHTML = `<td>${i.name}</td><td>${formatCur(i.amount)}</td><td>${i.freq}</td><td>${bn}</td><td><button class="btn ghost del-income" data-id="${i.id}">Eliminar</button></td>`; tbIncomes.appendChild(tr); });
 }
 
-/* ========== Core actions ========== */
+/* ========== Core save/history ========== */
 function pushHistory(){ state.history = state.history || []; state.history.push(JSON.stringify(state)); if(state.history.length>72) state.history.shift(); }
-function undoHistory(){ if(!state.history || state.history.length===0){ notify('No hay historial'); return; } state = JSON.parse(state.history.pop()); saveLocal(); notify('Deshecho'); }
+function undoHistory(){ if(!state.history||state.history.length===0){ notify('No hay historial'); return; } state = JSON.parse(state.history.pop()); saveLocal(); notify('Deshecho'); }
+function saveLocal(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); renderAll(); if(window.__FB_UID){ saveStateAuto(window.__FB_UID, state); } else enqueueFbOp({ type:'state', payload: state }); }
 
-function save(){
-  pushHistory();
-  saveLocal();
-  if(window.__FB_UID && window.fb && window.fb.saveStateAuto) window.fb.saveStateAuto(window.__FB_UID, state);
-  else enqueueFbOp({ type:'state', payload: state });
-}
-
-/* ========== CRUD actions: executed via event delegation ========== */
-function addBankLocal(name, balance, type){
-  const o = { id: uid('b'), name, balance: Number(balance||0), type };
-  state.banks.push(o);
-  save();
-  // firebase
-  const payload = { name: o.name, balance: o.balance, type: o.type };
-  if(window.__FB_UID) window.fb.addSubcollectionItem(window.__FB_UID,'banks',payload).catch(()=>enqueueFbOp({type:'subcol',subcol:'banks',payload}));
+/* ========== Local CRUD helpers (called by event handlers) ========== */
+function addBank(name,balance,type){
+  if(!name) return alert('Nombre requerido');
+  const o={id:uid('b'),name, balance: Number(balance||0), type};
+  state.banks.push(o); saveLocal();
+  const payload = { name:o.name, balance:o.balance, type:o.type };
+  if(window.__FB_UID) addSubcollectionItem(window.__FB_UID, 'banks', payload).catch(()=>enqueueFbOp({type:'subcol',subcol:'banks',payload}));
   else enqueueFbOp({type:'subcol',subcol:'banks',payload});
   notify('Banco agregado');
 }
-function addDebtLocal(creditor,total,months,bankId,startMonth){
+function addDebt(creditor,total,months,bankId,startMonth){
+  if(!creditor || total<=0 || months<=0) return alert('Campos inválidos');
   const monthly = +(total/months).toFixed(2);
-  const o = { id: uid('d'), creditor, total:Number(total), months:Number(months), monthly, bankId:bankId||null, startMonth:startMonth||state.currentDate.slice(0,7), remaining: Number(total), paidMonths:0 };
-  state.debts.push(o); save();
+  const o = { id:uid('d'), creditor, total:Number(total), months:Number(months), monthly, bankId: bankId || null, startMonth: startMonth || state.currentDate.slice(0,7), remaining: Number(total), paidMonths:0 };
+  state.debts.push(o); saveLocal();
   const payload = { creditor:o.creditor, total:o.total, months:o.months, monthly:o.monthly, bankId:o.bankId, startMonth:o.startMonth };
-  if(window.__FB_UID) window.fb.addSubcollectionItem(window.__FB_UID,'debts',payload).catch(()=>enqueueFbOp({type:'subcol',subcol:'debts',payload}));
+  if(window.__FB_UID) addSubcollectionItem(window.__FB_UID,'debts',payload).catch(()=>enqueueFbOp({type:'subcol',subcol:'debts',payload}));
   else enqueueFbOp({type:'subcol',subcol:'debts',payload});
   notify('Deuda agregada');
 }
-function addLiabLocal(name,monthly,bankId){
-  const o = { id: uid('l'), name, monthly:Number(monthly), bankId:bankId||null };
-  state.liabs.push(o); save();
+function addLiab(name,monthly,bankId){
+  if(!name || monthly<=0) return alert('Campos inválidos');
+  const o={id:uid('l'), name, monthly:Number(monthly), bankId:bankId||null};
+  state.liabs.push(o); saveLocal();
   const payload = { name:o.name, monthly:o.monthly, bankId:o.bankId };
-  if(window.__FB_UID) window.fb.addSubcollectionItem(window.__FB_UID,'liabs',payload).catch(()=>enqueueFbOp({type:'subcol',subcol:'liabs',payload}));
+  if(window.__FB_UID) addSubcollectionItem(window.__FB_UID,'liabs',payload).catch(()=>enqueueFbOp({type:'subcol',subcol:'liabs',payload}));
   else enqueueFbOp({type:'subcol',subcol:'liabs',payload});
   notify('Pasivo agregado');
 }
-function addGoodLocal(name,type,valor,monthly){
-  const o = { id: uid('g'), name, type, valor:Number(valor), monthly:Number(monthly) };
-  state.goods.push(o); save();
+function addGood(name,type,valor,monthly){
+  if(!name) return alert('Nombre requerido');
+  const o={id:uid('g'), name, type, valor:Number(valor), monthly:Number(monthly)};
+  state.goods.push(o); saveLocal();
   const payload = { name:o.name, type:o.type, valor:o.valor, monthly:o.monthly };
-  if(window.__FB_UID) window.fb.addSubcollectionItem(window.__FB_UID,'goods',payload).catch(()=>enqueueFbOp({type:'subcol',subcol:'goods',payload}));
+  if(window.__FB_UID) addSubcollectionItem(window.__FB_UID,'goods',payload).catch(()=>enqueueFbOp({type:'subcol',subcol:'goods',payload}));
   else enqueueFbOp({type:'subcol',subcol:'goods',payload});
   notify('Bien agregado');
 }
-function addDiaryLocal(date,desc,amount,bankId){
-  const o = { id: uid('di'), date, desc, amount:Number(amount), bankId:bankId||null };
+function addDiary(date,desc,amount,bankId){
+  if(amount<=0) return alert('Monto > 0');
+  const o={id:uid('di'), date, desc, amount:Number(amount), bankId:bankId||null};
   state.diary.push(o);
-  // update balances
-  state.balance -= Number(o.amount);
-  if(o.bankId){ const b = state.banks.find(x=>x.id===o.bankId); if(b) b.balance = Number(b.balance) - Number(o.amount); }
-  save();
+  state.balance -= Number(amount);
+  if(o.bankId){ const b = state.banks.find(x=>x.id===o.bankId); if(b) b.balance = Number(b.balance) - Number(amount); }
+  saveLocal();
   const payload = { date:o.date, desc:o.desc, amount:o.amount, bankId:o.bankId };
-  if(window.__FB_UID) window.fb.addSubcollectionItem(window.__FB_UID,'diary',payload).catch(()=>enqueueFbOp({type:'subcol',subcol:'diary',payload}));
+  if(window.__FB_UID) addSubcollectionItem(window.__FB_UID,'diary',payload).catch(()=>enqueueFbOp({type:'subcol',subcol:'diary',payload}));
   else enqueueFbOp({type:'subcol',subcol:'diary',payload});
   notify('Gasto registrado');
 }
-function addAssetLocal(name,income){
-  const o = { id: uid('a'), name, income:Number(income) };
-  state.assets.push(o); save();
+function addAsset(name,income){
+  if(!name) return alert('Nombre requerido');
+  const o={id:uid('a'), name, income:Number(income)};
+  state.assets.push(o); saveLocal();
   const payload = { name:o.name, income:o.income };
-  if(window.__FB_UID) window.fb.addSubcollectionItem(window.__FB_UID,'assets',payload).catch(()=>enqueueFbOp({type:'subcol',subcol:'assets',payload}));
+  if(window.__FB_UID) addSubcollectionItem(window.__FB_UID,'assets',payload).catch(()=>enqueueFbOp({type:'subcol',subcol:'assets',payload}));
   else enqueueFbOp({type:'subcol',subcol:'assets',payload});
   notify('Activo agregado');
 }
-function addIncomeLocal(name,amount,freq,bankId){
-  const o = { id: uid('in'), name, amount:Number(amount), freq, bankId:bankId||null };
+function addIncome(name,amount,freq,bankId){
+  if(!name || amount<=0) return alert('Campos inválidos');
+  const o={id:uid('in'), name, amount:Number(amount), freq, bankId:bankId||null};
   state.incomes.push(o);
   if(o.bankId){ const b = state.banks.find(x=>x.id===o.bankId); if(b) b.balance = Number(b.balance) + Number(o.amount); } else state.balance += Number(o.amount);
-  save();
+  saveLocal();
   const payload = { name:o.name, amount:o.amount, freq:o.freq, bankId:o.bankId };
-  if(window.__FB_UID) window.fb.addSubcollectionItem(window.__FB_UID,'incomes',payload).catch(()=>enqueueFbOp({type:'subcol',subcol:'incomes',payload}));
+  if(window.__FB_UID) addSubcollectionItem(window.__FB_UID,'incomes',payload).catch(()=>enqueueFbOp({type:'subcol',subcol:'incomes',payload}));
   else enqueueFbOp({type:'subcol',subcol:'incomes',payload});
   notify('Ingreso agregado');
 }
@@ -356,129 +352,116 @@ function addIncomeLocal(name,amount,freq,bankId){
 /* ========== Month advance ========== */
 function advanceMonth(){
   pushHistory();
-  const cur = new Date(state.currentDate); const next = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
-  state.currentDate = next.toISOString().slice(0,10);
+  const cur = new Date(state.currentDate); const next = new Date(cur.getFullYear(), cur.getMonth()+1, 1); state.currentDate = next.toISOString().slice(0,10);
   const curYm = state.currentDate.slice(0,7);
-  // debts
   state.debts.forEach(d=>{
     if(d.remaining>0 && d.startMonth <= curYm){
       const pay = Number(d.monthly||0);
-      if(d.bankId){ const b = state.banks.find(x=>x.id===d.bankId); if(b && Number(b.balance)>=pay){ b.balance = Number(b.balance) - pay; d.remaining = Math.max(0, Number(d.remaining)-pay); d.paidMonths=(d.paidMonths||0)+1; } else { const taken = b ? Math.min(Number(b.balance),pay) : 0; if(b) b.balance = Number(b.balance) - taken; const rest = pay - taken; state.balance -= rest; d.remaining = Math.max(0, Number(d.remaining)-pay); d.paidMonths=(d.paidMonths||0)+1; } } else { state.balance -= pay; d.remaining = Math.max(0, Number(d.remaining)-pay); d.paidMonths=(d.paidMonths||0)+1; }
+      if(d.bankId){ const b = state.banks.find(x=>x.id===d.bankId); if(b && Number(b.balance)>=pay){ b.balance = Number(b.balance) - pay; d.remaining = Math.max(0, Number(d.remaining)-pay); d.paidMonths=(d.paidMonths||0)+1; } else { const taken = b?Math.min(Number(b.balance),pay):0; if(b) b.balance = Number(b.balance) - taken; const rest = pay - taken; state.balance -= rest; d.remaining = Math.max(0, Number(d.remaining)-pay); d.paidMonths=(d.paidMonths||0)+1; } } else { state.balance -= pay; d.remaining = Math.max(0, Number(d.remaining)-pay); d.paidMonths=(d.paidMonths||0)+1; }
     }
   });
-  // liabs
   state.liabs.forEach(l=>{
     const pay = Number(l.monthly||0);
-    if(l.bankId){ const b = state.banks.find(x=>x.id===l.bankId); if(b && Number(b.balance)>=pay){ b.balance = Number(b.balance) - pay; } else { const taken = b ? Math.min(Number(b.balance),pay) : 0; if(b) b.balance = Number(b.balance) - taken; const rest = pay - taken; state.balance -= rest; } } else { state.balance -= pay; }
+    if(l.bankId){ const b = state.banks.find(x=>x.id===l.bankId); if(b && Number(b.balance)>=pay){ b.balance = Number(b.balance) - pay; } else { const taken = b?Math.min(Number(b.balance),pay):0; if(b) b.balance = Number(b.balance) - taken; const rest = pay - taken; state.balance -= rest; } } else { state.balance -= pay; }
   });
-  // income from goods activos
-  const incomeFromGoods = state.goods.filter(g=>g.type==='activo').reduce((s,g)=>s+Number(g.monthly||0),0);
-  state.balance += incomeFromGoods;
-  if(incomeFromGoods>0) notify(`Ingresos por bienes: S/ ${incomeFromGoods.toFixed(2)}`);
-  save();
+  // incomes from assets? take from assets array if any
+  const incomeFromAssets = state.assets.reduce((s,a)=>s+Number(a.income||0),0);
+  state.balance += incomeFromAssets;
+  if(incomeFromAssets>0) notify('Ingresos por activos: S/ ' + incomeFromAssets.toFixed(2));
+  saveLocal();
   if(window.__FB_UID) flushFbQueue();
 }
 
-/* ========== PDF generation ========== */
+/* ========== PDF ========== */
 function generatePDF(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({unit:'pt',format:'a4'});
-  let y = 40; const left = 40;
-  doc.setFontSize(14); doc.text('Resumen Control Económico', left, y); y+=20;
-  doc.setFontSize(10); doc.text(`Fecha: ${new Date().toLocaleString()}`, left, y); y+=18;
+  let y=40; const left=40;
+  doc.setFontSize(16); doc.text('Resumen Control Económico', left, y); y+=20;
+  doc.setFontSize(10); doc.text('Fecha: ' + new Date().toLocaleString(), left, y); y+=18;
   doc.setFontSize(12); doc.text('KPIs', left, y); y+=14; doc.setFontSize(10);
-  doc.text(`Balance: ${formatCur(state.balance)}`, left, y); y+=12;
-  doc.text(`Ahorros: ${formatCur(state.banks.reduce((s,b)=>s+Number(b.balance||0),0))}`, left, y); y+=12;
-  doc.text(`Deuda mensual: ${formatCur(state.debts.reduce((s,d)=>s+Number(d.monthly||0),0))}`, left, y); y+=18;
-  // sections (short)
-  doc.setFontSize(12); doc.text('Bancos', left, y); y+=14; doc.setFontSize(10);
+  doc.text('Balance: ' + formatCur(state.balance), left, y); y+=12;
+  doc.text('Ahorros: ' + formatCur(state.banks.reduce((s,b)=>s+Number(b.balance||0),0)), left, y); y+=12;
+  doc.text('Deuda mensual: ' + formatCur(state.debts.reduce((s,d)=>s+Number(d.monthly||0),0)), left, y); y+=16;
+  doc.text('Listado bancario:', left, y); y+=12;
   state.banks.forEach(b=>{ doc.text(`${b.name} — ${formatCur(b.balance)}`, left, y); y+=12; if(y>740){ doc.addPage(); y=40; } });
-  doc.setFontSize(12); doc.text('Deudas', left, y); y+=14; doc.setFontSize(10);
-  state.debts.forEach(d=>{ doc.text(`${d.creditor} — Total ${formatCur(d.total)} — Pago/m ${formatCur(d.monthly)} — Rem ${formatCur(d.remaining)}`, left, y); y+=12; if(y>740){ doc.addPage(); y=40; } });
-  doc.save(`resumen_${new Date().toISOString().slice(0,10)}.pdf`);
-  notify('PDF generado y descargado');
+  doc.save('resumen_ce_'+ new Date().toISOString().slice(0,10) + '.pdf');
+  notify('PDF descargado');
 }
 
-/* ========== Event wiring: attach after DOM ready ========== */
-document.addEventListener('DOMContentLoaded', ()=>{
-
-  // menu
-  const menuMap = { mDashboard:'sDashboard', mBanks:'sBanks', mDebts:'sDebts', mLiabs:'sLiabs', mBienes:'sBienes', mDiary:'sDiary', mAssets:'sAssets', mIncomes:'sIncomes' };
-  Object.keys(menuMap).forEach(btnId=>{
-    const el = document.getElementById(btnId);
-    if(el) el.addEventListener('click', ()=>{ document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('active')); el.classList.add('active'); document.querySelectorAll('main section.card').forEach(s=>s.style.display='none'); document.getElementById(menuMap[btnId]).style.display='block'; });
+/* ========== Wiring: DOM listeners and delegation ========== */
+document.addEventListener('DOMContentLoaded', function(){
+  // menu buttons
+  const map = { 'mDashboard':'sDashboard','mBanks':'sBanks','mDebts':'sDebts','mLiabs':'sLiabs','mBienes':'sBienes','mDiary':'sDiary','mAssets':'sAssets','mIncomes':'sIncomes' };
+  Object.keys(map).forEach(id=>{
+    const btn = document.getElementById(id);
+    if(btn) btn.addEventListener('click', ()=>{ document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); Object.values(map).forEach(s=>document.getElementById(s).style.display='none'); document.getElementById(map[id]).style.display='block'; });
   });
 
-  // simple UI helper: set today's date
-  document.getElementById('dDate').value = new Date().toISOString().slice(0,10);
+  // set today's date
+  const dDate = document.getElementById('dDate'); if(dDate) dDate.value = new Date().toISOString().slice(0,10);
 
-  // static buttons
-  document.getElementById('btnExportPDF').addEventListener('click', ()=> generatePDF());
-  document.getElementById('btnAdvance').addEventListener('click', ()=> { advanceMonth(); save(); });
-  document.getElementById('btnNext').addEventListener('click', ()=> { advanceMonth(); save(); });
-  document.getElementById('btnPrev').addEventListener('click', ()=> { if(confirm('Deshacer último avance?')) undoHistory(); });
-  document.getElementById('btnSyncNow').addEventListener('click', ()=> { if(window.__FB_UID) flushFbQueue(); else alert('Inicia sesión para sincronizar'); });
+  // top-level buttons
+  document.getElementById('btnExportPDF').addEventListener('click', generatePDF);
+  document.getElementById('btnAdvance').addEventListener('click', ()=>{ advanceMonth(); saveLocal(); });
+  document.getElementById('btnNext').addEventListener('click', ()=>{ advanceMonth(); saveLocal(); });
+  document.getElementById('btnPrev').addEventListener('click', ()=>{ if(confirm('Deshacer último avance?')) undoHistory(); });
+  document.getElementById('btnSyncNow').addEventListener('click', ()=>{ if(window.__FB_UID) flushFbQueue(); else alert('Inicia sesión para sincronizar'); });
 
-  // Delegated listeners for add buttons
-  document.getElementById('btnAddBank').addEventListener('click', ()=> addBankLocal(document.getElementById('bankName').value.trim(), document.getElementById('bankInit').value, document.getElementById('bankType').value));
-  document.getElementById('btnAddDebt').addEventListener('click', ()=> addDebtLocal(document.getElementById('debtCred').value.trim(), Number(document.getElementById('debtTotal').value||0), Number(document.getElementById('debtMonths').value||1), document.getElementById('debtBank').value||null, document.getElementById('debtStart').value||state.currentDate.slice(0,7)));
-  document.getElementById('btnAddLiab').addEventListener('click', ()=> addLiabLocal(document.getElementById('liabName').value.trim(), Number(document.getElementById('liabMonthly').value||0), document.getElementById('liabBank').value||null));
-  document.getElementById('btnAddGood').addEventListener('click', ()=> addGoodLocal(document.getElementById('goodName').value.trim(), document.getElementById('goodType').value, Number(document.getElementById('goodValue').value||0), Number(document.getElementById('goodMonthly').value||0)));
-  document.getElementById('btnAddDiary').addEventListener('click', ()=> addDiaryLocal(document.getElementById('dDate').value, document.getElementById('dDesc').value.trim(), Number(document.getElementById('dAmount').value||0), document.getElementById('dBank').value||null));
-  document.getElementById('btnAddAsset').addEventListener('click', ()=> addAssetLocal(document.getElementById('aName').value.trim(), Number(document.getElementById('aIncome').value||0)));
-  document.getElementById('btnAddIncome').addEventListener('click', ()=> addIncomeLocal(document.getElementById('iName').value.trim(), Number(document.getElementById('iAmount').value||0), document.getElementById('iFreq').value, document.getElementById('iBank').value||null));
+  // add buttons
+  document.getElementById('btnAddBank').addEventListener('click', ()=>{ addBank(document.getElementById('bankName').value.trim(), document.getElementById('bankInit').value, document.getElementById('bankType').value); document.getElementById('bankName').value=''; document.getElementById('bankInit').value=''; });
+  document.getElementById('btnAddDebt').addEventListener('click', ()=>{ addDebt(document.getElementById('debtCred').value.trim(), Number(document.getElementById('debtTotal').value||0), Number(document.getElementById('debtMonths').value||1), document.getElementById('debtBank').value||null, document.getElementById('debtStart').value); document.getElementById('debtCred').value=''; document.getElementById('debtTotal').value=''; });
+  document.getElementById('btnAddLiab').addEventListener('click', ()=>{ addLiab(document.getElementById('liabName').value.trim(), Number(document.getElementById('liabMonthly').value||0), document.getElementById('liabBank').value||null); document.getElementById('liabName').value=''; document.getElementById('liabMonthly').value=''; });
+  document.getElementById('btnAddGood').addEventListener('click', ()=>{ addGood(document.getElementById('goodName').value.trim(), document.getElementById('goodType').value, Number(document.getElementById('goodValue').value||0), Number(document.getElementById('goodMonthly').value||0)); document.getElementById('goodName').value=''; document.getElementById('goodValue').value=''; document.getElementById('goodMonthly').value=''; });
+  document.getElementById('btnAddDiary').addEventListener('click', ()=>{ addDiary(document.getElementById('dDate').value, document.getElementById('dDesc').value.trim(), Number(document.getElementById('dAmount').value||0), document.getElementById('dBank').value||null); document.getElementById('dDesc').value=''; document.getElementById('dAmount').value=''; });
+  document.getElementById('btnAddAsset').addEventListener('click', ()=>{ addAsset(document.getElementById('aName').value.trim(), Number(document.getElementById('aIncome').value||0)); document.getElementById('aName').value=''; document.getElementById('aIncome').value=''; });
+  document.getElementById('btnAddIncome').addEventListener('click', ()=>{ addIncome(document.getElementById('iName').value.trim(), Number(document.getElementById('iAmount').value||0), document.getElementById('iFreq').value, document.getElementById('iBank').value||null); document.getElementById('iName').value=''; document.getElementById('iAmount').value=''; });
 
-  // Event delegation for delete buttons in tables
-  document.body.addEventListener('click', (e)=>{
-    const delBank = e.target.closest('button.del-bank');
-    if(delBank){ const id = delBank.dataset.id; state.banks = state.banks.filter(b=>b.id!==id); save(); notify('Banco eliminado'); return; }
-    const delDebt = e.target.closest('button.del-debt');
-    if(delDebt){ const id = delDebt.dataset.id; state.debts = state.debts.filter(d=>d.id!==id); save(); notify('Deuda eliminada'); return; }
-    const delLiab = e.target.closest('button.del-liab');
-    if(delLiab){ const id = delLiab.dataset.id; state.liabs = state.liabs.filter(l=>l.id!==id); save(); notify('Pasivo eliminado'); return; }
-    const delGood = e.target.closest('button.del-good');
-    if(delGood){ const id = delGood.dataset.id; state.goods = state.goods.filter(g=>g.id!==id); save(); notify('Bien eliminado'); return; }
-    const delDiary = e.target.closest('button.del-diary');
-    if(delDiary){ const id = delDiary.dataset.id; const ent = state.diary.find(x=>x.id===id); if(ent){ state.balance += Number(ent.amount); if(ent.bankId){ const b = state.banks.find(x=>x.id===ent.bankId); if(b) b.balance = Number(b.balance) + Number(ent.amount); } } state.diary = state.diary.filter(d=>d.id!==id); save(); notify('Registro diario eliminado'); return; }
-    const delAsset = e.target.closest('button.del-asset');
-    if(delAsset){ const id = delAsset.dataset.id; state.assets = state.assets.filter(a=>a.id!==id); save(); notify('Activo eliminado'); return; }
-    const delIncome = e.target.closest('button.del-income');
-    if(delIncome){ const id = delIncome.dataset.id; state.incomes = state.incomes.filter(i=>i.id!==id); save(); notify('Ingreso eliminado'); return; }
+  // event delegation for deletes (single listener)
+  document.body.addEventListener('click', function(e){
+    const btn = e.target;
+    if(btn.matches('button.del-bank')){ const id = btn.dataset.id; state.banks = state.banks.filter(b=>b.id!==id); saveLocal(); notify('Banco eliminado'); }
+    if(btn.matches('button.del-debt')){ const id = btn.dataset.id; state.debts = state.debts.filter(d=>d.id!==id); saveLocal(); notify('Deuda eliminada'); }
+    if(btn.matches('button.del-liab')){ const id = btn.dataset.id; state.liabs = state.liabs.filter(l=>l.id!==id); saveLocal(); notify('Pasivo eliminado'); }
+    if(btn.matches('button.del-good')){ const id = btn.dataset.id; state.goods = state.goods.filter(g=>g.id!==id); saveLocal(); notify('Bien eliminado'); }
+    if(btn.matches('button.del-diary')){ const id = btn.dataset.id; const ent = state.diary.find(x=>x.id===id); if(ent){ state.balance += Number(ent.amount); if(ent.bankId){ const b = state.banks.find(x=>x.id===ent.bankId); if(b) b.balance = Number(b.balance) + Number(ent.amount); } } state.diary = state.diary.filter(d=>d.id!==id); saveLocal(); notify('Registro diario eliminado'); }
+    if(btn.matches('button.del-asset')){ const id = btn.dataset.id; state.assets = state.assets.filter(a=>a.id!==id); saveLocal(); notify('Activo eliminado'); }
+    if(btn.matches('button.del-income')){ const id = btn.dataset.id; state.incomes = state.incomes.filter(i=>i.id!==id); saveLocal(); notify('Ingreso eliminado'); }
   });
 
-  // initial load & render
+  // initial load
   loadLocal();
-
 });
 
-/* ========== Auth UI minimal + onAuthStateChanged flush queue ========== */
-// small auth UI (bottom-left)
-(function createAuthUI(){
-  if(document.getElementById('btnFirebaseLogin')) return;
-  const bar = document.createElement('div');
+/* ========== Auth UI & handlers (compat) ========== */
+/* Create a minimal auth bar */
+(function createAuthBar(){
+  if(document.getElementById('fbAuthBar')) return;
+  const bar = document.createElement('div'); bar.id='fbAuthBar';
   bar.style.position='fixed'; bar.style.bottom='12px'; bar.style.left='12px'; bar.style.zIndex=9999;
-  bar.innerHTML = `<button id="btnFirebaseLogin" style="margin-right:8px;padding:8px;border-radius:6px;background:#0f766e;color:#fff;border:0;cursor:pointer">Ingresar con Google</button>
-                   <button id="btnFirebaseLogout" style="padding:8px;border-radius:6px;display:none;background:#e5e7eb;border:0;cursor:pointer">Salir</button>`;
+  bar.innerHTML = '<button id="fbLogin" class="btn primary" style="margin-right:8px">Ingresar con Google</button><button id="fbLogout" class="btn" style="display:none">Salir</button>';
   document.body.appendChild(bar);
-  document.getElementById('btnFirebaseLogin').addEventListener('click', async ()=>{
-    try{ const provider = new GoogleAuthProvider(); await signInWithPopup(auth, provider); } catch(e){ console.error(e); alert('Error login: '+e.message); }
+  document.getElementById('fbLogin').addEventListener('click', async ()=>{
+    const provider = new firebase.auth.GoogleAuthProvider();
+    try{ await auth.signInWithPopup(provider); } catch(e){ console.error('login error', e); alert('Error login: '+(e.message||e)); }
   });
-  document.getElementById('btnFirebaseLogout').addEventListener('click', ()=> signOut(auth));
+  document.getElementById('fbLogout').addEventListener('click', ()=> auth.signOut());
 })();
 
-onAuthStateChanged(auth, user=>{
+/* onAuthStateChanged */
+auth.onAuthStateChanged(function(user){
   const fbUserEl = document.getElementById('fbUser');
-  const loginBtn = document.getElementById('btnFirebaseLogin');
-  const logoutBtn = document.getElementById('btnFirebaseLogout');
+  const loginBtn = document.getElementById('fbLogin');
+  const logoutBtn = document.getElementById('fbLogout');
   if(user){
     window.__FB_UID = user.uid;
-    if(fbUserEl) fbUserEl.innerText = `${user.displayName || user.email} (${user.uid.slice(0,6)})`;
+    if(fbUserEl) fbUserEl.innerText = (user.displayName || user.email) + ' (' + user.uid.slice(0,6) + ')';
     if(loginBtn) loginBtn.style.display='none';
     if(logoutBtn) logoutBtn.style.display='inline-block';
-    // try to flush pending operations
+    // flush queued operations
     flushFbQueue();
-    // also push immediate state
-    if(window.fb && window.fb.saveStateAuto) window.fb.saveStateAuto(window.__FB_UID, state, 200);
+    // push immediate state
+    saveStateAuto(window.__FB_UID, state, 300);
   } else {
     window.__FB_UID = null;
     if(fbUserEl) fbUserEl.innerText = 'No autenticado';
@@ -487,6 +470,10 @@ onAuthStateChanged(auth, user=>{
   }
 });
 
+/* ========== Expose debugging helpers ========== */
+window.debug = { state, saveLocal, loadLocal, flushFbQueue, enqueueFbOp, saveStateAuto };
+
+/* ========== End file ========= */
 </script>
 </body>
 </html>
