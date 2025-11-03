@@ -2,314 +2,568 @@
 <html lang="es">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Control Económico — Resumen PDF (Actualizado)</title>
-<link href="https://cdn.jsdelivr.net/npm/modern-normalize/modern-normalize.css" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Control Económico — Actualizado (RealtimeDB)</title>
+
+<!-- Estilos básicos -->
 <style>
-  :root{ --bg:#f6f7fb; --card:#fff; --text:#0f172a; --muted:#6b7280; --accent:#0f766e; --accent-dark:#055e52; }
-  body { font-family: Inter, system-ui, Arial, sans-serif; background: var(--bg); margin: 18px; color: var(--text); }
-  .card { background: var(--card); border-radius: 10px; padding: 16px; box-shadow: 0 6px 18px rgba(12,16,35,0.06); max-width: 980px; margin: auto; }
-  h2 { text-align: center; margin-bottom: 8px; }
-  section { margin-bottom: 18px; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th, td { padding: 8px; border-bottom: 1px solid #e6eef2; text-align: left; }
-  th { background: #eefbf9; color: var(--accent-dark); }
-  button { cursor: pointer; background: var(--accent); color: white; border: none; padding: 10px 14px; border-radius: 8px; font-weight: 700; }
-  button:hover { background: var(--accent-dark); }
-  .muted { color: var(--muted); font-size: 13px; margin-bottom: 8px; text-align: center; }
-  .kpis { display:flex; gap:10px; justify-content:center; margin-bottom:12px; flex-wrap:wrap; }
-  .kpi { background:#f3faf8; border-radius:8px; padding:10px 12px; min-width:160px; text-align:center; box-shadow: inset 0 -1px 0 rgba(0,0,0,0.02); }
-  .kpi .value { font-weight:800; font-size:16px; color:var(--accent-dark); }
-  .controls{ display:flex; gap:8px; justify-content:center; margin-top:12px; }
-  @media print{ button, .controls { display:none } }
-  .table-actions{ display:flex; gap:6px; align-items:center }
+  :root{--bg:#f5f7fb;--card:#fff;--muted:#6b7280;--accent:#0f766e}
+  body{font-family:Inter,system-ui,Arial;background:var(--bg);margin:0;color:#0b1220}
+  .wrap{max-width:1100px;margin:18px auto;padding:14px}
+  .card{background:var(--card);border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(12,16,35,0.06)}
+  .grid{display:grid;grid-template-columns:260px 1fr;gap:12px}
+  .menu button{display:block;width:100%;text-align:left;padding:10px;border-radius:8px;border:0;background:transparent;cursor:pointer}
+  .menu button.active{background:#eefbf9}
+  label{display:block;font-size:13px;margin-top:8px;color:var(--muted)}
+  input,select,textarea{width:100%;padding:8px;border-radius:6px;border:1px solid #e6e9ef;margin-top:6px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:8px;border-bottom:1px solid #f1f3f6;text-align:left}
+  .row{display:flex;gap:8px;align-items:center}
+  .btn{padding:8px 10px;border-radius:8px;border:0;cursor:pointer}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.ghost{background:transparent;border:1px solid #e6e9ef}
+  .notif{padding:8px;border-radius:8px;background:#fff7ed;border:1px solid #ffe1b8;font-size:13px;margin-top:8px}
+  #log{height:120px;overflow:auto;background:#0b1220;color:#fff;padding:8px;border-radius:6px;font-size:12px}
+  .time-meter{position:fixed;top:12px;right:12px;background:var(--card);padding:10px;border-radius:10px;box-shadow:0 8px 20px rgba(12,16,35,0.08);z-index:1200;display:flex;gap:8px;align-items:center}
+  @media (max-width:880px){.grid{grid-template-columns:1fr}.time-meter{position:static;margin-bottom:12px}}
 </style>
+
+<!-- Librerías: Chart.js (CDN) y jsPDF -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- Firebase compat -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-messaging-compat.js"></script>
 </head>
 <body>
+  <div class="wrap">
+    <header class="card" style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <strong>Control Económico — Actualizado</strong>
+        <div style="color:var(--muted)">RealtimeDB • Huchas • Recurrentes • Alertas • Charts</div>
+      </div>
+      <div style="text-align:right">
+        <div id="userDisplay" style="font-size:13px;color:var(--muted)">No autenticado</div>
+        <small id="syncStatus" style="color:var(--muted)">Sincronización: local</small>
+      </div>
+    </header>
 
-<div class="card">
-  <h2>Control Económico — Resumen Financiero</h2>
-  <div class="muted" id="reportDate" aria-live="polite"></div>
+    <div class="time-meter" id="timeMeter">
+      <button class="btn" id="prevMonth">◀</button>
+      <div style="min-width:160px;text-align:center">
+        <div id="monthName" style="font-weight:700">--</div>
+        <div id="monthYear" style="color:var(--muted)">----</div>
+      </div>
+      <button class="btn primary" id="nextMonth">▶</button>
+      <button class="btn" id="exportPDF">Exportar PDF</button>
+      <button class="btn" id="forceSync">Forzar sync</button>
+    </div>
 
-  <div class="kpis" aria-hidden="false">
-    <div class="kpi"><div class="label">Total Bancos</div><div id="kTotalBanks" class="value">S/ 0.00</div></div>
-    <div class="kpi"><div class="label">Pasivos / Mes</div><div id="kTotalLiabs" class="value">S/ 0.00</div></div>
-    <div class="kpi"><div class="label">Cashflow Neto</div><div id="kNetMonthly" class="value">S/ 0.00</div></div>
+    <div style="height:12px"></div>
+
+    <div class="grid">
+      <aside class="card menu">
+        <button id="m_dashboard" class="active">Dashboard</button>
+        <button id="m_expenses">Gastos</button>
+        <button id="m_incomes">Ingresos</button>
+        <button id="m_banks">Bancos</button>
+        <button id="m_pots">Huchas</button>
+        <button id="m_categories">Categorías</button>
+        <button id="m_settings">Ajustes</button>
+        <div style="margin-top:12px;font-size:12px;color:var(--muted)">LOG</div>
+        <div id="log" class="card"></div>
+      </aside>
+
+      <main>
+        <!-- Dashboard -->
+        <section id="s_dashboard" class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <h3 style="margin:0">Resumen mensual</h3>
+              <div style="color:var(--muted);font-size:13px">Visión rápida y gráficos</div>
+            </div>
+            <div class="row">
+              <div style="text-align:right">
+                <div style="color:var(--muted)">Balance</div>
+                <div id="k_balance" style="font-weight:700">S/ 0</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+            <div class="card">
+              <canvas id="chartExpenses" height="220"></canvas>
+            </div>
+            <div class="card">
+              <canvas id="chartCategories" height="220"></canvas>
+            </div>
+          </div>
+
+          <div style="margin-top:12px" id="alertsContainer"></div>
+        </section>
+
+        <!-- Expenses -->
+        <section id="s_expenses" class="card" style="display:none">
+          <h3>Registrar gasto</h3>
+          <label>Fecha</label><input id="e_date" type="date">
+          <label>Monto</label><input id="e_amount" type="number" step="0.01">
+          <label>Categoría</label>
+          <select id="e_category"></select>
+          <label>Banco (opcional)</label>
+          <select id="e_bank"><option value="">-- Ninguno --</option></select>
+          <label>Nota</label><input id="e_note">
+          <label><input type="checkbox" id="e_recurrent"> Recurrente mensual</label>
+          <div style="margin-top:8px" class="row">
+            <button class="btn primary" id="btnSaveExpense">Guardar gasto</button>
+            <button class="btn" id="btnClearExpense">Limpiar (NO recomendado)</button>
+          </div>
+
+          <h4 style="margin-top:12px">Historial (últimos 50)</h4>
+          <div style="max-height:240px;overflow:auto"><table id="tblExpenses"><thead><tr><th>Fecha</th><th>Desc</th><th>Monto</th><th>Cat</th><th></th></tr></thead><tbody></tbody></table></div>
+        </section>
+
+        <!-- Incomes -->
+        <section id="s_incomes" class="card" style="display:none">
+          <h3>Ingresos</h3>
+          <label>Concepto</label><input id="i_name">
+          <label>Monto</label><input id="i_amount" type="number" step="0.01">
+          <label>Frecuencia</label>
+          <select id="i_freq"><option value="mensual">Mensual</option><option value="unica">Única</option></select>
+          <label>Banco (opcional)</label><select id="i_bank"><option value="">-- Ninguno --</option></select>
+          <div style="margin-top:8px"><button class="btn primary" id="btnSaveIncome">Guardar ingreso</button></div>
+
+          <h4 style="margin-top:12px">Ingresos (últimos 50)</h4>
+          <div style="max-height:200px;overflow:auto"><table id="tblIncomes"><thead><tr><th>Ingreso</th><th>Monto</th><th>Freq</th><th></th></tr></thead><tbody></tbody></table></div>
+        </section>
+
+        <!-- Banks -->
+        <section id="s_banks" class="card" style="display:none">
+          <h3>Bancos / cuentas</h3>
+          <label>Nombre banco</label><input id="b_name">
+          <label>Saldo inicial</label><input id="b_balance" type="number" step="0.01">
+          <div style="margin-top:8px"><button class="btn primary" id="btnSaveBank">Guardar banco</button></div>
+          <div style="margin-top:12px"><table id="tblBanks"><thead><tr><th>Banco</th><th>Saldo</th><th></th></tr></thead><tbody></tbody></table></div>
+        </section>
+
+        <!-- Pots (huchas) -->
+        <section id="s_pots" class="card" style="display:none">
+          <h3>Huchas / Ahorros</h3>
+          <label>Nombre</label><input id="p_name">
+          <label>Meta (S/)</label><input id="p_goal" type="number">
+          <label>Regla automática (%)</label><input id="p_percent" type="number" value="0">
+          <div style="margin-top:8px"><button class="btn primary" id="btnSavePot">Crear hucha</button></div>
+          <div style="margin-top:12px"><table id="tblPots"><thead><tr><th>Hucha</th><th>Meta</th><th>Balance</th><th></th></tr></thead><tbody></tbody></table></div>
+        </section>
+
+        <!-- Categories -->
+        <section id="s_categories" class="card" style="display:none">
+          <h3>Categorías y presupuesto</h3>
+          <label>Nombre categoría</label><input id="c_name">
+          <label>Límite mensual (S/)</label><input id="c_limit" type="number" step="0.01">
+          <div style="margin-top:8px"><button class="btn primary" id="btnSaveCategory">Crear categoría</button></div>
+          <div style="margin-top:12px"><table id="tblCategories"><thead><tr><th>Cat</th><th>Límite</th><th>Gasto mes</th><th></th></tr></thead><tbody></tbody></table></div>
+        </section>
+
+        <!-- Settings -->
+        <section id="s_settings" class="card" style="display:none">
+          <h3>Ajustes</h3>
+          <div style="margin-bottom:8px">
+            <button class="btn primary" id="btnLogin">Iniciar sesión (Google)</button>
+            <button class="btn" id="btnLogout" style="display:none">Cerrar sesión</button>
+            <button class="btn" id="btnClearLocal">Borrar local (no cloud)</button>
+          </div>
+          <div style="margin-top:12px">
+            <strong>Estado</strong>
+            <div id="stateRaw" style="white-space:pre-wrap;max-height:180px;overflow:auto;background:#f1f3f5;padding:8px;border-radius:6px"></div>
+          </div>
+        </section>
+      </main>
+    </div>
   </div>
-
-  <section>
-    <h3>Bancos</h3>
-    <table id="tblBanks" aria-label="Bancos - saldos">
-      <caption class="muted">Lista de cuentas bancarias y sus saldos</caption>
-      <thead><tr><th>Banco</th><th>Saldo</th><th>Tipo</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </section>
-
-  <section>
-    <h3>Deudas vinculadas a banco</h3>
-    <table id="tblDebts" aria-label="Deudas vinculadas">
-      <caption class="muted">Deudas, cuotas y bancos asociados</caption>
-      <thead><tr><th>Acreedor</th><th>Total</th><th>Meses a pagar</th><th>Pago mensual</th><th>Banco asociado</th><th>Saldo pendiente</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </section>
-
-  <section>
-    <h3>Pasivos (Costo mensual)</h3>
-    <table id="tblLiabs" aria-label="Pasivos mensuales">
-      <caption class="muted">Costos y cuotas mensuales</caption>
-      <thead><tr><th>Concepto</th><th>Cuota mensual</th><th>Banco vinculado</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </section>
-
-  <section>
-    <h3>Registro de bienes activos y pasivos</h3>
-    <table id="tblGoods" aria-label="Bienes activos y pasivos">
-      <caption class="muted">Bienes con su valor e ingreso/costo mensual</caption>
-      <thead><tr><th>Bien</th><th>Tipo</th><th>Valor</th><th>Ingreso / Costo mensual</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </section>
-
-  <div class="controls">
-    <button id="btnGeneratePDF" type="button" aria-describedby="reportDate">Generar Reporte PDF</button>
-    <button id="btnExportCSV" type="button">Exportar CSV</button>
-    <button id="btnReset" type="button">Restablecer datos</button>
-  </div>
-
-</div>
-
-<!-- Dependencias: jsPDF + autotable (incluye antes del script principal para evitar race) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
 <script>
-// --- Datos de ejemplo (state) ---
-const DEFAULT_STATE = {
-  banks: [
-    {id:'b1', name:'Banco A', balance: 5000, type:'ahorro'},
-    {id:'b2', name:'Banco B', balance: 2000, type:'corriente'}
-  ],
-  debts: [
-    {id:'d1', creditor:'Tarjeta de crédito', total: 1200, months:12, monthly: 100, bankId:'b1', remaining: 800},
-    {id:'d2', creditor:'Préstamo personal', total: 6000, months:24, monthly: 250, bankId:'b2', remaining: 3000}
-  ],
-  liabs: [
-    {id:'l1', name:'Pago mensual alquiler', monthly: 1500, bankId:'b1'},
-    {id:'l2', name:'Servicio de internet', monthly: 100, bankId:null}
-  ],
-  goods: [
-    {id:'g1', name:'Auto', type:'pasivo', valor:12000, monthly:-300},
-    {id:'g2', name:'Departamento', type:'activo', valor:350000, monthly:1500}
-  ]
+/* ========= FIREBASE CONFIG (ajusta databaseURL si es distinto) ========= */
+const firebaseConfig = {
+  apiKey: "AIzaSyBVppNAicRPFXEUdErmHd24se_9bjXiqcM",
+  authDomain: "jhona-1b398.firebaseapp.com",
+  databaseURL: "https://jhona-1b398-default-rtdb.firebaseio.com",
+  projectId: "jhona-1b398",
+  storageBucket: "jhona-1b398.firebasestorage.app",
+  messagingSenderId: "981136306223",
+  appId: "1:981136306223:web:52a7b67c22c274efcc56da",
+  measurementId: "G-NVGKL0XGER"
 };
 
-// --- Helpers ---
-const currencyFmt = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' });
-function formatCur(v){ return currencyFmt.format(Number(v||0)); }
-function qs(sel){ return document.querySelector(sel); }
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const rdb = firebase.database();
+const messaging = firebase.messaging();
 
-// --- State management (localStorage) ---
-const STORAGE_KEY = 'econ_state_v2';
-let state = loadState();
+/* ========= App state & helpers ========= */
+const STORAGE_KEY = 'ce_app_v2_local';
+let state = {
+  currentMonthISO: new Date().toISOString().slice(0,10),
+  balance: 0,
+  banks: [],
+  expenses: [],
+  incomes: [],
+  pots: [],
+  categories: []
+};
 
-function loadState(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(!raw) return JSON.parse(JSON.stringify(DEFAULT_STATE));
-    const parsed = JSON.parse(raw);
-    // Basic shape validation (fallback to default for missing arrays)
-    return {
-      banks: Array.isArray(parsed.banks)? parsed.banks : DEFAULT_STATE.banks,
-      debts: Array.isArray(parsed.debts)? parsed.debts : DEFAULT_STATE.debts,
-      liabs: Array.isArray(parsed.liabs)? parsed.liabs : DEFAULT_STATE.liabs,
-      goods: Array.isArray(parsed.goods)? parsed.goods : DEFAULT_STATE.goods
-    };
-  }catch(e){
-    console.error('Error cargando state, usando default', e);
-    return JSON.parse(JSON.stringify(DEFAULT_STATE));
+const MONTHS_ES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SETIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+
+function uid(pref='id'){ return pref + '_' + Math.random().toString(36).slice(2,9); }
+function formatCur(v){ return 'S/ ' + Number(v||0).toLocaleString(); }
+function log(msg){ const el = document.getElementById('log'); el.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}<br>` + el.innerHTML; console.log(msg); }
+
+/* ========= Local storage ========= */
+function loadLocal(){ try{ const raw = localStorage.getItem(STORAGE_KEY); if(raw) state = JSON.parse(raw); renderAll(); log('Estado local cargado'); }catch(e){ log('Error cargando local: ' + e.message); } }
+function saveLocal(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); renderAll(); saveStateCloudIfPossible(); }
+
+/* ========= Cloud save (debounced) ========= */
+let _deb = null;
+function saveStateCloudIfPossible(){
+  if(!window.__UID){ enqueueOp({type:'state', payload: state}); document.getElementById('syncStatus').innerText = 'Sincronización: local (no auth)'; return; }
+  clearTimeout(_deb);
+  _deb = setTimeout(()=> {
+    rdb.ref(`users/${window.__UID}/state/current`).set({ state, updatedAt: new Date().toISOString() })
+      .then(()=> { document.getElementById('syncStatus').innerText = 'Sincronización: cloud'; log('Estado enviado a cloud'); })
+      .catch(err => { enqueueOp({type:'state', payload: state}); log('Error push state: ' + err.message); });
+  }, 700);
+}
+
+/* ========= Queue for offline ops ========= */
+const QUEUE_KEY = 'ce_app_v2_ops';
+function enqueueOp(op){
+  const raw = localStorage.getItem(QUEUE_KEY); const arr = raw ? JSON.parse(raw) : []; arr.push(op); localStorage.setItem(QUEUE_KEY, JSON.stringify(arr)); log('Op encolada: ' + (op.type || op.subcol)); 
+}
+async function flushQueue(){
+  const raw = localStorage.getItem(QUEUE_KEY); if(!raw) { log('Cola vacía'); return; }
+  const arr = JSON.parse(raw); if(!arr.length) { localStorage.removeItem(QUEUE_KEY); log('Cola vacía'); return; }
+  if(!window.__UID) { log('No auth, no puedo vaciar cola'); return; }
+  for(const op of arr){
+    try{
+      if(op.type==='state') await rdb.ref(`users/${window.__UID}/state/current`).set({ state: op.payload, updatedAt: new Date().toISOString() });
+      else if(op.type==='subcol') await rdb.ref(`users/${window.__UID}/${op.subcol}`).push(Object.assign({}, op.payload, { createdAt:new Date().toISOString() }));
+      log('Op enviada: ' + (op.type || op.subcol));
+    }catch(e){ log('Error enviando op: ' + e.message); return; }
   }
+  localStorage.removeItem(QUEUE_KEY); log('Cola sincronizada');
 }
 
-function saveState(){
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-  catch(e){ console.error('No se pudo guardar state', e); }
-}
-
-// --- Calculations ---
-function calcTotals(){
-  const totalBanks = state.banks.reduce((s,b)=> s + Number(b.balance||0), 0);
-  const totalDebtMonthly = state.debts.reduce((s,d)=> s + Number(d.monthly||0), 0);
-  const totalLiabs = state.liabs.reduce((s,l)=> s + Number(l.monthly||0), 0);
-  const goodsMonthly = state.goods.reduce((s,g)=> s + Number(g.monthly||0), 0);
-  const netMonthly = goodsMonthly - totalLiabs - totalDebtMonthly;
-  const totalAssets = state.goods.reduce((s,g)=> s + Number(g.valor||0), 0);
-  return { totalBanks, totalDebtMonthly, totalLiabs, netMonthly, totalAssets };
-}
-
-// --- Renderers (use element creation to avoid innerHTML injection) ---
-function renderTable(){
-  renderBanks();
-  renderDebts();
-  renderLiabs();
-  renderGoods();
-  renderKPIs();
-  const today = new Date();
-  qs('#reportDate').textContent = `Reporte generado el: ${today.toLocaleDateString('es-PE')}`;
-}
-
-function renderBanks(){
-  const tbody = qs('#tblBanks tbody'); tbody.innerHTML = '';
-  state.banks.forEach(b => {
-    const tr = document.createElement('tr');
-    const td1 = document.createElement('td'); td1.textContent = b.name;
-    const td2 = document.createElement('td'); td2.textContent = formatCur(b.balance);
-    const td3 = document.createElement('td'); td3.textContent = b.type;
-    tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3);
-    tbody.appendChild(tr);
-  });
-}
-
-function renderDebts(){
-  const tbody = qs('#tblDebts tbody'); tbody.innerHTML = '';
-  state.debts.forEach(d => {
-    const tr = document.createElement('tr');
-    const bankName = state.banks.find(b => b.id === d.bankId)?.name || '';
-    [d.creditor, formatCur(d.total), String(d.months), formatCur(d.monthly), bankName, formatCur(d.remaining)].forEach(txt => {
-      const td = document.createElement('td'); td.textContent = txt; tr.appendChild(td);
+/* ========= Real-time listeners ========= */
+let listeners = [];
+function startRealtime(uid){
+  stopRealtime();
+  try{
+    // state
+    const sref = rdb.ref(`users/${uid}/state/current`);
+    sref.on('value', snap => {
+      if(!snap.exists()) return;
+      const remote = snap.val().state;
+      state = remote;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); renderAll();
+      log('Estado remoto aplicado');
     });
-    tbody.appendChild(tr);
-  });
+    listeners.push(sref);
+
+    // subcollections: banks, expenses, incomes, pots, categories
+    ['banks','expenses','incomes','pots','categories'].forEach(path => {
+      const ref = rdb.ref(`users/${uid}/${path}`);
+      ref.on('value', snap => {
+        const arr = [];
+        snap.forEach(child => { const d = child.val(); d._remoteId = child.key; arr.push(d); });
+        state[path === 'expenses' ? 'expenses': path] = arr;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        renderAll();
+        log(`Synced remote '${path}' (${arr.length})`);
+      });
+      listeners.push(ref);
+    });
+
+    log('Realtime listeners activados');
+  }catch(e){ log('startRealtime error: ' + e.message); }
+}
+function stopRealtime(){ listeners.forEach(r=> r.off()); listeners = []; log('Realtime listeners detenidos'); }
+
+/* ========= UI render ========= */
+let chartExpenses=null, chartCat=null;
+function renderAll(){
+  // month UI
+  const d = new Date(state.currentMonthISO);
+  document.getElementById('monthName').innerText = MONTHS_ES[d.getMonth()];
+  document.getElementById('monthYear').innerText = d.getFullYear();
+
+  // KPIs
+  document.getElementById('k_balance').innerText = formatCur(state.balance || 0);
+
+  // populate selects & tables
+  const catSel = document.getElementById('e_category'); catSel.innerHTML = '';
+  state.categories.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.name; catSel.appendChild(o); });
+
+  const bankSel = document.getElementById('e_bank'); bankSel.innerHTML = '<option value="">-- Ninguno --</option>';
+  state.banks.forEach(b => { const o = document.createElement('option'); o.value = b.id; o.textContent = `${b.name} (S/ ${Number(b.balance||0).toLocaleString()})`; bankSel.appendChild(o); });
+  const iBankSel = document.getElementById('i_bank'); iBankSel.innerHTML = '<option value="">-- Ninguno --</option>'; state.banks.forEach(b=>{ const o=document.createElement('option'); o.value=b.id; o.textContent=b.name; iBankSel.appendChild(o); });
+  const bBankSel = document.getElementById('b_balance'); // no usa
+
+  // tables
+  const tbExp = document.querySelector('#tblExpenses tbody'); if(tbExp){ tbExp.innerHTML = ''; (state.expenses || []).slice().reverse().slice(0,50).forEach(e => { const tr = document.createElement('tr'); tr.innerHTML = `<td>${e.date}</td><td>${e.note || e.category || ''}</td><td>${formatCur(e.amount)}</td><td>${(state.categories.find(c=>c.id===e.category)||{}).name || ''}</td><td><button class="btn ghost" onclick="delLocalExpense('${e.id}')">Eliminar</button></td>`; tbExp.appendChild(tr); }); }
+
+  const tbInc = document.querySelector('#tblIncomes tbody'); if(tbInc){ tbInc.innerHTML=''; (state.incomes||[]).slice().reverse().slice(0,50).forEach(i=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${i.name}</td><td>${formatCur(i.amount)}</td><td>${i.freq}</td><td><button class="btn ghost" onclick="delLocalIncome('${i.id}')">Eliminar</button></td>`; tbInc.appendChild(tr); }); }
+
+  const tbBanks = document.querySelector('#tblBanks tbody'); if(tbBanks){ tbBanks.innerHTML=''; (state.banks||[]).forEach(b=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${b.name}</td><td>${formatCur(b.balance)}</td><td><button class="btn ghost" onclick="delLocalBank('${b.id}')">Eliminar</button></td>`; tbBanks.appendChild(tr); }); }
+
+  const tbPots = document.querySelector('#tblPots tbody'); if(tbPots){ tbPots.innerHTML=''; (state.pots||[]).forEach(p=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${p.name}</td><td>${formatCur(p.goal)}</td><td>${formatCur(p.balance||0)}</td><td><button class="btn ghost" onclick="delLocalPot('${p.id}')">Eliminar</button></td>`; tbPots.appendChild(tr); }); }
+
+  const tbCats = document.querySelector('#tblCategories tbody'); if(tbCats){ tbCats.innerHTML=''; (state.categories||[]).forEach(c=>{ // compute month spent
+    const month = state.currentMonthISO.slice(0,7);
+    const spent = (state.expenses||[]).filter(e => e.category===c.id && e.date && e.date.startsWith(month)).reduce((s,x)=>s+Number(x.amount||0),0);
+    const tr=document.createElement('tr'); tr.innerHTML=`<td>${c.name}</td><td>${formatCur(c.limit||0)}</td><td>${formatCur(spent)}</td><td><button class="btn ghost" onclick="delLocalCategory('${c.id}')">Eliminar</button></td>`; tbCats.appendChild(tr);
+  }); }
+
+  // charts: build expenses per day (month) and by category
+  buildCharts();
+  // raw state
+  document.getElementById('stateRaw').innerText = JSON.stringify(state, null, 2);
 }
 
-function renderLiabs(){
-  const tbody = qs('#tblLiabs tbody'); tbody.innerHTML = '';
-  state.liabs.forEach(l => {
-    const tr = document.createElement('tr');
-    const bankName = state.banks.find(b => b.id === l.bankId)?.name || '';
-    const td1 = document.createElement('td'); td1.textContent = l.name;
-    const td2 = document.createElement('td'); td2.textContent = formatCur(l.monthly);
-    const td3 = document.createElement('td'); td3.textContent = bankName;
-    tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3);
-    tbody.appendChild(tr);
-  });
+/* ========= Charts ========= */
+function buildCharts(){
+  const ctxE = document.getElementById('chartExpenses').getContext('2d');
+  const ctxC = document.getElementById('chartCategories').getContext('2d');
+  // expenses per day of current month
+  const month = state.currentMonthISO.slice(0,7);
+  const daysInMonth = new Date(Number(month.split('-')[0]), Number(month.split('-')[1]), 0).getDate();
+  const labels = Array.from({length: daysInMonth}, (_,i)=>String(i+1));
+  const totalsByDay = Array(daysInMonth).fill(0);
+  (state.expenses||[]).forEach(e => { if(e.date && e.date.startsWith(month)){ const day = Number(e.date.split('-')[2]) - 1; totalsByDay[day] += Number(e.amount||0); }});
+  if(chartExpenses) chartExpenses.destroy();
+  chartExpenses = new Chart(ctxE, { type:'bar', data:{ labels, datasets:[{ label:'Gastos por día', data: totalsByDay }]}, options:{ responsive:true, plugins:{legend:{display:false}} } });
+
+  // categories
+  const catNames = state.categories.map(c=>c.name);
+  const catTotals = state.categories.map(c => (state.expenses||[]).filter(e=>e.category===c.id && e.date && e.date.startsWith(month)).reduce((s,x)=>s+Number(x.amount||0),0));
+  if(chartCat) chartCat.destroy();
+  chartCat = new Chart(ctxC, { type:'pie', data:{ labels:catNames, datasets:[{ data:catTotals }]}, options:{ responsive:true } });
 }
 
-function renderGoods(){
-  const tbody = qs('#tblGoods tbody'); tbody.innerHTML = '';
-  state.goods.forEach(g => {
-    const tr = document.createElement('tr');
-    const td1 = document.createElement('td'); td1.textContent = g.name;
-    const td2 = document.createElement('td'); td2.textContent = g.type;
-    const td3 = document.createElement('td'); td3.textContent = formatCur(g.valor);
-    const td4 = document.createElement('td'); td4.textContent = (g.type === 'activo') ? formatCur(g.monthly) : formatCur(-Math.abs(g.monthly));
-    tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4);
-    tbody.appendChild(tr);
-  });
+/* ========= CRUD local & cloud actions ========= */
+/* Expenses */
+function saveExpense(){
+  const date = document.getElementById('e_date').value || new Date().toISOString().slice(0,10);
+  const amount = Number(document.getElementById('e_amount').value || 0);
+  const category = document.getElementById('e_category').value || null;
+  const bankId = document.getElementById('e_bank').value || null;
+  const note = document.getElementById('e_note').value || '';
+  const recurrent = document.getElementById('e_recurrent').checked;
+  if(amount <= 0) return alert('Monto debe ser mayor a 0');
+  const o = { id: uid('exp'), date, amount, category, bankId, note, recurrent };
+  state.expenses.push(o);
+  // update bank/ balance if bank assigned
+  if(bankId){
+    const b = state.banks.find(x=>x.id===bankId);
+    if(b){ b.balance = Number(b.balance||0) - Number(amount); }
+  } else {
+    state.balance = Number(state.balance||0) - Number(amount);
+  }
+  saveLocal();
+  // push to cloud if possible
+  if(window.__UID){ rdb.ref(`users/${window.__UID}/expenses`).push(Object.assign({}, o, { createdAt: new Date().toISOString() })).then(() => log('Gasto enviado a cloud')).catch(e=>{ enqueueOp({type:'subcol', subcol:'expenses', payload:o}); log('Error push expense: '+e.message); }); }
+  else { enqueueOp({type:'subcol', subcol:'expenses', payload:o}); log('Gasto encolado (no auth)'); }
+
+  // check budget and show immediate alert if needed
+  checkBudgetForCategory(o.category);
 }
 
-function renderKPIs(){
-  const t = calcTotals();
-  qs('#kTotalBanks').textContent = formatCur(t.totalBanks);
-  qs('#kTotalLiabs').textContent = formatCur(t.totalLiabs + t.totalDebtMonthly);
-  qs('#kNetMonthly').textContent = formatCur(t.netMonthly);
+/* Incomes */
+function saveIncome(){
+  const name = document.getElementById('i_name').value.trim();
+  const amount = Number(document.getElementById('i_amount').value||0);
+  const freq = document.getElementById('i_freq').value;
+  const bankId = document.getElementById('i_bank').value || null;
+  if(!name || amount<=0) return alert('Datos inválidos');
+  const o = { id: uid('inc'), name, amount, freq, bankId, createdAt: new Date().toISOString() };
+  state.incomes.push(o);
+  if(bankId){ const b = state.banks.find(x=>x.id===bankId); if(b) b.balance = Number(b.balance||0) + Number(amount); } else state.balance = Number(state.balance||0) + Number(amount);
+  saveLocal();
+  if(window.__UID){ rdb.ref(`users/${window.__UID}/incomes`).push(Object.assign({}, o, { createdAt: new Date().toISOString() })).then(()=>log('Ingreso enviado a cloud')).catch(e=>{ enqueueOp({type:'subcol', subcol:'incomes', payload:o}); log('Error push income: '+e.message); }); } else enqueueOp({type:'subcol', subcol:'incomes', payload:o});
 }
 
-// --- CSV export (simple) ---
-function exportCSV(){
-  const rows = [];
-  rows.push(['BANCOS']);
-  rows.push(['Banco','Saldo','Tipo']);
-  state.banks.forEach(b => rows.push([b.name, b.balance, b.type]));
-  rows.push([]);
-  rows.push(['DEUDAS']);
-  rows.push(['Acreedor','Total','Meses','Pago mensual','Banco asociado','Saldo pendiente']);
-  state.debts.forEach(d => rows.push([d.creditor,d.total,d.months,d.monthly, state.banks.find(b=>b.id===d.bankId)?.name || '', d.remaining]));
-  rows.push([]);
-  rows.push(['PASIVOS']);
-  rows.push(['Concepto','Cuota mensual','Banco vinculado']);
-  state.liabs.forEach(l => rows.push([l.name,l.monthly, state.banks.find(b=>b.id===l.bankId)?.name || '']));
-  rows.push([]);
-  rows.push(['BIENES']);
-  rows.push(['Bien','Tipo','Valor','Ingreso/Costo mensual']);
-  state.goods.forEach(g => rows.push([g.name,g.type,g.valor,g.monthly]));
-
-  const csv = rows.map(r => r.map(c => '"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = `ControlEconómico_Resumen_${new Date().toISOString().slice(0,10)}.csv`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+/* Banks */
+function saveBank(){
+  const name = document.getElementById('b_name').value.trim();
+  const bal = Number(document.getElementById('b_balance').value||0);
+  if(!name) return alert('Ingrese nombre');
+  const o = { id: uid('bank'), name, balance: bal };
+  state.banks.push(o);
+  saveLocal();
+  if(window.__UID){ rdb.ref(`users/${window.__UID}/banks`).push(Object.assign({}, o, { createdAt: new Date().toISOString() })).then(()=>log('Banco enviado a cloud')).catch(e=>{ enqueueOp({type:'subcol', subcol:'banks', payload:o}); }); } else enqueueOp({type:'subcol', subcol:'banks', payload:o});
 }
 
-// --- PDF generation ---
-function generatePDF(){
-  try{
-    if(!window.jspdf){ console.error('Falta jsPDF'); return; }
-    if(!window.jspdf || !window.jspdf.autoTable){ console.error('Falta jsPDF autoTable'); }
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('p','mm','a4');
-    const marginLeft = 14;
-    let cursorY = 14;
+/* Pots */
+function savePot(){
+  const name = document.getElementById('p_name').value.trim();
+  const goal = Number(document.getElementById('p_goal').value||0);
+  const percent = Number(document.getElementById('p_percent').value||0);
+  if(!name) return alert('Nombre requerido');
+  const o = { id: uid('pot'), name, goal, percent, balance: 0 };
+  state.pots.push(o);
+  saveLocal();
+  if(window.__UID){ rdb.ref(`users/${window.__UID}/pots`).push(Object.assign({}, o, { createdAt:new Date().toISOString() })).then(()=>log('Hucha enviada a cloud')).catch(e=>enqueueOp({type:'subcol', subcol:'pots', payload:o})); } else enqueueOp({type:'subcol', subcol:'pots', payload:o});
+}
 
-    pdf.setFontSize(14);
-    pdf.text('Control Económico — Resumen Financiero', marginLeft, cursorY);
-    pdf.setFontSize(10);
-    cursorY += 6;
-    pdf.text(`Fecha: ${new Date().toLocaleDateString('es-PE')}`, marginLeft, cursorY);
-    cursorY += 6;
+/* Categories */
+function saveCategory(){
+  const name = document.getElementById('c_name').value.trim();
+  const limit = Number(document.getElementById('c_limit').value||0);
+  if(!name) return alert('Nombre requerido');
+  const o = { id: uid('cat'), name, limit };
+  state.categories.push(o);
+  saveLocal();
+  if(window.__UID){ rdb.ref(`users/${window.__UID}/categories`).push(Object.assign({}, o, { createdAt:new Date().toISOString() })).then(()=>log('Categoria enviada a cloud')).catch(e=>enqueueOp({type:'subcol', subcol:'categories', payload:o})); } else enqueueOp({type:'subcol', subcol:'categories', payload:o});
+}
 
-    // Helper to add table with autotable
-    function addAutoTable(head, body){
-      pdf.autoTable({ startY: cursorY, head: [head], body: body, margin: { left: marginLeft, right: marginLeft }, styles: { fontSize: 9 }, didDrawPage: function(data){ cursorY = data.cursor.y + 6; } });
-    }
+/* Delete local helpers (note: in this simple file we only remove locally; remote may remain until cluster sync or manual remote delete) */
+function delLocalExpense(id){ state.expenses = state.expenses.filter(e=>e.id!==id); saveLocal(); log('Gasto eliminado localmente'); }
+function delLocalIncome(id){ state.incomes = state.incomes.filter(i=>i.id!==id); saveLocal(); log('Ingreso eliminado localmente'); }
+function delLocalBank(id){ state.banks = state.banks.filter(b=>b.id!==id); saveLocal(); log('Banco eliminado localmente'); }
+function delLocalPot(id){ state.pots = state.pots.filter(p=>p.id!==id); saveLocal(); log('Hucha eliminada localmente'); }
+function delLocalCategory(id){ state.categories = state.categories.filter(c=>c.id!==id); saveLocal(); log('Categoria eliminada localmente'); }
 
-    addAutoTable(['Banco','Saldo','Tipo'], state.banks.map(b => [b.name, formatCur(b.balance), b.type]));
-    addAutoTable(['Acreedor','Total','Meses a pagar','Pago mensual','Banco asociado','Saldo pendiente'], state.debts.map(d => [d.creditor, formatCur(d.total), String(d.months), formatCur(d.monthly), state.banks.find(b=>b.id===d.bankId)?.name || '', formatCur(d.remaining)]));
-    addAutoTable(['Concepto','Cuota mensual','Banco vinculado'], state.liabs.map(l=> [l.name, formatCur(l.monthly), state.banks.find(b=>b.id===l.bankId)?.name || '']));
-    addAutoTable(['Bien','Tipo','Valor','Ingreso / Costo mensual'], state.goods.map(g=> [g.name, g.type, formatCur(g.valor), (g.type === 'activo') ? formatCur(g.monthly) : formatCur(-Math.abs(g.monthly))]));
-
-    // Totales al final
-    const totals = calcTotals();
-    pdf.setFontSize(10);
-    pdf.text(`Totales — Bancos: ${formatCur(totals.totalBanks)}   Activos (valor): ${formatCur(totals.totalAssets)}   Cashflow neto: ${formatCur(totals.netMonthly)}`, marginLeft, cursorY+4);
-
-    // Page numbers
-    const pageCount = pdf.getNumberOfPages();
-    for(let i=1;i<=pageCount;i++){
-      pdf.setPage(i);
-      pdf.setFontSize(8);
-      pdf.text(`Página ${i} de ${pageCount}`, pdf.internal.pageSize.getWidth() - 40, pdf.internal.pageSize.getHeight() - 8);
-    }
-
-    const dateStr = new Date().toISOString().slice(0,10);
-    pdf.save(`ControlEconómico_Resumen_${dateStr}.pdf`);
-  }catch(err){
-    console.error('Error generando PDF', err);
-    alert('Ocurrió un error al generar el PDF. Revisa la consola.');
+/* ========= Alerts & budget checks ========= */
+function checkBudgetForCategory(catId){
+  if(!catId) return;
+  const cat = state.categories.find(c=>c.id===catId);
+  if(!cat || !cat.limit) return;
+  const month = state.currentMonthISO.slice(0,7);
+  const spent = state.expenses.filter(e=>e.category===catId && e.date && e.date.startsWith(month)).reduce((s,x)=>s+Number(x.amount||0),0);
+  if(spent > Number(cat.limit || 0)){
+    // show alert UI and queue cloud alert (Cloud Function will send push too)
+    const alerts = document.getElementById('alertsContainer');
+    const div = document.createElement('div'); div.className='notif'; div.innerHTML = `<strong>Presupuesto superado:</strong> ${cat.name} — gastado ${formatCur(spent)} / límite ${formatCur(cat.limit)}`;
+    alerts.prepend(div);
+    setTimeout(()=> div.remove(), 15000);
+    // enqueue an alert object for Cloud Functions to process (optional)
+    const alertObj = { id: uid('alert'), type:'budget_over', categoryId: catId, spent, limit:cat.limit, createdAt: new Date().toISOString() };
+    if(window.__UID) rdb.ref(`users/${window.__UID}/alerts`).push(alertObj).catch(()=>enqueueOp({type:'subcol', subcol:'alerts', payload: alertObj}));
+    else enqueueOp({type:'subcol', subcol:'alerts', payload: alertObj});
+    log('Alerta de presupuesto registrada');
   }
 }
 
-// --- Reset to defaults ---
-function resetState(){ if(confirm('¿Restablecer los datos al estado inicial?')){ state = JSON.parse(JSON.stringify(DEFAULT_STATE)); saveState(); renderTable(); } }
+/* ========= Monthly automation (client-side quick automation + server scheduled more robust) ========= */
+function runMonthlyAutomation(){
+  // Apply pots % from incomes that are 'mensual' and created this month - lightweight approach
+  (state.incomes||[]).forEach(inc => {
+    if(inc.freq === 'mensual'){
+      const amount = Number(inc.amount || 0);
+      (state.pots||[]).forEach(p => {
+        if(Number(p.percent || 0) > 0){
+          const take = +(amount * (Number(p.percent) / 100)).toFixed(2);
+          p.balance = Number(p.balance || 0) + take;
+          // reduce from first bank or balance
+          if(state.banks && state.banks.length) state.banks[0].balance = Number(state.banks[0].balance || 0) - take;
+          else state.balance = Number(state.balance || 0) - take;
+        }
+      });
+    }
+  });
+  saveLocal();
+  log('Automatización mensual (cliente) aplicada');
+}
 
-// --- Init ---
-qs('#btnGeneratePDF').addEventListener('click', generatePDF);
-qs('#btnExportCSV').addEventListener('click', exportCSV);
-qs('#btnReset').addEventListener('click', resetState);
+/* ========= PDF export ========= */
+function exportPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt', format:'a4'});
+  let y = 40; const left = 40;
+  doc.setFontSize(14); doc.text('Resumen Control Económico', left, y); y+=20;
+  doc.setFontSize(10); doc.text('Fecha: ' + new Date().toLocaleString(), left, y); y+=18;
+  doc.text('Balance: ' + formatCur(state.balance), left, y); y+=14;
+  doc.text('Bancos:', left, y); y+=12;
+  state.banks.forEach(b => { doc.text(`${b.name} — ${formatCur(b.balance)}`, left, y); y+=12; if(y>740){ doc.addPage(); y=40; }});
+  doc.save('resumen_ce_'+new Date().toISOString().slice(0,10)+'.pdf');
+  log('PDF generado');
+}
 
-// Save state periódicamente and on unload
-window.addEventListener('beforeunload', saveState);
-// Also save after every render to keep persistence
-const originalRender = renderTable;
-function renderTableAndPersist(){ originalRender(); saveState(); }
-// Replace renderTable reference used earlier
-window.renderTable = renderTableAndPersist;
+/* ========= Auth & messaging (push token) ========= */
+(function authUI(){
+  document.getElementById('btnLogin').addEventListener('click', async ()=>{
+    const provider = new firebase.auth.GoogleAuthProvider();
+    try{ await auth.signInWithPopup(provider); }catch(e){ log('login popup error: ' + e.message); try{ await auth.signInWithRedirect(provider); }catch(err){ log('redirect error: '+ err.message); } }
+  });
+  document.getElementById('btnLogout').addEventListener('click', ()=> auth.signOut());
+})();
 
-// First render
-renderTableAndPersist();
+auth.onAuthStateChanged(async user => {
+  const ud = document.getElementById('userDisplay');
+  const loginBtn = document.getElementById('btnLogin'), logoutBtn = document.getElementById('btnLogout');
+  if(user){
+    window.__UID = user.uid;
+    ud.innerText = (user.displayName || user.email) + ' (' + user.uid.slice(0,6) + ')';
+    if(loginBtn) loginBtn.style.display='none'; if(logoutBtn) logoutBtn.style.display='inline-block';
+    log('Usuario autenticado: ' + (user.email || user.uid));
+    // store user basic info
+    rdb.ref(`users/${window.__UID}/meta`).set({ displayName: user.displayName || null, email: user.email || null, lastLogin: new Date().toISOString() }).catch(()=>{});
+    // register FCM token (ask permission)
+    try{
+      await messaging.requestPermission();
+      const token = await messaging.getToken();
+      if(token){ rdb.ref(`users/${window.__UID}/devices`).push({ token, platform:'web', createdAt: new Date().toISOString() }); log('FCM token guardado'); }
+    }catch(e){ log('FCM permiso/token error: ' + (e.message||e)); }
+    // start listeners & flush queue
+    startRealtime(window.__UID);
+    await flushQueue();
+    saveStateCloudIfPossible();
+  } else {
+    window.__UID = null;
+    ud.innerText = 'No autenticado';
+    if(loginBtn) loginBtn.style.display='inline-block'; if(logoutBtn) logoutBtn.style.display='none';
+    log('Sesión cerrada');
+    stopRealtime();
+  }
+});
+
+/* ========= Buttons & wiring ========= */
+document.addEventListener('DOMContentLoaded', ()=>{
+  // menu
+  const map = { m_dashboard:'s_dashboard', m_expenses:'s_expenses', m_incomes:'s_incomes', m_banks:'s_banks', m_pots:'s_pots', m_categories:'s_categories', m_settings:'s_settings' };
+  Object.keys(map).forEach(k => { document.getElementById(k).addEventListener('click', ()=>{ document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('active')); document.getElementById(k).classList.add('active'); Object.values(map).forEach(id => document.getElementById(id).style.display = 'none'); document.getElementById(map[k]).style.display = 'block'; }); });
+
+  // init date input
+  document.getElementById('e_date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('d_date')?.value = new Date().toISOString().slice(0,10);
+
+  // expense save
+  document.getElementById('btnSaveExpense').addEventListener('click', saveExpense);
+  document.getElementById('btnClearExpense').addEventListener('click', ()=>{ if(confirm('Limpiar inputs?')){ document.getElementById('e_amount').value=''; document.getElementById('e_note').value=''; document.getElementById('e_recurrent').checked=false; } });
+
+  document.getElementById('btnSaveIncome').addEventListener('click', saveIncome);
+  document.getElementById('btnSaveBank').addEventListener('click', saveBank);
+  document.getElementById('btnSavePot').addEventListener('click', savePot);
+  document.getElementById('btnSaveCategory').addEventListener('click', saveCategory);
+
+  document.getElementById('prevMonth').addEventListener('click', ()=>{ const d = new Date(state.currentMonthISO); const prev = new Date(d.getFullYear(), d.getMonth()-1, 1); state.currentMonthISO = prev.toISOString().slice(0,10); saveLocal(); });
+  document.getElementById('nextMonth').addEventListener('click', ()=>{ const d = new Date(state.currentMonthISO); const next = new Date(d.getFullYear(), d.getMonth()+1, 1); state.currentMonthISO = next.toISOString().slice(0,10); saveLocal(); });
+  document.getElementById('exportPDF').addEventListener('click', exportPDF);
+  document.getElementById('forceSync').addEventListener('click', ()=>{ if(window.__UID) flushQueue(); else alert('Inicia sesión para sincronizar'); });
+  document.getElementById('btnClearLocal').addEventListener('click', ()=>{ if(confirm('Borrar estado local? Esto no tocará la cloud.')){ localStorage.removeItem(STORAGE_KEY); loadLocal(); } });
+
+  // initial load
+  loadLocal();
+  // minor automation: run client monthly automation if first load of month
+  const lastRun = localStorage.getItem('ce_client_monthly_' + state.currentMonthISO.slice(0,7));
+  if(!lastRun){ runMonthlyAutomation(); localStorage.setItem('ce_client_monthly_' + state.currentMonthISO.slice(0,7), new Date().toISOString()); }
+});
+
+/* ========= Simple helper to show full state in UI ========= */
+setInterval(()=>{ document.getElementById('stateRaw').innerText = JSON.stringify(state, null, 2); }, 2000);
 
 </script>
-
 </body>
 </html>
+
