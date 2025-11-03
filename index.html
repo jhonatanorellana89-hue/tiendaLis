@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Control Económico — Fix botones</title>
+<title>Control Económico — v5 (Deudas & Bienes)</title>
 <link href="https://cdn.jsdelivr.net/npm/modern-normalize/modern-normalize.css" rel="stylesheet">
 <style>
   :root{--bg:#f6f7fb;--card:#fff;--muted:#6b7280;--accent:#0f766e}
@@ -22,20 +22,28 @@
   th,td{padding:8px;border-bottom:1px solid #f1f3f6;text-align:left}
   .time-meter{position:fixed;top:18px;right:18px;background:var(--card);padding:8px;border-radius:10px;box-shadow:0 8px 20px rgba(12,16,35,0.08);z-index:1200;display:flex;gap:8px;align-items:center}
   .muted{color:var(--muted);font-size:13px}
+  .over{color:#b91c1c;font-weight:700}
+  .badge{display:inline-block;padding:6px 8px;border-radius:6px;background:#eefbf9;color:#055e52;font-weight:700;margin-right:6px}
   @media (max-width:880px){.grid{grid-template-columns:1fr}.menu{position:relative}}
 </style>
 </head>
 <body>
   <div class="wrap">
-    <header style="display:flex;justify-content:space-between;align-items:center" class="card">
-      <div><strong>Control Económico — Fix botones</strong><div class="muted">Versión con botones arreglados</div></div>
+    <header class="card" style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-weight:700">Control Económico — v5</div>
+        <div class="muted">Deudas vinculadas a banco, Pasivos mensuales, Registro de bienes (activo/pasivo)</div>
+      </div>
       <div class="muted">Guardado en localStorage</div>
     </header>
 
     <div class="time-meter" id="timeMeter">
-      <button class="btn" id="btnPrevMonth">◀</button>
-      <div style="min-width:140px;text-align:center"><div class="muted">Mes</div><div id="tmCurrent" style="font-weight:700">--</div></div>
-      <button class="btn primary" id="btnNextMonth">▶</button>
+      <button class="btn" id="btnPrev">◀</button>
+      <div style="min-width:160px;text-align:center">
+        <div id="monthName" style="font-weight:800;letter-spacing:1px">--</div>
+        <div id="monthYear" class="muted">----</div>
+      </div>
+      <button class="btn primary" id="btnNext">▶</button>
       <button class="btn ghost" id="btnUndo">↶</button>
     </div>
 
@@ -43,117 +51,109 @@
       <aside class="card menu">
         <button id="mDashboard" class="active">Dashboard</button>
         <button id="mBanks">Bancos</button>
-        <button id="mCategories">Categorías</button>
+        <button id="mDebts">Deudas</button>
+        <button id="mLiabs">Pasivos (cuota mensual)</button>
+        <button id="mBienes">Bienes (Activo / Pasivo)</button>
         <button id="mDiary">Registro Diario</button>
-        <button id="mAssets">Activos</button>
-        <button id="mLiabs">Pasivos</button>
-        <button id="mIncomes">Ingresos</button>
       </aside>
 
       <main>
         <!-- Dashboard -->
         <section id="sDashboard" class="card">
           <div style="display:flex;justify-content:space-between;align-items:center">
-            <div><h3 style="margin:0">Dashboard</h3><div class="muted">Resumen rápido</div></div>
-            <div class="row"><div class="muted">Mes: <span id="currentMonth"></span></div><button class="btn primary" id="btnAdvance">Avanzar mes</button></div>
+            <div><h3 style="margin:0">Dashboard</h3><div class="muted">Resumen (mes actual y KPIs)</div></div>
+            <div>
+              <div class="muted">Mes actual:</div>
+              <div><strong id="dashMonthName">--</strong> <span id="dashMonthYear">----</span></div>
+            </div>
           </div>
+
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px">
             <div class="card"><div class="muted">Balance</div><div id="kBalance" style="font-weight:700">S/ 0</div></div>
-            <div class="card"><div class="muted">Ahorros</div><div id="kSavings" style="font-weight:700">S/ 0</div></div>
-            <div class="card"><div class="muted">Ingreso pasivo</div><div id="kPassive" style="font-weight:700">S/ 0</div></div>
-            <div class="card"><div class="muted">Gastos fijos</div><div id="kFixed" style="font-weight:700">S/ 0</div></div>
+            <div class="card"><div class="muted">Ahorros en bancos</div><div id="kBanks" style="font-weight:700">S/ 0</div></div>
+            <div class="card"><div class="muted">Total deuda mensual</div><div id="kDebtMonthly" style="font-weight:700">S/ 0</div></div>
+            <div class="card"><div class="muted">Activos netos (valor)</div><div id="kAssetsVal" style="font-weight:700">S/ 0</div></div>
           </div>
+
+          <div style="margin-top:12px" id="notifications"></div>
         </section>
 
         <!-- Banks -->
         <section id="sBanks" class="card" style="display:none">
           <h3>Bancos</h3>
-          <div class="muted">Agregar cuentas bancarias</div>
+          <div class="muted">Registra cuentas bancarias (saldo inicial)</div>
           <div style="display:flex;gap:12px;margin-top:10px">
             <div style="flex:1">
-              <label>Nombre</label><input id="bankName">
+              <label>Nombre banco / cuenta</label><input id="bankName">
               <label>Saldo inicial</label><input id="bankInit" type="number">
               <label>Tipo</label><select id="bankType"><option value="ahorro">Ahorro</option><option value="corriente">Corriente</option></select>
               <div style="margin-top:8px"><button class="btn primary" id="btnAddBank">Agregar banco</button></div>
             </div>
-            <div style="flex:1;overflow:auto;height:220px">
-              <table id="tblBanks"><thead><tr><th>Banco</th><th>Saldo</th><th>Tipo</th><th></th></tr></thead><tbody></tbody></table>
-            </div>
+            <div style="flex:1;overflow:auto;height:240px"><table id="tblBanks"><thead><tr><th>Banco</th><th>Saldo</th><th>Tipo</th><th></th></tr></thead><tbody></tbody></table></div>
           </div>
         </section>
 
-        <!-- Categories -->
-        <section id="sCategories" class="card" style="display:none">
-          <h3>Categorías</h3>
-          <div class="muted">Definir presupuesto por categoría</div>
+        <!-- Debts -->
+        <section id="sDebts" class="card" style="display:none">
+          <h3>Deudas vinculadas a banco</h3>
+          <div class="muted">Registra deudas con total, meses a pagar y banco asociado</div>
           <div style="display:flex;gap:12px;margin-top:10px">
             <div style="flex:1">
-              <label>Nombre categoría</label><input id="catName">
-              <label>Presupuesto mensual</label><input id="catBudget" type="number">
-              <div style="margin-top:8px"><button class="btn primary" id="btnAddCat">Agregar categoría</button></div>
+              <label>Concepto / Acreedor</label><input id="debtCred">
+              <label>Total deuda</label><input id="debtTotal" type="number">
+              <label>Meses a pagar</label><input id="debtMonths" type="number" value="12">
+              <label>Banco (opcional)</label><select id="debtBank"></select>
+              <label>Mes inicio (YYYY-MM)</label><input id="debtStart" placeholder="2025-11" type="month">
+              <div style="margin-top:8px"><button class="btn primary" id="btnAddDebt">Agregar deuda</button></div>
             </div>
-            <div style="flex:1;overflow:auto;height:220px" id="catList"></div>
+            <div style="flex:1;overflow:auto;height:240px"><table id="tblDebts"><thead><tr><th>Acreedor</th><th>Total</th><th>Meses</th><th>Pago/m</th><th>Banco</th><th>Remanente</th><th></th></tr></thead><tbody></tbody></table></div>
+          </div>
+        </section>
+
+        <!-- Liabilities (monthly) -->
+        <section id="sLiabs" class="card" style="display:none">
+          <h3>Pasivos (solo costo mensual)</h3>
+          <div class="muted">Registra la cuota mensual de pasivos, vinculada a banco si aplica</div>
+          <div style="display:flex;gap:12px;margin-top:10px">
+            <div style="flex:1">
+              <label>Concepto</label><input id="liabName">
+              <label>Cuota mensual</label><input id="liabMonthly" type="number">
+              <label>Banco (opcional)</label><select id="liabBank"></select>
+              <div style="margin-top:8px"><button class="btn primary" id="btnAddLiab">Agregar pasivo</button></div>
+            </div>
+            <div style="flex:1;overflow:auto;height:240px"><table id="tblLiabs"><thead><tr><th>Concepto</th><th>Cuota/m</th><th>Banco</th><th></th></tr></thead><tbody></tbody></table></div>
+          </div>
+        </section>
+
+        <!-- Bienes -->
+        <section id="sBienes" class="card" style="display:none">
+          <h3>Registro de bienes</h3>
+          <div class="muted">Clasifica bienes como Activo (genera ingreso) o Pasivo (genera costo)</div>
+          <div style="display:flex;gap:12px;margin-top:10px">
+            <div style="flex:1">
+              <label>Nombre bien</label><input id="goodName">
+              <label>Tipo</label><select id="goodType"><option value="activo">Activo</option><option value="pasivo">Pasivo</option></select>
+              <label>Valor (S/)</label><input id="goodValue" type="number">
+              <label>Ingreso mensual (si activo) / Costo mensual (si pasivo)</label><input id="goodMonthly" type="number">
+              <div style="margin-top:8px"><button class="btn primary" id="btnAddGood">Agregar bien</button></div>
+            </div>
+            <div style="flex:1;overflow:auto;height:240px"><table id="tblGoods"><thead><tr><th>Bien</th><th>Tipo</th><th>Valor</th><th>Mensual</th><th></th></tr></thead><tbody></tbody></table></div>
           </div>
         </section>
 
         <!-- Diary -->
         <section id="sDiary" class="card" style="display:none">
           <h3>Registro diario</h3>
-          <div class="muted">Registrar gasto por categoría (afecta saldo banco si se asigna)</div>
+          <div class="muted">Registra gastos por categoría o libre (afecta banco si asignas)</div>
           <div style="display:flex;gap:12px;margin-top:10px">
             <div style="flex:1">
               <label>Fecha</label><input id="dDate" type="date">
-              <label>Categoría</label><select id="dCategory"></select>
+              <label>Descripción</label><input id="dDesc">
               <label>Monto</label><input id="dAmount" type="number">
               <label>Banco (opcional)</label><select id="dBank"></select>
               <div style="margin-top:8px"><button class="btn primary" id="btnAddDiary">Registrar gasto</button></div>
             </div>
-            <div style="flex:1;overflow:auto;height:220px"><table id="tblDiary"><thead><tr><th>Fecha</th><th>Cat</th><th>Monto</th><th>Banco</th><th></th></tr></thead><tbody></tbody></table></div>
-          </div>
-        </section>
-
-        <!-- Small: Assets -->
-        <section id="sAssets" class="card" style="display:none">
-          <h3>Activos</h3>
-          <div class="muted">Ingreso pasivo por activos</div>
-          <div style="display:flex;gap:12px;margin-top:10px">
-            <div style="flex:1">
-              <label>Nombre</label><input id="aName">
-              <label>Ingreso mensual</label><input id="aIncome" type="number">
-              <div style="margin-top:8px"><button class="btn primary" id="btnAddAsset">Agregar</button></div>
-            </div>
-            <div style="flex:1;overflow:auto;height:160px"><table id="tblAssets"><thead><tr><th>Activo</th><th>Ingreso/m</th><th></th></tr></thead><tbody></tbody></table></div>
-          </div>
-        </section>
-
-        <!-- Pasivos -->
-        <section id="sLiabs" class="card" style="display:none">
-          <h3>Pasivos</h3>
-          <div class="muted">Registrar deudas y vincular banco</div>
-          <div style="display:flex;gap:12px;margin-top:10px">
-            <div style="flex:1">
-              <label>Concepto</label><input id="lName">
-              <label>Cuota mensual</label><input id="lMonthly" type="number">
-              <label>Banco</label><select id="lBank"></select>
-              <div style="margin-top:8px"><button class="btn primary" id="btnAddLiab">Agregar pasivo</button></div>
-            </div>
-            <div style="flex:1;overflow:auto;height:160px"><table id="tblLiabs"><thead><tr><th>Pasivo</th><th>Cuota/m</th><th>Banco</th><th></th></tr></thead><tbody></tbody></table></div>
-          </div>
-        </section>
-
-        <!-- Incomes -->
-        <section id="sIncomes" class="card" style="display:none">
-          <h3>Ingresos</h3>
-          <div class="muted">Registrar ingresos y asignar banco</div>
-          <div style="display:flex;gap:12px;margin-top:10px">
-            <div style="flex:1">
-              <label>Concepto</label><input id="iName">
-              <label>Monto</label><input id="iAmount" type="number">
-              <label>Frecuencia</label><select id="iFreq"><option value="mensual">Mensual</option><option value="unica">Única</option></select>
-              <label>Banco</label><select id="iBank"></select>
-              <div style="margin-top:8px"><button class="btn primary" id="btnAddIncome">Agregar ingreso</button></div>
-            </div>
-            <div style="flex:1;overflow:auto;height:160px"><table id="tblIncomes"><thead><tr><th>Ingreso</th><th>Monto</th><th>Freq</th><th>Banco</th><th></th></tr></thead><tbody></tbody></table></div>
+            <div style="flex:1;overflow:auto;height:240px"><table id="tblDiary"><thead><tr><th>Fecha</th><th>Desc</th><th>Monto</th><th>Banco</th><th></th></tr></thead><tbody></tbody></table></div>
           </div>
         </section>
 
@@ -162,223 +162,206 @@
   </div>
 
 <script>
-/* ---------- Estado simple en localStorage ---------- */
-const KEY='ce_fix_v1';
+/* ---------- Estado ---------- */
+const KEY='ce_v5_deudas_bienes';
 let state = {
   currentDate: new Date().toISOString().slice(0,10),
   balance:0,
   banks:[],
-  categories:[{id:'cat_food',name:'Alimentos',budget:300}],
+  debts:[], // {id, creditor, total, months, monthly, bankId, startMonth (YYYY-MM), remaining, paidMonths}
+  liabs:[], // {id,name,monthly,bankId}
+  goods:[], // {id,name,type,valor,monthly}
   diary:[],
-  assets:[],
-  liabs:[],
-  incomes:[],
   history:[]
 };
 
-function load(){ const raw = localStorage.getItem(KEY); if(raw) state = JSON.parse(raw); renderAll(); }
-function save(){ localStorage.setItem(KEY, JSON.stringify(state)); renderAll(); }
-function uid(pref='id'){ return pref + '_' + Math.random().toString(36).slice(2,9); }
-function notify(txt){ const n=document.createElement('div'); n.className='notif'; n.style.marginTop='8px'; n.innerText=txt; document.getElementById('notifications').prepend(n); setTimeout(()=>n.remove(),7000); }
+function uid(p='id'){return p+'_'+Math.random().toString(36).slice(2,9)}
+function load(){const raw=localStorage.getItem(KEY); if(raw) state=JSON.parse(raw)}
+function save(){localStorage.setItem(KEY,JSON.stringify(state)); renderAll()}
 
-/* ---------- Utilities ---------- */
-function formatCurrency(v){ return 'S/ '+Number(v||0).toLocaleString(); }
-function formatMonth(iso){ const d=new Date(iso); return d.toLocaleString('es-PE',{month:'long',year:'numeric'}); }
-function pushHistory(){ state.history = state.history || []; state.history.push(JSON.stringify(state)); if(state.history.length>48) state.history.shift(); localStorage.setItem(KEY, JSON.stringify(state)); }
+function notify(t,ttl=7000){ const n=document.createElement('div'); n.className='notif'; n.style.marginTop='8px'; n.innerText=t; document.getElementById('notifications').prepend(n); setTimeout(()=>n.remove(),ttl); }
+
+/* ---------- Helpers de mes ---------- */
+const MONTHS_ES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SETIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+function setMonthUI(iso){ const d=new Date(iso); document.getElementById('monthName').innerText = MONTHS_ES[d.getMonth()]; document.getElementById('monthYear').innerText = d.getFullYear(); document.getElementById('dashMonthName').innerText = MONTHS_ES[d.getMonth()]; document.getElementById('dashMonthYear').innerText = d.getFullYear(); }
 
 /* ---------- Renderers ---------- */
 function renderAll(){
-  // Dashboard
-  document.getElementById('currentMonth').innerText = formatMonth(state.currentDate);
-  document.getElementById('tmCurrent').innerText = formatMonth(state.currentDate);
-  document.getElementById('kBalance').innerText = formatCurrency(state.balance);
-  document.getElementById('kSavings').innerText = formatCurrency(state.banks.reduce((s,b)=>s + Number(b.balance||0),0));
-  document.getElementById('kPassive').innerText = formatCurrency(state.assets.reduce((s,a)=>s + Number(a.income||0),0));
-  document.getElementById('kFixed').innerText = formatCurrency(state.liabs.reduce((s,l)=>s + Number(l.monthly||0),0) + state.expensesSum || 0);
+  setMonthUI(state.currentDate);
+  document.getElementById('kBalance').innerText = formatCur(state.balance);
+  const totalBank = state.banks.reduce((s,b)=>s+Number(b.balance||0),0); document.getElementById('kBanks').innerText = formatCur(totalBank);
+  const debtMonthly = state.debts.reduce((s,d)=>s+Number(d.monthly||0),0); document.getElementById('kDebtMonthly').innerText = formatCur(debtMonthly);
+  const assetsVal = state.goods.filter(g=>g.type==='activo').reduce((s,g)=>s+Number(g.valor||0),0); document.getElementById('kAssetsVal').innerText = formatCur(assetsVal);
 
-  // Banks table & selects
-  const tb = document.querySelector('#tblBanks tbody'); tb.innerHTML='';
-  const bankSelects = ['dBank','iBank','lBank'];
-  state.banks.forEach(b=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${b.name}</td><td>${Number(b.balance).toLocaleString()}</td><td>${b.type}</td><td><button class="btn ghost" data-id="${b.id}">Eliminar</button></td>`;
-    tb.appendChild(tr);
-  });
-  // attach delete listeners
-  document.querySelectorAll('#tblBanks button[data-id]').forEach(btn=>{
-    btn.onclick = ()=>{ const id=btn.dataset.id; state.banks = state.banks.filter(x=>x.id!==id); save(); notify('Banco eliminado'); }
-  });
+  // banks table & selects
+  const tbBanks = document.querySelector('#tblBanks tbody'); tbBanks.innerHTML='';
+  state.banks.forEach(b=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${b.name}</td><td>${formatCur(b.balance)}</td><td>${b.type}</td><td><button class="btn ghost" data-id="${b.id}">Eliminar</button></td>`; tbBanks.appendChild(tr); });
+  document.querySelectorAll('#tblBanks button[data-id]').forEach(btn=>btn.onclick=()=>{ const id=btn.dataset.id; state.banks=state.banks.filter(x=>x.id!==id); save(); notify('Banco eliminado'); });
 
-  // bank selects
-  bankSelects.forEach(selId=>{
-    const sel = document.getElementById(selId); if(!sel) return;
-    const prev = sel.value;
-    sel.innerHTML = '<option value="">-- Ninguno --</option>';
-    state.banks.forEach(b=>{ const o=document.createElement('option'); o.value=b.id; o.textContent = `${b.name} (S/ ${Number(b.balance||0).toLocaleString()})`; sel.appendChild(o); });
-    sel.value = prev || '';
-  });
+  ['debtBank','liabBank','dBank'].forEach(id=>{ const sel=document.getElementById(id); if(!sel) return; const prev=sel.value; sel.innerHTML='<option value=\"\">-- Ninguno --</option>'; state.banks.forEach(b=>{ const o=document.createElement('option'); o.value=b.id; o.textContent=`${b.name} (S/ ${Number(b.balance||0).toLocaleString()})`; sel.appendChild(o); }); sel.value = prev||''; });
 
-  // Categories list and category select
-  const catList = document.getElementById('catList'); catList.innerHTML='';
-  state.categories.forEach(c=>{
-    const div = document.createElement('div');
-    const spent = state.diary.filter(d=>{
-      const dd = new Date(d.date); const cur = new Date(state.currentDate);
-      return dd.getFullYear()===cur.getFullYear() && dd.getMonth()===cur.getMonth() && d.category===c.id;
-    }).reduce((s,i)=>s+i.amount,0);
-    div.innerHTML = `<strong>${c.name}</strong> • Presupuesto S/ ${Number(c.budget).toLocaleString()} • Gastado S/ ${Number(spent).toLocaleString()}`;
-    catList.appendChild(div);
-  });
-  const dCat = document.getElementById('dCategory'); dCat.innerHTML=''; state.categories.forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=c.name; dCat.appendChild(o); });
-
-  // Diary table
-  const tD = document.querySelector('#tblDiary tbody'); tD.innerHTML='';
-  state.diary.slice().reverse().forEach(entry=>{
-    const b = state.banks.find(x=>x.id===entry.bankId); const bn = b?b.name:'';
-    const c = state.categories.find(x=>x.id===entry.category); const cn = c?c.name:'';
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${entry.date}</td><td>${cn}</td><td>${Number(entry.amount).toLocaleString()}</td><td>${bn}</td><td><button class="btn ghost" data-id="${entry.id}">Eliminar</button></td>`;
-    tD.appendChild(tr);
-  });
-  document.querySelectorAll('#tblDiary button[data-id]').forEach(btn=>{ btn.onclick = ()=>{ const id=btn.dataset.id; const e = state.diary.find(x=>x.id===id); if(e){ state.balance += Number(e.amount); if(e.bankId){ const b = state.banks.find(x=>x.id===e.bankId); if(b) b.balance = Number(b.balance) + Number(e.amount); } } state.diary = state.diary.filter(x=>x.id!==id); save(); notify('Registro diario eliminado'); } });
-
-  // assets
-  const tA = document.querySelector('#tblAssets tbody'); tA.innerHTML='';
-  state.assets.forEach(a=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${a.name}</td><td>${Number(a.income).toLocaleString()}</td><td><button class="btn ghost" data-id="${a.id}">Eliminar</button></td>`; tA.appendChild(tr); });
-  document.querySelectorAll('#tblAssets button[data-id]').forEach(b=>{ b.onclick=()=>{ state.assets = state.assets.filter(x=>x.id!==b.dataset.id); save(); notify('Activo eliminado'); } });
+  // debts
+  const tbDebt = document.querySelector('#tblDebts tbody'); tbDebt.innerHTML='';
+  state.debts.forEach(d=>{ const b = state.banks.find(x=>x.id===d.bankId); const bn=b?b.name:''; const tr=document.createElement('tr'); tr.innerHTML=`<td>${d.creditor}</td><td>${formatCur(d.total)}</td><td>${d.months}</td><td>${formatCur(d.monthly)}</td><td>${bn}</td><td>${formatCur(d.remaining)}</td><td><button class="btn ghost" data-id="${d.id}">Eliminar</button></td>`; tbDebt.appendChild(tr); });
+  document.querySelectorAll('#tblDebts button[data-id]').forEach(b=>b.onclick=()=>{ const id=b.dataset.id; state.debts=state.debts.filter(x=>x.id!==id); save(); notify('Deuda eliminada'); });
 
   // liabs
-  const tL = document.querySelector('#tblLiabs tbody'); tL.innerHTML='';
-  state.liabs.forEach(l=>{ const b = state.banks.find(x=>x.id===l.bankId); const bn = b?b.name:''; const tr=document.createElement('tr'); tr.innerHTML=`<td>${l.name}</td><td>${Number(l.monthly).toLocaleString()}</td><td>${bn}</td><td><button class="btn ghost" data-id="${l.id}">Eliminar</button></td>`; tL.appendChild(tr); });
-  document.querySelectorAll('#tblLiabs button[data-id]').forEach(b=>{ b.onclick=()=>{ state.liabs = state.liabs.filter(x=>x.id!==b.dataset.id); save(); notify('Pasivo eliminado'); } });
+  const tbLiab=document.querySelector('#tblLiabs tbody'); tbLiab.innerHTML='';
+  state.liabs.forEach(l=>{ const b=state.banks.find(x=>x.id===l.bankId); const bn=b?b.name:''; const tr=document.createElement('tr'); tr.innerHTML=`<td>${l.name}</td><td>${formatCur(l.monthly)}</td><td>${bn}</td><td><button class="btn ghost" data-id="${l.id}">Eliminar</button></td>`; tbLiab.appendChild(tr); });
+  document.querySelectorAll('#tblLiabs button[data-id]').forEach(b=>b.onclick=()=>{ state.liabs=state.liabs.filter(x=>x.id!==b.dataset.id); save(); notify('Pasivo eliminado'); });
 
-  // incomes
-  const tI = document.querySelector('#tblIncomes tbody'); tI.innerHTML='';
-  state.incomes.forEach(i=>{ const b = state.banks.find(x=>x.id===i.bankId); const bn = b?b.name:''; const tr=document.createElement('tr'); tr.innerHTML=`<td>${i.name}</td><td>${Number(i.amount).toLocaleString()}</td><td>${i.freq}</td><td>${bn}</td><td><button class="btn ghost" data-id="${i.id}">Eliminar</button></td>`; tI.appendChild(tr); });
-  document.querySelectorAll('#tblIncomes button[data-id]').forEach(b=>{ b.onclick=()=>{ state.incomes = state.incomes.filter(x=>x.id!==b.dataset.id); save(); notify('Ingreso eliminado'); } });
+  // goods
+  const tbGoods = document.querySelector('#tblGoods tbody'); tbGoods.innerHTML='';
+  state.goods.forEach(g=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${g.name}</td><td>${g.type}</td><td>${formatCur(g.valor)}</td><td>${formatCur(g.monthly)}</td><td><button class="btn ghost" data-id="${g.id}">Eliminar</button></td>`; tbGoods.appendChild(tr); });
+  document.querySelectorAll('#tblGoods button[data-id]').forEach(b=>b.onclick=()=>{ state.goods=state.goods.filter(x=>x.id!==b.dataset.id); save(); notify('Bien eliminado'); });
+
+  // diary
+  const tbD = document.querySelector('#tblDiary tbody'); tbD.innerHTML='';
+  state.diary.slice().reverse().forEach(e=>{ const b = state.banks.find(x=>x.id===e.bankId); const bn=b?b.name:''; const tr=document.createElement('tr'); tr.innerHTML=`<td>${e.date}</td><td>${e.desc}</td><td>${formatCur(e.amount)}</td><td>${bn}</td><td><button class="btn ghost" data-id="${e.id}">Eliminar</button></td>`; tbD.appendChild(tr); });
+  document.querySelectorAll('#tblDiary button[data-id]').forEach(btn=>btn.onclick=()=>{ const id=btn.dataset.id; const ent=state.diary.find(x=>x.id===id); if(ent){ state.balance += Number(ent.amount); if(ent.bankId){ const b = state.banks.find(x=>x.id===ent.bankId); if(b) b.balance = Number(b.balance) + Number(ent.amount); } } state.diary = state.diary.filter(x=>x.id!==id); save(); notify('Registro diario eliminado'); });
+
 }
 
-/* ---------- Actions (all wired) ---------- */
-function showSection(id){
-  ['sDashboard','sBanks','sCategories','sDiary','sAssets','sLiabs','sIncomes'].forEach(s=>document.getElementById(s).style.display = (s===id? 'block':'none'));
-  document.querySelectorAll('.menu button').forEach(btn=>btn.classList.remove('active'));
-  // menu mapping
-  const map = { sDashboard:'mDashboard', sBanks:'mBanks', sCategories:'mCategories', sDiary:'mDiary', sAssets:'mAssets', sLiabs:'mLiabs', sIncomes:'mIncomes' };
-  const btnId = map[id];
-  if(btnId) document.getElementById(btnId).classList.add('active');
-}
+/* ---------- Format ---------- */
+function formatCur(v){ return 'S/ '+Number(v||0).toLocaleString(); }
 
-/* Banks */
+/* ---------- CRUD actions (wired) ---------- */
 document.addEventListener('DOMContentLoaded', ()=>{
-  // menu wiring (explicit)
-  document.getElementById('mDashboard').onclick = ()=> showSection('sDashboard');
-  document.getElementById('mBanks').onclick = ()=> showSection('sBanks');
-  document.getElementById('mCategories').onclick = ()=> showSection('sCategories');
-  document.getElementById('mDiary').onclick = ()=> showSection('sDiary');
-  document.getElementById('mAssets').onclick = ()=> showSection('sAssets');
-  document.getElementById('mLiabs').onclick = ()=> showSection('sLiabs');
-  document.getElementById('mIncomes').onclick = ()=> showSection('sIncomes');
+
+  load(); renderAll(); setMonthUI(state.currentDate);
+
+  // menu wiring
+  document.getElementById('mDashboard').onclick = ()=> show('sDashboard');
+  document.getElementById('mBanks').onclick = ()=> show('sBanks');
+  document.getElementById('mDebts').onclick = ()=> show('sDebts');
+  document.getElementById('mLiabs').onclick = ()=> show('sLiabs');
+  document.getElementById('mBienes').onclick = ()=> show('sBienes');
+  document.getElementById('mDiary').onclick = ()=> show('sDiary');
 
   // bank add
   document.getElementById('btnAddBank').onclick = ()=>{
-    const n = document.getElementById('bankName').value.trim(); const b = Number(document.getElementById('bankInit').value)||0; const t = document.getElementById('bankType').value;
-    if(!n) return alert('Nombre requerido');
-    state.banks.push({id:uid('b'),name:n,balance:b,type:t});
-    document.getElementById('bankName').value=''; document.getElementById('bankInit').value='';
-    save(); notify('Banco agregado');
+    const name = document.getElementById('bankName').value.trim(); const bal = Number(document.getElementById('bankInit').value)||0; const type = document.getElementById('bankType').value;
+    if(!name) return alert('Nombre banco requerido');
+    state.banks.push({id:uid('b'),name,balance:bal,type}); document.getElementById('bankName').value=''; document.getElementById('bankInit').value=''; save(); notify('Banco agregado');
   };
 
-  // add category
-  document.getElementById('btnAddCat').onclick = ()=>{
-    const n = document.getElementById('catName').value.trim(); const b = Number(document.getElementById('catBudget').value)||0;
-    if(!n) return alert('Nombre requerido');
-    state.categories.push({id:uid('cat'),name:n,budget:b});
-    document.getElementById('catName').value=''; document.getElementById('catBudget').value='';
-    save(); notify('Categoría agregada');
+  // add debt
+  document.getElementById('btnAddDebt').onclick = ()=>{
+    const cred = document.getElementById('debtCred').value.trim(); const total = Number(document.getElementById('debtTotal').value)||0; const months = Number(document.getElementById('debtMonths').value)||1; const bankId = document.getElementById('debtBank').value||null; const start = document.getElementById('debtStart').value;
+    if(!cred || total<=0 || months<=0) return alert('Completa campos válidos');
+    const monthly = +(total/months).toFixed(2);
+    state.debts.push({id:uid('d'),creditor:cred,total,months,monthly,bankId,startMonth:start||state.currentDate.slice(0,7),remaining:total,paidMonths:0});
+    document.getElementById('debtCred').value=''; document.getElementById('debtTotal').value=''; document.getElementById('debtMonths').value='12'; document.getElementById('debtStart').value='';
+    save(); notify('Deuda agregada');
+  };
+
+  // add liab (monthly only)
+  document.getElementById('btnAddLiab').onclick = ()=>{
+    const name = document.getElementById('liabName').value.trim(); const mon = Number(document.getElementById('liabMonthly').value)||0; const bankId = document.getElementById('liabBank').value||null;
+    if(!name || mon<=0) return alert('Nombre y cuota validos');
+    state.liabs.push({id:uid('l'),name,monthly:mon,bankId}); document.getElementById('liabName').value=''; document.getElementById('liabMonthly').value=''; save(); notify('Pasivo agregado');
+  };
+
+  // add good
+  document.getElementById('btnAddGood').onclick = ()=>{
+    const name = document.getElementById('goodName').value.trim(); const type = document.getElementById('goodType').value; const val = Number(document.getElementById('goodValue').value)||0; const mon = Number(document.getElementById('goodMonthly').value)||0;
+    if(!name) return alert('Nombre del bien requerido');
+    state.goods.push({id:uid('g'),name,type,valor:val,monthly:mon}); document.getElementById('goodName').value=''; document.getElementById('goodValue').value=''; document.getElementById('goodMonthly').value=''; save(); notify('Bien agregado');
   };
 
   // diary add
   document.getElementById('btnAddDiary').onclick = ()=>{
     const date = document.getElementById('dDate').value || new Date().toISOString().slice(0,10);
-    const cat = document.getElementById('dCategory').value;
+    const desc = document.getElementById('dDesc').value || '';
     const amt = Number(document.getElementById('dAmount').value)||0;
-    const bankId = document.getElementById('dBank').value || null;
-    if(!cat) return alert('Selecciona categoría');
+    const bankId = document.getElementById('dBank').value||null;
     if(amt<=0) return alert('Monto mayor que 0');
-    // check budget
-    const catObj = state.categories.find(c=>c.id===cat);
-    const spent = state.diary.filter(d=>{
-      const dd = new Date(d.date); const cur = new Date(state.currentDate);
-      return dd.getFullYear()===cur.getFullYear() && dd.getMonth()===cur.getMonth() && d.category===cat;
-    }).reduce((s,i)=>s+i.amount,0);
-    if(catObj && (spent + amt) > catObj.budget){
-      if(!confirm(`Este gasto excede presupuesto de ${catObj.name} por S/ ${(spent+amt - catObj.budget).toFixed(2)}. Registrar igual?`)) return;
-    }
-    state.diary.push({id:uid('d'),date,category:cat,amount:amt,bankId,notes:''});
-    state.balance -= amt;
-    if(bankId){
-      const b = state.banks.find(x=>x.id===bankId); if(b) b.balance = Number(b.balance) - amt;
-    }
-    document.getElementById('dAmount').value=''; save(); notify('Gasto registrado');
-  };
-
-  // assets add
-  document.getElementById('btnAddAsset').onclick = ()=>{
-    const n=document.getElementById('aName').value.trim(); const inc=Number(document.getElementById('aIncome').value)||0;
-    if(!n) return alert('Nombre requerido');
-    state.assets.push({id:uid('a'),name:n,income:inc}); document.getElementById('aName').value=''; document.getElementById('aIncome').value=''; save(); notify('Activo agregado');
-  };
-
-  // liab add
-  document.getElementById('btnAddLiab').onclick = ()=>{
-    const n=document.getElementById('lName').value.trim(); const mon=Number(document.getElementById('lMonthly').value)||0; const bankId=document.getElementById('lBank').value || null;
-    if(!n) return alert('Nombre requerido');
-    state.liabs.push({id:uid('l'),name:n,monthly:mon,bankId}); document.getElementById('lName').value=''; document.getElementById('lMonthly').value=''; save(); notify('Pasivo agregado');
-  };
-
-  // income add
-  document.getElementById('btnAddIncome').onclick = ()=>{
-    const n=document.getElementById('iName').value.trim(); const amt=Number(document.getElementById('iAmount').value)||0; const freq=document.getElementById('iFreq').value; const bankId=document.getElementById('iBank').value||null;
-    if(!n) return alert('Nombre requerido');
-    state.incomes.push({id:uid('in'),name:n,amount:amt,freq,bankId});
-    // apply simple allocation: deposit into bank if chosen else to balance
-    if(bankId){ const b = state.banks.find(x=>x.id===bankId); if(b) b.balance = Number(b.balance) + amt; } else state.balance += amt;
-    document.getElementById('iName').value=''; document.getElementById('iAmount').value=''; save(); notify('Ingreso agregado');
+    state.diary.push({id:uid('di'),date,desc,amount:amt,bankId}); state.balance -= amt;
+    if(bankId){ const b = state.banks.find(x=>x.id===bankId); if(b) b.balance = Number(b.balance) - amt; }
+    document.getElementById('dDesc').value=''; document.getElementById('dAmount').value=''; save(); notify('Gasto registrado');
   };
 
   // month controls
-  document.getElementById('btnNextMonth').onclick = ()=>{ pushHistory(); advanceMonth(); save(); };
-  document.getElementById('btnPrevMonth').onclick = ()=>{ if(confirm('Deshacer último avance?')) undoHistory(); };
+  document.getElementById('btnNext').onclick = ()=>{ pushHistory(); advanceMonth(); save(); };
+  document.getElementById('btnPrev').onclick = ()=>{ if(confirm('Deshacer último avance?')) undoHistory(); };
   document.getElementById('btnUndo').onclick = ()=>{ if(confirm('Deshacer último avance?')) undoHistory(); };
-  document.getElementById('btnAdvance').onclick = ()=>{ pushHistory(); advanceMonth(); save(); };
 
-  // initial load
-  load();
-});
+}); // DOMContentLoaded end
 
-/* ---------- Monthly processing ---------- */
-function advanceMonth(){
-  const cur = new Date(state.currentDate); const next = new Date(cur.getFullYear(), cur.getMonth()+1, 1); state.currentDate = next.toISOString().slice(0,10);
-  // incomes mensuales + activos
-  const incomeMonthly = state.incomes.reduce((s,i)=> s + ((i.freq==='mensual')?Number(i.amount||0):0),0);
-  const passive = state.assets.reduce((s,a)=> s + Number(a.income||0),0);
-  const total = incomeMonthly + passive;
-  // add to balance
-  state.balance += total;
-  // deduct liabilities (cuotas) and debit bank if linked
-  state.liabs.forEach(l=>{
-    state.balance -= Number(l.monthly||0);
-    if(l.bankId){ const b = state.banks.find(x=>x.id===l.bankId); if(b) b.balance = Number(b.balance) - Number(l.monthly||0); }
-  });
-  notify(`Mes avanzado: ingresos S/ ${total.toFixed(2)} aplicado`);
+/* ---------- Section show ---------- */
+function show(id){
+  ['sDashboard','sBanks','sDebts','sLiabs','sBienes','sDiary'].forEach(s=>document.getElementById(s).style.display = (s===id?'block':'none'));
+  document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('active'));
+  const map = {sDashboard:'mDashboard',sBanks:'mBanks',sDebts:'mDebts',sLiabs:'mLiabs',sBienes:'mBienes',sDiary:'mDiary'};
+  const bid = map[id]; if(bid) document.getElementById(bid).classList.add('active');
 }
 
-/* ---------- Undo ---------- */
-function undoHistory(){ if(!state.history || state.history.length===0){ notify('No hay historial'); return } const snap = state.history.pop(); state = JSON.parse(snap); save(); notify('Deshecho'); }
+/* ---------- History ---------- */
+function pushHistory(){ state.history = state.history || []; state.history.push(JSON.stringify(state)); if(state.history.length>48) state.history.shift(); localStorage.setItem(KEY, JSON.stringify(state)); }
+function undoHistory(){ if(!state.history||state.history.length===0){ notify('No hay historial'); return } const snap = state.history.pop(); state = JSON.parse(snap); save(); notify('Deshecho'); }
 
-/* ---------- Helpers exp sum ---------- */
-Object.defineProperty(state, 'expensesSum', { get: function(){ return state.liabs.reduce((s,l)=>s+Number(l.monthly||0),0); }, configurable:true });
+/* ---------- Advance month logic: aplica cuotas de deudas y pasivos ---------- */
+function advanceMonth(){
+  // mover mes
+  const cur = new Date(state.currentDate); const next = new Date(cur.getFullYear(), cur.getMonth()+1, 1); state.currentDate = next.toISOString().slice(0,10);
 
+  // 1) aplicar pagos mensuales de deudas que correspondan (si startMonth <= current month and remaining>0)
+  state.debts.forEach(d=>{
+    // check if debt is active this month: compare startMonth <= current YYYY-MM and remaining>0
+    const curYm = state.currentDate.slice(0,7);
+    if(d.remaining > 0 && d.startMonth <= curYm){
+      const pay = Number(d.monthly||0);
+      // debit from bank if present and has balance, else from balance
+      if(d.bankId){
+        const b = state.banks.find(x=>x.id===d.bankId);
+        if(b && Number(b.balance) >= pay){ b.balance = Number(b.balance) - pay; d.remaining = Math.max(0, Number(d.remaining) - pay); d.paidMonths = (d.paidMonths||0) + 1; }
+        else { // partial: debit what bank has then from balance
+          const taken = b ? Math.min(Number(b.balance), pay) : 0;
+          if(b) b.balance = Number(b.balance) - taken;
+          const rest = pay - taken;
+          state.balance -= rest;
+          d.remaining = Math.max(0, Number(d.remaining) - pay);
+          d.paidMonths = (d.paidMonths||0) + 1;
+        }
+      } else { // no bank linked
+        state.balance -= pay; d.remaining = Math.max(0, Number(d.remaining) - pay); d.paidMonths = (d.paidMonths||0) + 1;
+      }
+    }
+  });
+
+  // 2) aplicar pasivos (liabs) cuotas mensuales: debit from linked bank if possible else from balance
+  state.liabs.forEach(l=>{
+    const pay = Number(l.monthly||0);
+    if(l.bankId){
+      const b = state.banks.find(x=>x.id===l.bankId);
+      if(b && Number(b.balance) >= pay){ b.balance = Number(b.balance) - pay; } else {
+        const taken = b ? Math.min(Number(b.balance), pay) : 0; if(b) b.balance = Number(b.balance) - taken; const rest = pay - taken; state.balance -= rest;
+      }
+    } else { state.balance -= pay; }
+  });
+
+  // 3) aplicar ingresos por bienes activos automáticamente al balance
+  const incomeFromGoods = state.goods.filter(g=>g.type==='activo').reduce((s,g)=>s + Number(g.monthly||0),0);
+  state.balance += incomeFromGoods;
+  if(incomeFromGoods>0) notify(`Ingresos por bienes activos: S/ ${incomeFromGoods.toFixed(2)}`);
+
+  notify(`Mes avanzado: se aplicaron pagos mensuales y se registraron ingresos activos`);
+}
+
+/* ---------- Utilities ---------- */
+function formatMonthYear(iso){
+  const d = new Date(iso);
+  return `${MONTHS_ES[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+/* ---------- Init ---------- */
+window.addEventListener('DOMContentLoaded', ()=>{
+  load(); renderAll(); setMonthUI(state.currentDate);
+  // make sure default section show
+  show('sDashboard');
+});
+window.addEventListener('beforeunload', ()=> save());
 </script>
 </body>
 </html>
+
