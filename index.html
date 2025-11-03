@@ -1,324 +1,568 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8"/>
+<meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Control Financiero — Firestore Sync</title>
+<title>Control Económico — Actualizado (RealtimeDB)</title>
+
+<!-- Estilos básicos -->
 <style>
-  body{font-family:Arial,Helvetica,sans-serif;background:#f5f7fb;margin:0;color:#0b1220}
-  .wrap{max-width:1100px;margin:18px auto;padding:18px}
-  .card{background:#fff;border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(12,16,35,0.06)}
-  .grid{display:grid;grid-template-columns:260px 1fr;gap:14px}
-  .menu button{display:block;width:100%;text-align:left;padding:10px;border:0;background:transparent;cursor:pointer}
+  :root{--bg:#f5f7fb;--card:#fff;--muted:#6b7280;--accent:#0f766e}
+  body{font-family:Inter,system-ui,Arial;background:var(--bg);margin:0;color:#0b1220}
+  .wrap{max-width:1100px;margin:18px auto;padding:14px}
+  .card{background:var(--card);border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(12,16,35,0.06)}
+  .grid{display:grid;grid-template-columns:260px 1fr;gap:12px}
+  .menu button{display:block;width:100%;text-align:left;padding:10px;border-radius:8px;border:0;background:transparent;cursor:pointer}
   .menu button.active{background:#eefbf9}
-  label{display:block;font-size:13px;color:#6b7280;margin-top:8px}
-  input,select{width:100%;padding:8px;border-radius:8px;border:1px solid #e6e9ef;margin-top:6px}
-  .btn{padding:8px 10px;border-radius:8px;border:0;cursor:pointer}
-  .btn.primary{background:#0f766e;color:#fff}
+  label{display:block;font-size:13px;margin-top:8px;color:var(--muted)}
+  input,select,textarea{width:100%;padding:8px;border-radius:6px;border:1px solid #e6e9ef;margin-top:6px}
   table{width:100%;border-collapse:collapse;font-size:13px}
   th,td{padding:8px;border-bottom:1px solid #f1f3f6;text-align:left}
-  .log{height:140px;overflow:auto;background:#0b1220;color:#fff;padding:8px;border-radius:8px;font-size:12px}
-  .timebar{position:fixed;top:12px;right:12px;background:#fff;padding:10px;border-radius:12px;box-shadow:0 12px 36px rgba(12,16,35,0.08);z-index:1200;display:flex;gap:8px;align-items:center}
-  @media (max-width:980px){.grid{grid-template-columns:1fr} .timebar{position:static;margin-bottom:12px}}
+  .row{display:flex;gap:8px;align-items:center}
+  .btn{padding:8px 10px;border-radius:8px;border:0;cursor:pointer}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.ghost{background:transparent;border:1px solid #e6e9ef}
+  .notif{padding:8px;border-radius:8px;background:#fff7ed;border:1px solid #ffe1b8;font-size:13px;margin-top:8px}
+  #log{height:120px;overflow:auto;background:#0b1220;color:#fff;padding:8px;border-radius:6px;font-size:12px}
+  .time-meter{position:fixed;top:12px;right:12px;background:var(--card);padding:10px;border-radius:10px;box-shadow:0 8px 20px rgba(12,16,35,0.08);z-index:1200;display:flex;gap:8px;align-items:center}
+  @media (max-width:880px){.grid{grid-template-columns:1fr}.time-meter{position:static;margin-bottom:12px}}
 </style>
 
-<!-- jsPDF (PDF export) -->
+<!-- Librerías: Chart.js (CDN) y jsPDF -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-<!-- Firebase compat libs (Firestore + Auth) -->
+<!-- Firebase compat -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-messaging-compat.js"></script>
 </head>
 <body>
   <div class="wrap">
     <header class="card" style="display:flex;justify-content:space-between;align-items:center">
       <div>
-        <strong>Control Financiero — Firestore</strong>
-        <div style="font-size:13px;color:#6b7280">Sincronización automática con Cloud Firestore</div>
+        <strong>Control Económico — Actualizado</strong>
+        <div style="color:var(--muted)">RealtimeDB • Huchas • Recurrentes • Alertas • Charts</div>
       </div>
       <div style="text-align:right">
-        <div id="userInfo" style="font-size:13px;color:#6b7280">No autenticado</div>
-        <div style="margin-top:6px">
-          <button id="btnLogin" class="btn primary">Ingresar con Google</button>
-          <button id="btnLogout" class="btn" style="display:none">Salir</button>
-        </div>
+        <div id="userDisplay" style="font-size:13px;color:var(--muted)">No autenticado</div>
+        <small id="syncStatus" style="color:var(--muted)">Sincronización: local</small>
       </div>
     </header>
 
-    <div class="timebar card">
-      <button class="btn" onclick="prevMonth()">◀</button>
-      <div style="text-align:center;min-width:160px">
-        <div id="monthLabel" style="font-weight:700">--</div>
-        <div id="yearLabel" style="font-size:12px;color:#6b7280">----</div>
+    <div class="time-meter" id="timeMeter">
+      <button class="btn" id="prevMonth">◀</button>
+      <div style="min-width:160px;text-align:center">
+        <div id="monthName" style="font-weight:700">--</div>
+        <div id="monthYear" style="color:var(--muted)">----</div>
       </div>
-      <button class="btn primary" onclick="nextMonth()">▶</button>
-      <button class="btn" onclick="exportPDF()">Exportar PDF</button>
-      <button class="btn" onclick="flushQueue()">Forzar sync</button>
+      <button class="btn primary" id="nextMonth">▶</button>
+      <button class="btn" id="exportPDF">Exportar PDF</button>
+      <button class="btn" id="forceSync">Forzar sync</button>
     </div>
 
     <div style="height:12px"></div>
 
     <div class="grid">
       <aside class="card menu">
-        <button id="m_dashboard" class="active" onclick="show('dashboard')">Dashboard</button>
-        <button id="m_banks" onclick="show('banks')">Bancos</button>
-        <button id="m_debts" onclick="show('debts')">Deudas</button>
-        <button id="m_expenses" onclick="show('expenses')">Gastos</button>
-        <div style="margin-top:12px;font-size:13px;color:#6b7280">LOG</div>
-        <div id="log" class="log card"></div>
+        <button id="m_dashboard" class="active">Dashboard</button>
+        <button id="m_expenses">Gastos</button>
+        <button id="m_incomes">Ingresos</button>
+        <button id="m_banks">Bancos</button>
+        <button id="m_pots">Huchas</button>
+        <button id="m_categories">Categorías</button>
+        <button id="m_settings">Ajustes</button>
+        <div style="margin-top:12px;font-size:12px;color:var(--muted)">LOG</div>
+        <div id="log" class="card"></div>
       </aside>
 
       <main>
-        <section id="dashboard" class="card">
-          <h3>Resumen</h3>
-          <div style="display:flex;gap:12px">
-            <div style="flex:1" class="card"><div style="color:#6b7280">Balance</div><div id="k_balance" style="font-weight:700">S/ 0</div></div>
-            <div style="flex:1" class="card"><div style="color:#6b7280">Ahorros (bancos)</div><div id="k_savings" style="font-weight:700">S/ 0</div></div>
-            <div style="flex:1" class="card"><div style="color:#6b7280">Deuda mensual</div><div id="k_debt" style="font-weight:700">S/ 0</div></div>
+        <!-- Dashboard -->
+        <section id="s_dashboard" class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <h3 style="margin:0">Resumen mensual</h3>
+              <div style="color:var(--muted);font-size:13px">Visión rápida y gráficos</div>
+            </div>
+            <div class="row">
+              <div style="text-align:right">
+                <div style="color:var(--muted)">Balance</div>
+                <div id="k_balance" style="font-weight:700">S/ 0</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+            <div class="card">
+              <canvas id="chartExpenses" height="220"></canvas>
+            </div>
+            <div class="card">
+              <canvas id="chartCategories" height="220"></canvas>
+            </div>
+          </div>
+
+          <div style="margin-top:12px" id="alertsContainer"></div>
+        </section>
+
+        <!-- Expenses -->
+        <section id="s_expenses" class="card" style="display:none">
+          <h3>Registrar gasto</h3>
+          <label>Fecha</label><input id="e_date" type="date">
+          <label>Monto</label><input id="e_amount" type="number" step="0.01">
+          <label>Categoría</label>
+          <select id="e_category"></select>
+          <label>Banco (opcional)</label>
+          <select id="e_bank"><option value="">-- Ninguno --</option></select>
+          <label>Nota</label><input id="e_note">
+          <label><input type="checkbox" id="e_recurrent"> Recurrente mensual</label>
+          <div style="margin-top:8px" class="row">
+            <button class="btn primary" id="btnSaveExpense">Guardar gasto</button>
+            <button class="btn" id="btnClearExpense">Limpiar (NO recomendado)</button>
+          </div>
+
+          <h4 style="margin-top:12px">Historial (últimos 50)</h4>
+          <div style="max-height:240px;overflow:auto"><table id="tblExpenses"><thead><tr><th>Fecha</th><th>Desc</th><th>Monto</th><th>Cat</th><th></th></tr></thead><tbody></tbody></table></div>
+        </section>
+
+        <!-- Incomes -->
+        <section id="s_incomes" class="card" style="display:none">
+          <h3>Ingresos</h3>
+          <label>Concepto</label><input id="i_name">
+          <label>Monto</label><input id="i_amount" type="number" step="0.01">
+          <label>Frecuencia</label>
+          <select id="i_freq"><option value="mensual">Mensual</option><option value="unica">Única</option></select>
+          <label>Banco (opcional)</label><select id="i_bank"><option value="">-- Ninguno --</option></select>
+          <div style="margin-top:8px"><button class="btn primary" id="btnSaveIncome">Guardar ingreso</button></div>
+
+          <h4 style="margin-top:12px">Ingresos (últimos 50)</h4>
+          <div style="max-height:200px;overflow:auto"><table id="tblIncomes"><thead><tr><th>Ingreso</th><th>Monto</th><th>Freq</th><th></th></tr></thead><tbody></tbody></table></div>
+        </section>
+
+        <!-- Banks -->
+        <section id="s_banks" class="card" style="display:none">
+          <h3>Bancos / cuentas</h3>
+          <label>Nombre banco</label><input id="b_name">
+          <label>Saldo inicial</label><input id="b_balance" type="number" step="0.01">
+          <div style="margin-top:8px"><button class="btn primary" id="btnSaveBank">Guardar banco</button></div>
+          <div style="margin-top:12px"><table id="tblBanks"><thead><tr><th>Banco</th><th>Saldo</th><th></th></tr></thead><tbody></tbody></table></div>
+        </section>
+
+        <!-- Pots (huchas) -->
+        <section id="s_pots" class="card" style="display:none">
+          <h3>Huchas / Ahorros</h3>
+          <label>Nombre</label><input id="p_name">
+          <label>Meta (S/)</label><input id="p_goal" type="number">
+          <label>Regla automática (%)</label><input id="p_percent" type="number" value="0">
+          <div style="margin-top:8px"><button class="btn primary" id="btnSavePot">Crear hucha</button></div>
+          <div style="margin-top:12px"><table id="tblPots"><thead><tr><th>Hucha</th><th>Meta</th><th>Balance</th><th></th></tr></thead><tbody></tbody></table></div>
+        </section>
+
+        <!-- Categories -->
+        <section id="s_categories" class="card" style="display:none">
+          <h3>Categorías y presupuesto</h3>
+          <label>Nombre categoría</label><input id="c_name">
+          <label>Límite mensual (S/)</label><input id="c_limit" type="number" step="0.01">
+          <div style="margin-top:8px"><button class="btn primary" id="btnSaveCategory">Crear categoría</button></div>
+          <div style="margin-top:12px"><table id="tblCategories"><thead><tr><th>Cat</th><th>Límite</th><th>Gasto mes</th><th></th></tr></thead><tbody></tbody></table></div>
+        </section>
+
+        <!-- Settings -->
+        <section id="s_settings" class="card" style="display:none">
+          <h3>Ajustes</h3>
+          <div style="margin-bottom:8px">
+            <button class="btn primary" id="btnLogin">Iniciar sesión (Google)</button>
+            <button class="btn" id="btnLogout" style="display:none">Cerrar sesión</button>
+            <button class="btn" id="btnClearLocal">Borrar local (no cloud)</button>
+          </div>
+          <div style="margin-top:12px">
+            <strong>Estado</strong>
+            <div id="stateRaw" style="white-space:pre-wrap;max-height:180px;overflow:auto;background:#f1f3f5;padding:8px;border-radius:6px"></div>
           </div>
         </section>
-
-        <section id="banks" class="card" style="display:none">
-          <h3>Bancos</h3>
-          <label>Nombre</label><input id="bank_name">
-          <label>Saldo (S/)</label><input id="bank_balance" type="number" value="0">
-          <label>Tipo</label><select id="bank_type"><option value="ahorro">Ahorro</option><option value="corriente">Corriente</option></select>
-          <div style="margin-top:8px"><button class="btn primary" onclick="addBank()">Guardar banco</button></div>
-          <div style="margin-top:12px"><table id="tblBanks"><thead><tr><th>Banco</th><th>Saldo</th><th>Tipo</th><th></th></tr></thead><tbody></tbody></table></div>
-        </section>
-
-        <section id="debts" class="card" style="display:none">
-          <h3>Deudas</h3>
-          <label>Acreedor</label><input id="debt_creditor">
-          <label>Total (S/)</label><input id="debt_total" type="number">
-          <label>Meses</label><input id="debt_months" type="number" value="12">
-          <div style="margin-top:8px"><button class="btn primary" onclick="addDebt()">Guardar deuda</button></div>
-          <div style="margin-top:12px"><table id="tblDebts"><thead><tr><th>Acreedor</th><th>Total</th><th>Pago/m</th><th>Remanente</th><th></th></tr></thead><tbody></tbody></table></div>
-        </section>
-
-        <section id="expenses" class="card" style="display:none">
-          <h3>Gastos (registro)</h3>
-          <label>Fecha</label><input id="exp_date" type="date">
-          <label>Descripción</label><input id="exp_desc">
-          <label>Monto (S/)</label><input id="exp_amount" type="number">
-          <div style="margin-top:8px"><button class="btn primary" onclick="addExpense()">Registrar gasto</button></div>
-          <div style="margin-top:12px"><div id="expenseList" style="font-size:13px;color:#6b7280"></div></div>
-        </section>
-
       </main>
     </div>
   </div>
 
 <script>
-/* ================= FIREBASE CONFIG (usa tu config proporcionada) ================= */
+/* ========= FIREBASE CONFIG (ajusta databaseURL si es distinto) ========= */
 const firebaseConfig = {
   apiKey: "AIzaSyBVppNAicRPFXEUdErmHd24se_9bjXiqcM",
   authDomain: "jhona-1b398.firebaseapp.com",
+  databaseURL: "https://jhona-1b398-default-rtdb.firebaseio.com",
   projectId: "jhona-1b398",
-  storageBucket: "jhona-1398.firebasestorage.app",
+  storageBucket: "jhona-1b398.firebasestorage.app",
   messagingSenderId: "981136306223",
   appId: "1:981136306223:web:52a7b67c22c274efcc56da",
   measurementId: "G-NVGKL0XGER"
 };
-/* ---------- Inicializar Firebase (compat) ---------- */
+
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
-const db = firebase.firestore();
+const rdb = firebase.database();
+const messaging = firebase.messaging();
 
-/* ========== APP STATE ========== */
-const STORAGE_KEY = 'cf_firestore_v1';
-let state = { balance:0, banks:[], debts:[], expenses:[], monthISO: new Date().toISOString().slice(0,10) };
+/* ========= App state & helpers ========= */
+const STORAGE_KEY = 'ce_app_v2_local';
+let state = {
+  currentMonthISO: new Date().toISOString().slice(0,10),
+  balance: 0,
+  banks: [],
+  expenses: [],
+  incomes: [],
+  pots: [],
+  categories: []
+};
 
-/* ========== COLA OFFLINE ========== */
-const PENDING_KEY = 'cf_pending_ops_v1';
-function enqueue(op){ const raw = localStorage.getItem(PENDING_KEY); const arr = raw?JSON.parse(raw):[]; arr.push(op); localStorage.setItem(PENDING_KEY, JSON.stringify(arr)); log('Op encolada'); }
+const MONTHS_ES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SETIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+
+function uid(pref='id'){ return pref + '_' + Math.random().toString(36).slice(2,9); }
+function formatCur(v){ return 'S/ ' + Number(v||0).toLocaleString(); }
+function log(msg){ const el = document.getElementById('log'); el.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}<br>` + el.innerHTML; console.log(msg); }
+
+/* ========= Local storage ========= */
+function loadLocal(){ try{ const raw = localStorage.getItem(STORAGE_KEY); if(raw) state = JSON.parse(raw); renderAll(); log('Estado local cargado'); }catch(e){ log('Error cargando local: ' + e.message); } }
+function saveLocal(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); renderAll(); saveStateCloudIfPossible(); }
+
+/* ========= Cloud save (debounced) ========= */
+let _deb = null;
+function saveStateCloudIfPossible(){
+  if(!window.__UID){ enqueueOp({type:'state', payload: state}); document.getElementById('syncStatus').innerText = 'Sincronización: local (no auth)'; return; }
+  clearTimeout(_deb);
+  _deb = setTimeout(()=> {
+    rdb.ref(`users/${window.__UID}/state/current`).set({ state, updatedAt: new Date().toISOString() })
+      .then(()=> { document.getElementById('syncStatus').innerText = 'Sincronización: cloud'; log('Estado enviado a cloud'); })
+      .catch(err => { enqueueOp({type:'state', payload: state}); log('Error push state: ' + err.message); });
+  }, 700);
+}
+
+/* ========= Queue for offline ops ========= */
+const QUEUE_KEY = 'ce_app_v2_ops';
+function enqueueOp(op){
+  const raw = localStorage.getItem(QUEUE_KEY); const arr = raw ? JSON.parse(raw) : []; arr.push(op); localStorage.setItem(QUEUE_KEY, JSON.stringify(arr)); log('Op encolada: ' + (op.type || op.subcol)); 
+}
 async function flushQueue(){
-  const raw = localStorage.getItem(PENDING_KEY); if(!raw) { log('Cola vacía'); return; }
-  const arr = JSON.parse(raw); if(!arr.length){ localStorage.removeItem(PENDING_KEY); log('Cola vacía'); return; }
-  if(!window.__UID) { log('No autenticado: no puedo vaciar cola'); return; }
+  const raw = localStorage.getItem(QUEUE_KEY); if(!raw) { log('Cola vacía'); return; }
+  const arr = JSON.parse(raw); if(!arr.length) { localStorage.removeItem(QUEUE_KEY); log('Cola vacía'); return; }
+  if(!window.__UID) { log('No auth, no puedo vaciar cola'); return; }
   for(const op of arr){
     try{
-      if(op.type==='state') await db.collection('users').doc(window.__UID).collection('state').doc('current').set({ state: op.payload, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
-      else if(op.type==='subcol') await db.collection('users').doc(window.__UID).collection(op.path).add(Object.assign({}, op.payload, { createdAt: firebase.firestore.FieldValue.serverTimestamp() }));
-      log('Op enviada: ' + (op.type||op.path));
-    }catch(e){ log('Error en flushQueue: '+ e.message); return; }
+      if(op.type==='state') await rdb.ref(`users/${window.__UID}/state/current`).set({ state: op.payload, updatedAt: new Date().toISOString() });
+      else if(op.type==='subcol') await rdb.ref(`users/${window.__UID}/${op.subcol}`).push(Object.assign({}, op.payload, { createdAt:new Date().toISOString() }));
+      log('Op enviada: ' + (op.type || op.subcol));
+    }catch(e){ log('Error enviando op: ' + e.message); return; }
   }
-  localStorage.removeItem(PENDING_KEY);
-  log('Cola sincronizada');
+  localStorage.removeItem(QUEUE_KEY); log('Cola sincronizada');
 }
 
-/* ========== UI log ========== */
-function log(msg){
-  const el = document.getElementById('log'); const t = new Date().toLocaleTimeString(); el.innerHTML = `[${t}] ${msg}<br>` + el.innerHTML; console.log(msg);
-}
-
-/* ========== Load / Save local ========= */
-function loadLocal(){ const raw = localStorage.getItem(STORAGE_KEY); if(raw) state = JSON.parse(raw); renderAll(); log('Estado local cargado'); }
-function saveLocal(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); renderAll(); // try push state to Firestore
-  if(window.__UID) { db.collection('users').doc(window.__UID).collection('state').doc('current').set({ state: state, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true }).then(()=>log('Estado push a Firestore')).catch(e=>{ log('Push state error: '+e.message); enqueue({ type:'state', payload: state }); }); }
-  else enqueue({ type:'state', payload: state });
-}
-
-/* ========== Real-time listeners (cuando haya sesión) ========== */
-let unsubscribers = [];
+/* ========= Real-time listeners ========= */
+let listeners = [];
 function startRealtime(uid){
   stopRealtime();
-  // listen state/current
-  const stateDoc = db.collection('users').doc(uid).collection('state').doc('current');
-  const sUnsub = stateDoc.onSnapshot(doc => { if(!doc.exists) return; const remote = doc.data().state; if(JSON.stringify(remote)!==JSON.stringify(state)) { state = remote; saveLocal(); log('Estado remoto aplicado'); } }, err=>log('Listen state err: '+err.message));
-  unsubscribers.push(sUnsub);
+  try{
+    // state
+    const sref = rdb.ref(`users/${uid}/state/current`);
+    sref.on('value', snap => {
+      if(!snap.exists()) return;
+      const remote = snap.val().state;
+      state = remote;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); renderAll();
+      log('Estado remoto aplicado');
+    });
+    listeners.push(sref);
 
-  // listen subcollections
-  ['banks','debts','expenses'].forEach(path=>{
-    const col = db.collection('users').doc(uid).collection(path);
-    const u = col.onSnapshot(snap=>{
-      const arr = snap.docs.map(d=>({ _remoteId: d.id, ...d.data() }));
-      state[path] = arr.map(item => {
-        // convert serverTimestamp to readable if present
-        if(item.createdAt && item.createdAt.toDate) item._createdAt = item.createdAt.toDate().toISOString();
-        return item;
+    // subcollections: banks, expenses, incomes, pots, categories
+    ['banks','expenses','incomes','pots','categories'].forEach(path => {
+      const ref = rdb.ref(`users/${uid}/${path}`);
+      ref.on('value', snap => {
+        const arr = [];
+        snap.forEach(child => { const d = child.val(); d._remoteId = child.key; arr.push(d); });
+        state[path === 'expenses' ? 'expenses': path] = arr;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        renderAll();
+        log(`Synced remote '${path}' (${arr.length})`);
       });
-      saveLocal();
-      log(`Subcolección ${path} sincronizada (${arr.length})`);
-    }, err=>log('Listen '+path+' err: '+err.message));
-    unsubscribers.push(u);
-  });
+      listeners.push(ref);
+    });
 
-  log('Realtime listeners iniciados');
+    log('Realtime listeners activados');
+  }catch(e){ log('startRealtime error: ' + e.message); }
 }
-function stopRealtime(){ unsubscribers.forEach(u=>u()); unsubscribers = []; log('Realtime listeners detenidos'); }
+function stopRealtime(){ listeners.forEach(r=> r.off()); listeners = []; log('Realtime listeners detenidos'); }
 
-/* ========== Render UI ========== */
+/* ========= UI render ========= */
+let chartExpenses=null, chartCat=null;
 function renderAll(){
-  // labels
-  const d = new Date(state.monthISO);
-  const MONTHS = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SETIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
-  document.getElementById('monthLabel').innerText = MONTHS[d.getMonth()];
-  document.getElementById('yearLabel').innerText = d.getFullYear();
+  // month UI
+  const d = new Date(state.currentMonthISO);
+  document.getElementById('monthName').innerText = MONTHS_ES[d.getMonth()];
+  document.getElementById('monthYear').innerText = d.getFullYear();
 
-  document.getElementById('k_balance').innerText = 'S/ ' + Number(state.balance||0).toLocaleString();
-  document.getElementById('k_savings').innerText = 'S/ ' + (state.banks.reduce((s,b)=>s+Number(b.balance||0),0)||0).toLocaleString();
-  document.getElementById('k_debt').innerText = 'S/ ' + (state.debts.reduce((s,d)=>s+Number(d.monthly||0),0)||0).toLocaleString();
+  // KPIs
+  document.getElementById('k_balance').innerText = formatCur(state.balance || 0);
+
+  // populate selects & tables
+  const catSel = document.getElementById('e_category'); catSel.innerHTML = '';
+  state.categories.forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.name; catSel.appendChild(o); });
+
+  const bankSel = document.getElementById('e_bank'); bankSel.innerHTML = '<option value="">-- Ninguno --</option>';
+  state.banks.forEach(b => { const o = document.createElement('option'); o.value = b.id; o.textContent = `${b.name} (S/ ${Number(b.balance||0).toLocaleString()})`; bankSel.appendChild(o); });
+  const iBankSel = document.getElementById('i_bank'); iBankSel.innerHTML = '<option value="">-- Ninguno --</option>'; state.banks.forEach(b=>{ const o=document.createElement('option'); o.value=b.id; o.textContent=b.name; iBankSel.appendChild(o); });
+  const bBankSel = document.getElementById('b_balance'); // no usa
 
   // tables
-  const tbB = document.querySelector('#tblBanks tbody'); if(tbB){ tbB.innerHTML=''; (state.banks||[]).forEach(b=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${b.name}</td><td>S/ ${Number(b.balance||0).toLocaleString()}</td><td>${b.type||''}</td><td><button onclick="removeBank('${b.id}')" class="btn">Eliminar</button></td>`; tbB.appendChild(tr); }); }
-  const tbD = document.querySelector('#tblDebts tbody'); if(tbD){ tbD.innerHTML=''; (state.debts||[]).forEach(d=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${d.creditor}</td><td>S/ ${Number(d.total||0).toLocaleString()}</td><td>S/ ${Number(d.monthly||0).toLocaleString()}</td><td>S/ ${Number(d.remaining||0).toLocaleString()}</td><td><button onclick="removeDebt('${d.id}')" class="btn">Eliminar</button></td>`; tbD.appendChild(tr); }); }
-  const elExp = document.getElementById('expenseList'); if(elExp){ elExp.innerHTML = (state.expenses||[]).slice(-12).reverse().map(e=>`${e.date} • ${e.desc} • S/ ${Number(e.amount).toLocaleString()}`).join('<br>') || '<span style="color:#6b7280">Sin gastos</span>'; }
+  const tbExp = document.querySelector('#tblExpenses tbody'); if(tbExp){ tbExp.innerHTML = ''; (state.expenses || []).slice().reverse().slice(0,50).forEach(e => { const tr = document.createElement('tr'); tr.innerHTML = `<td>${e.date}</td><td>${e.note || e.category || ''}</td><td>${formatCur(e.amount)}</td><td>${(state.categories.find(c=>c.id===e.category)||{}).name || ''}</td><td><button class="btn ghost" onclick="delLocalExpense('${e.id}')">Eliminar</button></td>`; tbExp.appendChild(tr); }); }
+
+  const tbInc = document.querySelector('#tblIncomes tbody'); if(tbInc){ tbInc.innerHTML=''; (state.incomes||[]).slice().reverse().slice(0,50).forEach(i=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${i.name}</td><td>${formatCur(i.amount)}</td><td>${i.freq}</td><td><button class="btn ghost" onclick="delLocalIncome('${i.id}')">Eliminar</button></td>`; tbInc.appendChild(tr); }); }
+
+  const tbBanks = document.querySelector('#tblBanks tbody'); if(tbBanks){ tbBanks.innerHTML=''; (state.banks||[]).forEach(b=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${b.name}</td><td>${formatCur(b.balance)}</td><td><button class="btn ghost" onclick="delLocalBank('${b.id}')">Eliminar</button></td>`; tbBanks.appendChild(tr); }); }
+
+  const tbPots = document.querySelector('#tblPots tbody'); if(tbPots){ tbPots.innerHTML=''; (state.pots||[]).forEach(p=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td>${p.name}</td><td>${formatCur(p.goal)}</td><td>${formatCur(p.balance||0)}</td><td><button class="btn ghost" onclick="delLocalPot('${p.id}')">Eliminar</button></td>`; tbPots.appendChild(tr); }); }
+
+  const tbCats = document.querySelector('#tblCategories tbody'); if(tbCats){ tbCats.innerHTML=''; (state.categories||[]).forEach(c=>{ // compute month spent
+    const month = state.currentMonthISO.slice(0,7);
+    const spent = (state.expenses||[]).filter(e => e.category===c.id && e.date && e.date.startsWith(month)).reduce((s,x)=>s+Number(x.amount||0),0);
+    const tr=document.createElement('tr'); tr.innerHTML=`<td>${c.name}</td><td>${formatCur(c.limit||0)}</td><td>${formatCur(spent)}</td><td><button class="btn ghost" onclick="delLocalCategory('${c.id}')">Eliminar</button></td>`; tbCats.appendChild(tr);
+  }); }
+
+  // charts: build expenses per day (month) and by category
+  buildCharts();
+  // raw state
+  document.getElementById('stateRaw').innerText = JSON.stringify(state, null, 2);
 }
 
-/* ========== CRUD (botones globales usados por onclick) ========== */
-function addBank(){
-  const name = document.getElementById('bank_name').value.trim();
-  const balance = Number(document.getElementById('bank_balance').value||0);
-  const type = document.getElementById('bank_type').value;
-  if(!name) return alert('Ingrese nombre banco');
-  const item = { id: uid('b'), name, balance, type };
-  state.banks.push(item);
-  saveLocal();
-  // push to Firestore subcollection (must have createdAt timestamp)
-  if(window.__UID){
-    db.collection('users').doc(window.__UID).collection('banks').add(Object.assign({}, item, { createdAt: firebase.firestore.FieldValue.serverTimestamp() }))
-      .then(ref=>log('Banco creado en Firestore id:' + ref.id))
-      .catch(e=>{ log('Error push bank: '+e.message); enqueue({ type:'subcol', path:'banks', payload: item }); });
+/* ========= Charts ========= */
+function buildCharts(){
+  const ctxE = document.getElementById('chartExpenses').getContext('2d');
+  const ctxC = document.getElementById('chartCategories').getContext('2d');
+  // expenses per day of current month
+  const month = state.currentMonthISO.slice(0,7);
+  const daysInMonth = new Date(Number(month.split('-')[0]), Number(month.split('-')[1]), 0).getDate();
+  const labels = Array.from({length: daysInMonth}, (_,i)=>String(i+1));
+  const totalsByDay = Array(daysInMonth).fill(0);
+  (state.expenses||[]).forEach(e => { if(e.date && e.date.startsWith(month)){ const day = Number(e.date.split('-')[2]) - 1; totalsByDay[day] += Number(e.amount||0); }});
+  if(chartExpenses) chartExpenses.destroy();
+  chartExpenses = new Chart(ctxE, { type:'bar', data:{ labels, datasets:[{ label:'Gastos por día', data: totalsByDay }]}, options:{ responsive:true, plugins:{legend:{display:false}} } });
+
+  // categories
+  const catNames = state.categories.map(c=>c.name);
+  const catTotals = state.categories.map(c => (state.expenses||[]).filter(e=>e.category===c.id && e.date && e.date.startsWith(month)).reduce((s,x)=>s+Number(x.amount||0),0));
+  if(chartCat) chartCat.destroy();
+  chartCat = new Chart(ctxC, { type:'pie', data:{ labels:catNames, datasets:[{ data:catTotals }]}, options:{ responsive:true } });
+}
+
+/* ========= CRUD local & cloud actions ========= */
+/* Expenses */
+function saveExpense(){
+  const date = document.getElementById('e_date').value || new Date().toISOString().slice(0,10);
+  const amount = Number(document.getElementById('e_amount').value || 0);
+  const category = document.getElementById('e_category').value || null;
+  const bankId = document.getElementById('e_bank').value || null;
+  const note = document.getElementById('e_note').value || '';
+  const recurrent = document.getElementById('e_recurrent').checked;
+  if(amount <= 0) return alert('Monto debe ser mayor a 0');
+  const o = { id: uid('exp'), date, amount, category, bankId, note, recurrent };
+  state.expenses.push(o);
+  // update bank/ balance if bank assigned
+  if(bankId){
+    const b = state.banks.find(x=>x.id===bankId);
+    if(b){ b.balance = Number(b.balance||0) - Number(amount); }
   } else {
-    enqueue({ type:'subcol', path:'banks', payload: item });
+    state.balance = Number(state.balance||0) - Number(amount);
   }
-  log('Banco agregado localmente');
-}
-
-function removeBank(id){ state.banks = (state.banks||[]).filter(b=>b.id!==id); saveLocal(); log('Banco eliminado localmente'); }
-
-function addDebt(){
-  const creditor = document.getElementById('debt_creditor').value.trim();
-  const total = Number(document.getElementById('debt_total').value||0);
-  const months = Number(document.getElementById('debt_months').value||1);
-  if(!creditor || total<=0 || months<=0) return alert('Completa datos de deuda');
-  const monthly = +(total/months).toFixed(2);
-  const item = { id: uid('d'), creditor, total, months, monthly, remaining: total };
-  state.debts.push(item);
   saveLocal();
-  if(window.__UID){
-    db.collection('users').doc(window.__UID).collection('debts').add(Object.assign({}, item, { createdAt: firebase.firestore.FieldValue.serverTimestamp() }))
-      .then(r=>log('Deuda creada en Firestore id:' + r.id)).catch(e=>{ log('Error push debt: '+e.message); enqueue({ type:'subcol', path:'debts', payload: item }); });
-  } else enqueue({ type:'subcol', path:'debts', payload: item });
-  log('Deuda agregada localmente');
+  // push to cloud if possible
+  if(window.__UID){ rdb.ref(`users/${window.__UID}/expenses`).push(Object.assign({}, o, { createdAt: new Date().toISOString() })).then(() => log('Gasto enviado a cloud')).catch(e=>{ enqueueOp({type:'subcol', subcol:'expenses', payload:o}); log('Error push expense: '+e.message); }); }
+  else { enqueueOp({type:'subcol', subcol:'expenses', payload:o}); log('Gasto encolado (no auth)'); }
+
+  // check budget and show immediate alert if needed
+  checkBudgetForCategory(o.category);
 }
 
-function removeDebt(id){ state.debts = state.debts.filter(d=>d.id!==id); saveLocal(); log('Deuda eliminada'); }
-
-function addExpense(){
-  const date = document.getElementById('exp_date').value || new Date().toISOString().slice(0,10);
-  const desc = document.getElementById('exp_desc').value.trim();
-  const amount = Number(document.getElementById('exp_amount').value||0);
-  if(amount<=0) return alert('Monto > 0');
-  const item = { id: uid('e'), date, desc, amount };
-  state.expenses.push(item);
-  state.balance = Number(state.balance || 0) - amount;
+/* Incomes */
+function saveIncome(){
+  const name = document.getElementById('i_name').value.trim();
+  const amount = Number(document.getElementById('i_amount').value||0);
+  const freq = document.getElementById('i_freq').value;
+  const bankId = document.getElementById('i_bank').value || null;
+  if(!name || amount<=0) return alert('Datos inválidos');
+  const o = { id: uid('inc'), name, amount, freq, bankId, createdAt: new Date().toISOString() };
+  state.incomes.push(o);
+  if(bankId){ const b = state.banks.find(x=>x.id===bankId); if(b) b.balance = Number(b.balance||0) + Number(amount); } else state.balance = Number(state.balance||0) + Number(amount);
   saveLocal();
-  if(window.__UID){
-    db.collection('users').doc(window.__UID).collection('expenses').add(Object.assign({}, item, { createdAt: firebase.firestore.FieldValue.serverTimestamp() }))
-      .then(r=>log('Gasto creado en Firestore id:' + r.id)).catch(e=>{ log('Error push expense: '+e.message); enqueue({ type:'subcol', path:'expenses', payload: item }); });
-  } else enqueue({ type:'subcol', path:'expenses', payload: item });
-  log('Gasto registrado localmente');
+  if(window.__UID){ rdb.ref(`users/${window.__UID}/incomes`).push(Object.assign({}, o, { createdAt: new Date().toISOString() })).then(()=>log('Ingreso enviado a cloud')).catch(e=>{ enqueueOp({type:'subcol', subcol:'incomes', payload:o}); log('Error push income: '+e.message); }); } else enqueueOp({type:'subcol', subcol:'incomes', payload:o});
 }
 
-/* ========== Month controls, PDF ========== */
-function nextMonth(){ const d = new Date(state.monthISO); const n = new Date(d.getFullYear(), d.getMonth()+1, 1); state.monthISO = n.toISOString().slice(0,10); saveLocal(); }
-function prevMonth(){ const d = new Date(state.monthISO); const p = new Date(d.getFullYear(), d.getMonth()-1, 1); state.monthISO = p.toISOString().slice(0,10); saveLocal(); }
+/* Banks */
+function saveBank(){
+  const name = document.getElementById('b_name').value.trim();
+  const bal = Number(document.getElementById('b_balance').value||0);
+  if(!name) return alert('Ingrese nombre');
+  const o = { id: uid('bank'), name, balance: bal };
+  state.banks.push(o);
+  saveLocal();
+  if(window.__UID){ rdb.ref(`users/${window.__UID}/banks`).push(Object.assign({}, o, { createdAt: new Date().toISOString() })).then(()=>log('Banco enviado a cloud')).catch(e=>{ enqueueOp({type:'subcol', subcol:'banks', payload:o}); }); } else enqueueOp({type:'subcol', subcol:'banks', payload:o});
+}
 
+/* Pots */
+function savePot(){
+  const name = document.getElementById('p_name').value.trim();
+  const goal = Number(document.getElementById('p_goal').value||0);
+  const percent = Number(document.getElementById('p_percent').value||0);
+  if(!name) return alert('Nombre requerido');
+  const o = { id: uid('pot'), name, goal, percent, balance: 0 };
+  state.pots.push(o);
+  saveLocal();
+  if(window.__UID){ rdb.ref(`users/${window.__UID}/pots`).push(Object.assign({}, o, { createdAt:new Date().toISOString() })).then(()=>log('Hucha enviada a cloud')).catch(e=>enqueueOp({type:'subcol', subcol:'pots', payload:o})); } else enqueueOp({type:'subcol', subcol:'pots', payload:o});
+}
+
+/* Categories */
+function saveCategory(){
+  const name = document.getElementById('c_name').value.trim();
+  const limit = Number(document.getElementById('c_limit').value||0);
+  if(!name) return alert('Nombre requerido');
+  const o = { id: uid('cat'), name, limit };
+  state.categories.push(o);
+  saveLocal();
+  if(window.__UID){ rdb.ref(`users/${window.__UID}/categories`).push(Object.assign({}, o, { createdAt:new Date().toISOString() })).then(()=>log('Categoria enviada a cloud')).catch(e=>enqueueOp({type:'subcol', subcol:'categories', payload:o})); } else enqueueOp({type:'subcol', subcol:'categories', payload:o});
+}
+
+/* Delete local helpers (note: in this simple file we only remove locally; remote may remain until cluster sync or manual remote delete) */
+function delLocalExpense(id){ state.expenses = state.expenses.filter(e=>e.id!==id); saveLocal(); log('Gasto eliminado localmente'); }
+function delLocalIncome(id){ state.incomes = state.incomes.filter(i=>i.id!==id); saveLocal(); log('Ingreso eliminado localmente'); }
+function delLocalBank(id){ state.banks = state.banks.filter(b=>b.id!==id); saveLocal(); log('Banco eliminado localmente'); }
+function delLocalPot(id){ state.pots = state.pots.filter(p=>p.id!==id); saveLocal(); log('Hucha eliminada localmente'); }
+function delLocalCategory(id){ state.categories = state.categories.filter(c=>c.id!==id); saveLocal(); log('Categoria eliminada localmente'); }
+
+/* ========= Alerts & budget checks ========= */
+function checkBudgetForCategory(catId){
+  if(!catId) return;
+  const cat = state.categories.find(c=>c.id===catId);
+  if(!cat || !cat.limit) return;
+  const month = state.currentMonthISO.slice(0,7);
+  const spent = state.expenses.filter(e=>e.category===catId && e.date && e.date.startsWith(month)).reduce((s,x)=>s+Number(x.amount||0),0);
+  if(spent > Number(cat.limit || 0)){
+    // show alert UI and queue cloud alert (Cloud Function will send push too)
+    const alerts = document.getElementById('alertsContainer');
+    const div = document.createElement('div'); div.className='notif'; div.innerHTML = `<strong>Presupuesto superado:</strong> ${cat.name} — gastado ${formatCur(spent)} / límite ${formatCur(cat.limit)}`;
+    alerts.prepend(div);
+    setTimeout(()=> div.remove(), 15000);
+    // enqueue an alert object for Cloud Functions to process (optional)
+    const alertObj = { id: uid('alert'), type:'budget_over', categoryId: catId, spent, limit:cat.limit, createdAt: new Date().toISOString() };
+    if(window.__UID) rdb.ref(`users/${window.__UID}/alerts`).push(alertObj).catch(()=>enqueueOp({type:'subcol', subcol:'alerts', payload: alertObj}));
+    else enqueueOp({type:'subcol', subcol:'alerts', payload: alertObj});
+    log('Alerta de presupuesto registrada');
+  }
+}
+
+/* ========= Monthly automation (client-side quick automation + server scheduled more robust) ========= */
+function runMonthlyAutomation(){
+  // Apply pots % from incomes that are 'mensual' and created this month - lightweight approach
+  (state.incomes||[]).forEach(inc => {
+    if(inc.freq === 'mensual'){
+      const amount = Number(inc.amount || 0);
+      (state.pots||[]).forEach(p => {
+        if(Number(p.percent || 0) > 0){
+          const take = +(amount * (Number(p.percent) / 100)).toFixed(2);
+          p.balance = Number(p.balance || 0) + take;
+          // reduce from first bank or balance
+          if(state.banks && state.banks.length) state.banks[0].balance = Number(state.banks[0].balance || 0) - take;
+          else state.balance = Number(state.balance || 0) - take;
+        }
+      });
+    }
+  });
+  saveLocal();
+  log('Automatización mensual (cliente) aplicada');
+}
+
+/* ========= PDF export ========= */
 function exportPDF(){
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({unit:'pt',format:'a4'}); let y=40;
-  doc.setFontSize(14); doc.text('Resumen Control Financiero',40,y); y+=18;
-  doc.setFontSize(10); doc.text('Balance: S/ ' + Number(state.balance||0).toLocaleString(),40,y); y+=14;
-  doc.text('Bancos:',40,y); y+=12;
-  (state.banks||[]).forEach(b=>{ doc.text(`${b.name} — S/ ${Number(b.balance||0).toLocaleString()}`,40,y); y+=10; if(y>740){ doc.addPage(); y=40; } });
-  doc.save('resumen_ce_' + new Date().toISOString().slice(0,10) + '.pdf'); log('PDF generado');
+  const doc = new jsPDF({unit:'pt', format:'a4'});
+  let y = 40; const left = 40;
+  doc.setFontSize(14); doc.text('Resumen Control Económico', left, y); y+=20;
+  doc.setFontSize(10); doc.text('Fecha: ' + new Date().toLocaleString(), left, y); y+=18;
+  doc.text('Balance: ' + formatCur(state.balance), left, y); y+=14;
+  doc.text('Bancos:', left, y); y+=12;
+  state.banks.forEach(b => { doc.text(`${b.name} — ${formatCur(b.balance)}`, left, y); y+=12; if(y>740){ doc.addPage(); y=40; }});
+  doc.save('resumen_ce_'+new Date().toISOString().slice(0,10)+'.pdf');
+  log('PDF generado');
 }
 
-/* ========== Auth (Google) ========== */
-document.getElementById('btnLogin').addEventListener('click', async ()=>{
-  const provider = new firebase.auth.GoogleAuthProvider();
-  try{ await auth.signInWithPopup(provider); }catch(e){ log('Login popup error: '+ (e.message||e)); try{ await auth.signInWithRedirect(provider); }catch(err){ log('Redirect also failed: '+ (err.message||err)); alert('Error login: '+ (err.message||err)); } }
-});
-document.getElementById('btnLogout').addEventListener('click', ()=> auth.signOut());
+/* ========= Auth & messaging (push token) ========= */
+(function authUI(){
+  document.getElementById('btnLogin').addEventListener('click', async ()=>{
+    const provider = new firebase.auth.GoogleAuthProvider();
+    try{ await auth.signInWithPopup(provider); }catch(e){ log('login popup error: ' + e.message); try{ await auth.signInWithRedirect(provider); }catch(err){ log('redirect error: '+ err.message); } }
+  });
+  document.getElementById('btnLogout').addEventListener('click', ()=> auth.signOut());
+})();
 
-auth.onAuthStateChanged(user=>{
-  const ui = document.getElementById('userInfo');
+auth.onAuthStateChanged(async user => {
+  const ud = document.getElementById('userDisplay');
+  const loginBtn = document.getElementById('btnLogin'), logoutBtn = document.getElementById('btnLogout');
   if(user){
     window.__UID = user.uid;
-    ui.innerText = `${user.displayName || user.email} (${user.uid.slice(0,6)})`;
-    document.getElementById('btnLogin').style.display='none';
-    document.getElementById('btnLogout').style.display='inline-block';
-    log('Usuario autenticado: ' + (user.email||user.uid));
-    // start realtime listeners and flush queue & push state
-    startRealtime(user.uid);
-    flushQueue();
-    // push current state once (must include state map + updatedAt timestamp)
-    db.collection('users').doc(user.uid).collection('state').doc('current')
-      .set({ state: state, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true })
-      .then(()=>log('Estado enviado a Firestore al login'))
-      .catch(e=>{ log('Push state al login falló: '+ e.message); enqueue({ type:'state', payload: state }); });
+    ud.innerText = (user.displayName || user.email) + ' (' + user.uid.slice(0,6) + ')';
+    if(loginBtn) loginBtn.style.display='none'; if(logoutBtn) logoutBtn.style.display='inline-block';
+    log('Usuario autenticado: ' + (user.email || user.uid));
+    // store user basic info
+    rdb.ref(`users/${window.__UID}/meta`).set({ displayName: user.displayName || null, email: user.email || null, lastLogin: new Date().toISOString() }).catch(()=>{});
+    // register FCM token (ask permission)
+    try{
+      await messaging.requestPermission();
+      const token = await messaging.getToken();
+      if(token){ rdb.ref(`users/${window.__UID}/devices`).push({ token, platform:'web', createdAt: new Date().toISOString() }); log('FCM token guardado'); }
+    }catch(e){ log('FCM permiso/token error: ' + (e.message||e)); }
+    // start listeners & flush queue
+    startRealtime(window.__UID);
+    await flushQueue();
+    saveStateCloudIfPossible();
   } else {
     window.__UID = null;
-    ui.innerText = 'No autenticado';
-    document.getElementById('btnLogin').style.display='inline-block';
-    document.getElementById('btnLogout').style.display='none';
+    ud.innerText = 'No autenticado';
+    if(loginBtn) loginBtn.style.display='inline-block'; if(logoutBtn) logoutBtn.style.display='none';
     log('Sesión cerrada');
     stopRealtime();
   }
 });
 
-/* ========== Helpers y arranque ========= */
-function uid(pref='id'){ return pref + '_' + Math.random().toString(36).slice(2,9); }
-function show(id){ ['dashboard','banks','debts','expenses'].forEach(s=>document.getElementById(s).style.display = (s===id?'block':'none')); document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('active')); const btn = document.getElementById('m_' + id); if(btn) btn.classList.add('active'); }
-loadLocal(); log('App lista (Firestore)');
+/* ========= Buttons & wiring ========= */
+document.addEventListener('DOMContentLoaded', ()=>{
+  // menu
+  const map = { m_dashboard:'s_dashboard', m_expenses:'s_expenses', m_incomes:'s_incomes', m_banks:'s_banks', m_pots:'s_pots', m_categories:'s_categories', m_settings:'s_settings' };
+  Object.keys(map).forEach(k => { document.getElementById(k).addEventListener('click', ()=>{ document.querySelectorAll('.menu button').forEach(b=>b.classList.remove('active')); document.getElementById(k).classList.add('active'); Object.values(map).forEach(id => document.getElementById(id).style.display = 'none'); document.getElementById(map[k]).style.display = 'block'; }); });
+
+  // init date input
+  document.getElementById('e_date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('d_date')?.value = new Date().toISOString().slice(0,10);
+
+  // expense save
+  document.getElementById('btnSaveExpense').addEventListener('click', saveExpense);
+  document.getElementById('btnClearExpense').addEventListener('click', ()=>{ if(confirm('Limpiar inputs?')){ document.getElementById('e_amount').value=''; document.getElementById('e_note').value=''; document.getElementById('e_recurrent').checked=false; } });
+
+  document.getElementById('btnSaveIncome').addEventListener('click', saveIncome);
+  document.getElementById('btnSaveBank').addEventListener('click', saveBank);
+  document.getElementById('btnSavePot').addEventListener('click', savePot);
+  document.getElementById('btnSaveCategory').addEventListener('click', saveCategory);
+
+  document.getElementById('prevMonth').addEventListener('click', ()=>{ const d = new Date(state.currentMonthISO); const prev = new Date(d.getFullYear(), d.getMonth()-1, 1); state.currentMonthISO = prev.toISOString().slice(0,10); saveLocal(); });
+  document.getElementById('nextMonth').addEventListener('click', ()=>{ const d = new Date(state.currentMonthISO); const next = new Date(d.getFullYear(), d.getMonth()+1, 1); state.currentMonthISO = next.toISOString().slice(0,10); saveLocal(); });
+  document.getElementById('exportPDF').addEventListener('click', exportPDF);
+  document.getElementById('forceSync').addEventListener('click', ()=>{ if(window.__UID) flushQueue(); else alert('Inicia sesión para sincronizar'); });
+  document.getElementById('btnClearLocal').addEventListener('click', ()=>{ if(confirm('Borrar estado local? Esto no tocará la cloud.')){ localStorage.removeItem(STORAGE_KEY); loadLocal(); } });
+
+  // initial load
+  loadLocal();
+  // minor automation: run client monthly automation if first load of month
+  const lastRun = localStorage.getItem('ce_client_monthly_' + state.currentMonthISO.slice(0,7));
+  if(!lastRun){ runMonthlyAutomation(); localStorage.setItem('ce_client_monthly_' + state.currentMonthISO.slice(0,7), new Date().toISOString()); }
+});
+
+/* ========= Simple helper to show full state in UI ========= */
+setInterval(()=>{ document.getElementById('stateRaw').innerText = JSON.stringify(state, null, 2); }, 2000);
 
 </script>
 </body>
 </html>
-
-
-
-
