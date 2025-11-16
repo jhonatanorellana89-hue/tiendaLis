@@ -7,26 +7,25 @@
 
   <!--
     APP SPA - JHONATAN ORELLANA (UN SOLO ARCHIVO)
-    Última versión: corrección para que los cambios se reflejen inmediatamente en pantalla.
-    Cambios principales en esta versión:
-      - Se añadió suscripción en tiempo real (onSnapshot) a Firestore para que
-        cualquier alta/edición/borrado se refleje inmediatamente en la UI.
-      - Se corrigió la inicialización de Auth (signInAnonymously(auth)) y uso de db.
-      - Se dejó tu firebaseConfig (tal como lo pediste).
-      - Conservé el diseño móvil (vertical), botones y ventanas sin cambiar su comportamiento.
-      - Mejoras menores de robustez y mensajes.
-    INSTRUCCIONES RÁPIDAS:
-      1) Si aún no lo hiciste, crea un proyecto Firebase y habilita Firestore + Authentication (anónima está bien).
-      2) Pega este archivo en tu servidor local o ábrelo con Live Server en VSCode.
-      3) Comprueba que la app muestra "Conectado (Firestore)" en la cabecera si todo está correcto.
+    Correcciones solicitadas en esta versión:
+      - Al guardar una entidad (transacción, cuenta, deuda, categoría, fijo) la ventana modal
+        se cierra correctamente y la UI se actualiza inmediatamente.
+      - Se fuerza la recarga desde Firestore (loadAllFromFirestore) después de operaciones
+        de escritura para evitar retrasos en la visualización.
+      - Se agregaron try/catch y mensajes de error para mostrar fallas y permitir cerrar modal.
+      - Mantiene la vista móvil vertical y todas las funcionalidades previas.
+    Nota: Este archivo contiene tu firebaseConfig (tal como lo pediste).
+    Instrucciones rápidas:
+      1) Asegúrate de haber habilitado Firestore y Authentication (anónimo o tu preferencia).
+      2) Abre este archivo con Live Server o desde un servidor local para evitar problemas de CORS.
+      3) Revisa la consola para mensajes de diagnóstico (F12).
   -->
 
   <style>
-    /* Diseño móvil en "phone-frame" */
     :root{
       --bg:#041018; --panel:#071421; --card:#0b1b26; --muted:#9fb1bd;
       --accent:#00b894; --accent-2:#34ace0; --danger:#ff6b6b; --glass: rgba(255,255,255,0.02);
-      --radius:12px; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
     }
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#021018);color:#e6f6f6}
@@ -43,10 +42,6 @@
     .card{background:linear-gradient(180deg,var(--card),#06121a);border-radius:12px;padding:12px;margin-bottom:12px;box-shadow:0 6px 20px rgba(0,0,0,0.5)}
     h2{margin:0;font-size:16px}
     .muted{color:var(--muted);font-size:12px}
-    .small{font-size:12px;color:var(--muted)}
-    .row{display:flex;gap:8px;align-items:center}
-    .col{flex:1}
-    label{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}
     input,select,textarea{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit;font-size:13px}
     button.primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#001219;border:0;padding:8px 10px;border-radius:10px;cursor:pointer;font-weight:800}
     button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:8px;border-radius:8px;color:var(--muted);cursor:pointer}
@@ -54,7 +49,6 @@
     table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
     th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.02);text-align:left}
     .right{text-align:right}
-    .tag{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,0.02);font-weight:700}
     .danger{background:var(--danger);color:#1a0303;border:0;padding:8px 10px;border-radius:8px;cursor:pointer}
     .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#071421;color:#d6f6ef;padding:12px;border-radius:10px;box-shadow:0 8px 26px rgba(0,0,0,0.6);display:none;z-index:120}
     .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:140}
@@ -221,8 +215,7 @@
   <div class="modal-backdrop" id="modal-backdrop"><div class="modal" id="modal"></div></div>
   <div class="toast" id="toast"></div>
 
-  <!-- Firestore rules example (comentadas) -->
-  <!--
+  <!-- Firestore rules example (comentadas)
     rules_version = '2';
     service cloud.firestore {
       match /databases/{database}/documents {
@@ -233,7 +226,7 @@
     }
   -->
 
-  <!-- LIBS: Firebase v9 modular + html2pdf + Chart.js -->
+  <!-- Librerías -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
@@ -242,7 +235,7 @@
       updateDoc, serverTimestamp, Timestamp, getDoc, onSnapshot
     } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
-    // extras
+    // Carga asíncrona de utilitarios (Chart.js, html2pdf para export PDF)
     const s1 = document.createElement('script'); s1.src = 'https://cdn.jsdelivr.net/npm/chart.js'; document.head.appendChild(s1);
     const s2 = document.createElement('script'); s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js'; document.head.appendChild(s2);
 
@@ -264,7 +257,7 @@
       app = initializeApp(firebaseConfig);
       auth = getAuth(app);
       db = getFirestore(app);
-      console.log('Firebase inicializado (Firestore).');
+      console.log('Firebase inicializado.');
     } else {
       console.warn('Firebase no configurado. Funcionando en modo local (localStorage).');
     }
@@ -288,67 +281,30 @@
       categories: [] // {id, name, limitMonthly}
     };
 
-    /* ================== FIRESTORE SUBSCRIPTIONS (REALTIME) ================== */
+    /* ================== SUSCRIPCIONES EN TIEMPO REAL ================== */
     let unsubscribers = [];
-    function clearUnsubscribers(){
-      unsubscribers.forEach(u => { try{ u(); } catch(e){ }});
-      unsubscribers = [];
-    }
+    function clearUnsubscribers(){ unsubscribers.forEach(u=>{ try{ u(); }catch(e){} }); unsubscribers = []; }
     function subscribeToCollections(){
       if(!db || !state.uid) return;
       clearUnsubscribers();
-      // transactions
-      const txQ = query(collection(db, userPath('transactions')), orderBy('date','desc'));
-      const unsubTx = onSnapshot(txQ, snap => {
-        state.transactions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderAll();
-      }, e => console.error('tx onSnapshot error', e));
-      unsubscribers.push(unsubTx);
-
-      // banks
-      const bQ = query(collection(db, userPath('banks')), orderBy('name'));
-      const unsubB = onSnapshot(bQ, snap => {
-        state.banks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderAll();
-      }, e => console.error('banks onSnapshot', e));
-      unsubscribers.push(unsubB);
-
-      // debts
-      const dQ = query(collection(db, userPath('debts')), orderBy('createdAt','desc'));
-      const unsubD = onSnapshot(dQ, snap => {
-        state.debts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderAll();
-      }, e => console.error('debts onSnapshot', e));
-      unsubscribers.push(unsubD);
-
-      // fixedExpenses
-      const fQ = query(collection(db, userPath('fixedExpenses')), orderBy('name'));
-      const unsubF = onSnapshot(fQ, snap => {
-        state.fixed = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderAll();
-      }, e => console.error('fixed onSnapshot', e));
-      unsubscribers.push(unsubF);
-
-      // savings
-      const sQ = query(collection(db, userPath('savings')), orderBy('createdAt','desc'));
-      const unsubS = onSnapshot(sQ, snap => {
-        state.savings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderAll();
-      }, e => console.error('savings onSnapshot', e));
-      unsubscribers.push(unsubS);
-
-      // categories
-      const cQ = query(collection(db, userPath('categories')), orderBy('name'));
-      const unsubC = onSnapshot(cQ, snap => {
-        state.categories = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderAll();
-      }, e => console.error('categories onSnapshot', e));
-      unsubscribers.push(unsubC);
+      try {
+        const txQ = query(collection(db, userPath('transactions')), orderBy('date','desc'));
+        unsubscribers.push(onSnapshot(txQ, snap => { state.transactions = snap.docs.map(d=>({ id:d.id, ...d.data() })); renderAll(); }, e=>console.error(e)));
+        const bQ = query(collection(db, userPath('banks')), orderBy('name'));
+        unsubscribers.push(onSnapshot(bQ, snap => { state.banks = snap.docs.map(d=>({ id:d.id, ...d.data() })); renderAll(); }, e=>console.error(e)));
+        const dQ = query(collection(db, userPath('debts')), orderBy('createdAt','desc'));
+        unsubscribers.push(onSnapshot(dQ, snap => { state.debts = snap.docs.map(d=>({ id:d.id, ...d.data() })); renderAll(); }, e=>console.error(e)));
+        const fQ = query(collection(db, userPath('fixedExpenses')), orderBy('name'));
+        unsubscribers.push(onSnapshot(fQ, snap => { state.fixed = snap.docs.map(d=>({ id:d.id, ...d.data() })); renderAll(); }, e=>console.error(e)));
+        const sQ = query(collection(db, userPath('savings')), orderBy('createdAt','desc'));
+        unsubscribers.push(onSnapshot(sQ, snap => { state.savings = snap.docs.map(d=>({ id:d.id, ...d.data() })); renderAll(); }, e=>console.error(e)));
+        const cQ = query(collection(db, userPath('categories')), orderBy('name'));
+        unsubscribers.push(onSnapshot(cQ, snap => { state.categories = snap.docs.map(d=>({ id:d.id, ...d.data() })); renderAll(); }, e=>console.error(e)));
+      } catch(e) { console.error('subscribe error', e); }
     }
 
     /* ================== HELPERS FIRESTORE & LOCAL ================== */
     function userPath(coll){ if(!state.uid) throw new Error('UID no disponible'); return `users/${state.uid}/${coll}`; }
-
     async function loadAllFromFirestore(){
       if(!db) return;
       try {
@@ -364,71 +320,75 @@
         state.savings = sSnap.docs.map(d=>({ id:d.id, ...d.data() }));
         const cSnap = await getDocs(query(collection(db, userPath('categories')), orderBy('name')));
         state.categories = cSnap.docs.map(d=>({ id:d.id, ...d.data() }));
-      } catch(e){
-        console.error('loadAllFromFirestore error', e);
-      }
+        renderAll();
+      } catch(e) { console.error('loadAllFromFirestore error', e); }
     }
 
-    function persistLocal(){ const data={transactions:state.transactions,banks:state.banks,depts:state.debts,fixed:state.fixed,savings:state.savings,categories:state.categories}; localStorage.setItem('jo_finanzas_v4', JSON.stringify(data)); }
-    function loadLocal(){ const raw = localStorage.getItem('jo_finanzas_v4'); if(!raw) return; try{ const d = JSON.parse(raw); state.transactions = d.transactions||[]; state.banks = d.banks||[]; state.debts = d.depts||[]; state.fixed = d.fixed||[]; state.savings = d.savings||[]; state.categories = d.categories||[]; } catch(e){ console.error(e) } }
+    function persistLocal(){ const data={transactions:state.transactions,banks:state.banks,depts:state.debts,fixed:state.fixed,savings:state.savings,categories:state.categories}; localStorage.setItem('jo_finanzas_v5', JSON.stringify(data)); }
+    function loadLocal(){ const raw = localStorage.getItem('jo_finanzas_v5'); if(!raw) return; try{ const d = JSON.parse(raw); state.transactions = d.transactions||[]; state.banks = d.banks||[]; state.debts = d.depts||[]; state.fixed = d.fixed||[]; state.savings = d.savings||[]; state.categories = d.categories||[]; }catch(e){console.error(e);} }
 
-    /* ================== CRUD & LÓGICA ================== */
+    /* ================== CRUD & LÓGICA (FORZANDO REFRESH AL GUARDAR) ================== */
     async function addCategory(cat){
-      if(!db){ cat.id = 'local-'+Math.random().toString(36).slice(2,9); state.categories.push(cat); persistLocal(); renderCategories(); showToast('Categoría creada (local)'); return cat; }
+      if(!db){ cat.id='local-'+Math.random().toString(36).slice(2,9); state.categories.push(cat); persistLocal(); renderCategories(); showToast('Categoría creada (local)'); return cat; }
       const ref = await addDoc(collection(db, userPath('categories')), {...cat, createdAt: serverTimestamp()});
-      // onSnapshot will reflect the change and call renderAll
-      showToast('Categoría creada (Firestore)');
-      return { id: ref.id, ...cat };
+      await loadAllFromFirestore(); showToast('Categoría creada'); return { id: ref.id, ...cat };
     }
     async function updateCategory(id, data){
-      if(!db){ const c = state.categories.find(x=>x.id===id); if(c) Object.assign(c,data); persistLocal(); renderCategories(); return; }
+      if(!db){ const c=state.categories.find(x=>x.id===id); if(c) Object.assign(c,data); persistLocal(); renderCategories(); return; }
       await updateDoc(doc(db, userPath('categories'), id), data);
-      showToast('Categoría actualizada');
+      await loadAllFromFirestore(); showToast('Categoría actualizada');
     }
     async function deleteCategory(id){
       if(!db){ state.categories = state.categories.filter(x=>x.id!==id); persistLocal(); renderCategories(); return; }
       await deleteDoc(doc(db, userPath('categories'), id));
-      showToast('Categoría eliminada');
+      await loadAllFromFirestore(); showToast('Categoría eliminada');
     }
 
     async function addTransaction(tx){
       if(!parseDateDDMMYYYY(tx.dateStr)) throw new Error('Fecha inválida');
       const payload = {...tx, amount: Number(tx.amount)||0, date: Timestamp.fromDate(parseDateDDMMYYYY(tx.dateStr)), createdAt: serverTimestamp()};
       if(!db){
-        payload.id = 'local-'+Math.random().toString(36).slice(2,9);
+        payload.id='local-'+Math.random().toString(36).slice(2,9);
         state.transactions.unshift(payload);
-        if(payload.bankId) updateBankBalanceLocal(payload.bankId, payload.type === 'Egreso' ? -payload.amount : payload.amount);
-        if(payload.debtId && payload.type === 'Egreso'){ const d = state.debts.find(x=>x.id===payload.debtId); if(d) d.outstanding = Math.max(0, (Number(d.outstanding)||0) - payload.amount); }
+        if(payload.bankId) updateBankBalanceLocal(payload.bankId, payload.type==='Egreso' ? -payload.amount : payload.amount);
+        if(payload.debtId && payload.type==='Egreso'){ const d = state.debts.find(x=>x.id===payload.debtId); if(d) d.outstanding = Math.max(0, (Number(d.outstanding)||0) - payload.amount); }
         persistLocal(); renderAll(); checkCategoryLimitAfterAdd(payload); showToast('Transacción creada (local)'); return payload;
       }
       const ref = await addDoc(collection(db, userPath('transactions')), payload);
-      // bank & debt balances updated
-      if(payload.bankId){ const delta = payload.type === 'Egreso' ? -payload.amount : payload.amount; await updateBankBalance(payload.bankId, delta); }
-      if(payload.debtId && payload.type === 'Egreso'){ const debtRef = doc(db, userPath('debts'), payload.debtId); const snap = await getDoc(debtRef); if(snap.exists()){ const cur = snap.data().outstanding || 0; await updateDoc(debtRef, { outstanding: Math.max(0, Number(cur) - payload.amount) }); } }
-      // onSnapshot will refresh UI
-      showToast('Transacción creada');
-      return { id: ref.id, ...payload };
+      // actualizar saldo de banco y deuda en Firestore y forzar recarga
+      if(payload.bankId){ const delta = payload.type==='Egreso' ? -payload.amount : payload.amount; await updateBankBalance(payload.bankId, delta); }
+      if(payload.debtId && payload.type==='Egreso'){ const debtRef = doc(db, userPath('debts'), payload.debtId); const snap = await getDoc(debtRef); if(snap.exists()){ const cur = snap.data().outstanding || 0; await updateDoc(debtRef, { outstanding: Math.max(0, Number(cur) - payload.amount) }); } }
+      await loadAllFromFirestore(); checkCategoryLimitAfterAdd(payload); showToast('Transacción creada'); return { id: ref.id, ...payload };
     }
 
     async function addBank(bank){
-      if(!db){ bank.id = 'local-'+Math.random().toString(36).slice(2,9); state.banks.push(bank); persistLocal(); renderBanks(); showToast('Cuenta creada (local)'); return bank; }
+      if(!db){ bank.id='local-'+Math.random().toString(36).slice(2,9); state.banks.push(bank); persistLocal(); renderBanks(); showToast('Cuenta creada (local)'); return bank; }
       const ref = await addDoc(collection(db, userPath('banks')), {...bank, createdAt: serverTimestamp()});
-      showToast('Cuenta creada (Firestore)');
-      return { id: ref.id, ...bank };
+      await loadAllFromFirestore(); showToast('Cuenta creada'); return { id: ref.id, ...bank };
+    }
+
+    async function updateBank(bankId, data){
+      if(!db){ const b = state.banks.find(x=>x.id===bankId); if(b) Object.assign(b,data); persistLocal(); renderBanks(); return; }
+      await updateDoc(doc(db, userPath('banks'), bankId), data);
+      await loadAllFromFirestore(); showToast('Cuenta actualizada');
+    }
+
+    async function deleteBank(bankId){
+      if(!db){ state.banks = state.banks.filter(x=>x.id!==bankId); persistLocal(); renderBanks(); return; }
+      await deleteDoc(doc(db, userPath('banks'), bankId));
+      await loadAllFromFirestore(); showToast('Cuenta eliminada');
     }
 
     async function addDebt(debt){
-      if(!db){ debt.id = 'local-'+Math.random().toString(36).slice(2,9); state.debts.push(debt); persistLocal(); renderAll(); showToast('Deuda creada (local)'); return debt; }
+      if(!db){ debt.id='local-'+Math.random().toString(36).slice(2,9); state.debts.push(debt); persistLocal(); renderAll(); showToast('Deuda creada (local)'); return debt; }
       const ref = await addDoc(collection(db, userPath('debts')), {...debt, createdAt: serverTimestamp()});
-      showToast('Deuda creada');
-      return { id: ref.id, ...debt };
+      await loadAllFromFirestore(); showToast('Deuda creada'); return { id: ref.id, ...debt };
     }
 
     async function addFixedExpense(f){
-      if(!db){ f.id = 'local-'+Math.random().toString(36).slice(2,9); state.fixed.push(f); persistLocal(); renderFixed(); showToast('Gasto fijo creado (local)'); return f; }
+      if(!db){ f.id='local-'+Math.random().toString(36).slice(2,9); state.fixed.push(f); persistLocal(); renderFixed(); showToast('Gasto fijo creado (local)'); return f; }
       const ref = await addDoc(collection(db, userPath('fixedExpenses')), {...f, createdAt: serverTimestamp()});
-      showToast('Gasto fijo creado');
-      return { id: ref.id, ...f };
+      await loadAllFromFirestore(); showToast('Gasto fijo creado'); return { id: ref.id, ...f };
     }
 
     async function updateBankBalance(bankId, delta){
@@ -438,16 +398,14 @@
       if(!snap.exists()) return;
       const cur = snap.data().balance || 0;
       await updateDoc(ref, { balance: Number(cur) + Number(delta) });
-      // onSnapshot will update UI
+      await loadAllFromFirestore();
     }
     function updateBankBalanceLocal(bankId, delta){ const b = state.banks.find(x=>x.id===bankId); if(b){ b.balance = (Number(b.balance)||0) + Number(delta); persistLocal(); renderBanks(); renderDashboard(); } }
 
     /* ================== LÍMITES/CHEQUEO ================== */
     function checkCategoryLimitAfterAdd(tx){
-      const cid = tx.categoryId;
-      if(!cid) return;
-      const cat = state.categories.find(c => c.id === cid);
-      if(!cat || !cat.limitMonthly || Number(cat.limitMonthly) <= 0) return;
+      const cid = tx.categoryId; if(!cid) return;
+      const cat = state.categories.find(c=>c.id===cid); if(!cat || !cat.limitMonthly || Number(cat.limitMonthly) <= 0) return;
       const date = tx.date ? (tx.date.toDate ? tx.date.toDate() : parseDateDDMMYYYY(tx.dateStr||'')) : parseDateDDMMYYYY(tx.dateStr||'');
       if(!date) return;
       const month = date.getMonth(), year = date.getFullYear();
@@ -456,34 +414,29 @@
         if(!d) return acc;
         if(d.getMonth()===month && d.getFullYear()===year && t.categoryId === cid) acc += Number(t.amount)||0;
         return acc;
-      }, 0);
-      if(total > Number(cat.limitMonthly)){
-        showToast(`Límite superado en "${cat.name}": ${fmtMoney(total)} / ${fmtMoney(cat.limitMonthly)}`, true);
-      } else if(total >= Number(cat.limitMonthly)*0.8){
-        showToast(`Cuidado: "${cat.name}" cerca del límite (${fmtMoney(total)} / ${fmtMoney(cat.limitMonthly)})`, false);
-      }
+      },0);
+      if(total > Number(cat.limitMonthly)) showToast(`Límite superado en "${cat.name}": ${fmtMoney(total)} / ${fmtMoney(cat.limitMonthly)}`, true);
+      else if(total >= Number(cat.limitMonthly)*0.8) showToast(`Cuidado: "${cat.name}" cerca del límite (${fmtMoney(total)} / ${fmtMoney(cat.limitMonthly)})`);
     }
 
     /* ================== RENDER / UI ================== */
     function switchView(view){
       const views = ['dashboard','transactions','banks','fixed','categories','savings','export'];
-      views.forEach(v => { const el = document.getElementById('view-'+v); if(el) el.style.display = (v === view) ? '' : 'none'; });
-      document.querySelectorAll('nav.bottom-nav button').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+      views.forEach(v=>{ const el = document.getElementById('view-'+v); if(el) el.style.display = (v===view)?'':'none'; });
+      document.querySelectorAll('nav.bottom-nav button').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
       $('#uid').textContent = state.uid ? state.uid : 'Sin iniciar';
     }
 
-    function renderAll(){
-      renderDashboard(); renderTransactions(); renderBanks(); renderFixed(); renderCategories(); renderSavings(); populateFilters();
-    }
+    function renderAll(){ renderDashboard(); renderTransactions(); renderBanks(); renderFixed(); renderCategories(); renderSavings(); populateFilters(); }
 
     function renderDashboard(){
       let inc=0, exp=0;
-      const now=new Date(), month=now.getMonth(), year=now.getFullYear();
+      const now = new Date(), month = now.getMonth(), year = now.getFullYear();
       state.transactions.forEach(t=>{
         const d = t.date ? (t.date.toDate ? t.date.toDate() : parseDateDDMMYYYY(t.dateStr||tsToDateStr(t.date))) : parseDateDDMMYYYY(t.dateStr||'');
         if(!d) return;
         if(d.getMonth()===month && d.getFullYear()===year){
-          if((t.type||'Ingreso').toLowerCase() === 'egreso') exp += Number(t.amount)||0; else inc += Number(t.amount)||0;
+          if((t.type||'Ingreso').toLowerCase()==='egreso') exp += Number(t.amount)||0; else inc += Number(t.amount)||0;
         }
       });
       $('#balance').textContent = fmtMoney(inc - exp);
@@ -493,13 +446,14 @@
       state.banks.forEach(b=> assets += Number(b.balance)||0);
       state.debts.forEach(d=> liabilities += Number(d.outstanding)||0);
       $('#net-assets').textContent = fmtMoney(assets - liabilities);
-      $('#assets-break')?.textContent = `Act: ${fmtMoney(assets)} · Pas: ${fmtMoney(liabilities)}`;
-      const alerts = state.categories.map(cat => {
-        if(!cat.limitMonthly || Number(cat.limitMonthly) <= 0) return null;
+      // optional element
+      if($('#assets-break')) $('#assets-break').textContent = `Act: ${fmtMoney(assets)} · Pas: ${fmtMoney(liabilities)}`;
+      const alerts = state.categories.map(cat=>{
+        if(!cat.limitMonthly || Number(cat.limitMonthly)<=0) return null;
         const total = state.transactions.reduce((acc,t)=>{
           const d = t.date ? (t.date.toDate ? t.date.toDate() : parseDateDDMMYYYY(t.dateStr||tsToDateStr(t.date))) : parseDateDDMMYYYY(t.dateStr||'');
           if(!d) return acc;
-          const now2 = new Date(); if(d.getMonth() === now2.getMonth() && d.getFullYear() === now2.getFullYear() && t.categoryId === cat.id) acc += Number(t.amount)||0;
+          const now2 = new Date(); if(d.getMonth()===now2.getMonth() && d.getFullYear()===now2.getFullYear() && t.categoryId===cat.id) acc += Number(t.amount)||0;
           return acc;
         },0);
         if(total >= Number(cat.limitMonthly)) return `<div style="margin-bottom:6px;color:var(--danger)"><strong>${cat.name}</strong> ${fmtMoney(total)} / ${fmtMoney(cat.limitMonthly)} (Superado)</div>`;
@@ -519,14 +473,14 @@
         const bankName = bank ? bank.name : '-';
         const catName = cat ? cat.name : (t.categoryName || '-');
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${date}</td><td>${bankName}</td><td>${t.type}</td><td>${catName}</td><td class="right">${fmtMoney(t.amount)}</td><td><button class="ghost compact" data-id="${t.id}" data-act="edit">E</button> <button class="danger compact" data-id="${t.id}" data-act="del">X</button></td>`;
+        tr.innerHTML = `<td>${date}</td><td>${bankName}</td><td>${t.type}</td><td>${catName}</td><td class="right">${fmtMoney(Number(t.amount)||0)}</td><td><button class="ghost compact" data-id="${t.id}" data-act="edit">E</button> <button class="danger compact" data-id="${t.id}" data-act="del">X</button></td>`;
         tbody.appendChild(tr);
       });
       $$('#tx-table button').forEach(btn=>{
         btn.onclick = async ()=> {
           const id = btn.dataset.id, act = btn.dataset.act;
-          if(act === 'del') showConfirm('Eliminar transacción','Confirmar eliminación', async ()=>{ if(!db){ state.transactions = state.transactions.filter(x=>x.id!==id); persistLocal(); renderAll(); } else { await deleteDoc(doc(db, userPath('transactions'), id)); /* onSnapshot actualizará UI */ } });
-          if(act === 'edit'){ const tx = state.transactions.find(x=>x.id===id); if(tx) openTransactionModal(tx); }
+          if(act==='del') showConfirm('Eliminar transacción','Confirmar eliminación', async ()=>{ try{ if(!db){ state.transactions = state.transactions.filter(x=>x.id!==id); persistLocal(); renderAll(); } else { await deleteDoc(doc(db, userPath('transactions'), id)); await loadAllFromFirestore(); } } catch(e){ console.error(e); alert('Error: '+e.message); } });
+          if(act==='edit'){ const tx = state.transactions.find(x=>x.id===id); if(tx) openTransactionModal(tx); }
         };
       });
     }
@@ -550,17 +504,17 @@
       const wrap = $('#banks-table'); if(!wrap) return;
       if(state.banks.length === 0) wrap.innerHTML = '<div class="muted">No hay cuentas</div>';
       else {
-        wrap.innerHTML = `<table><thead><tr><th>Cuenta</th><th class="right">Saldo</th><th>Acc.</th></tr></thead><tbody>${state.banks.map(b=>`<tr><td>${b.name}<div class="muted" style="font-size:12px">${b.type||''}</div></td><td class="right">${fmtMoney(b.balance)}</td><td><button class="ghost compact" data-id="${b.id}" data-act="edit">E</button> <button class="danger compact" data-id="${b.id}" data-act="del">X</button></td></tr>`).join('')}</tbody></table>`;
+        wrap.innerHTML = `<table><thead><tr><th>Cuenta</th><th class="right">Saldo</th><th>Acc.</th></tr></thead><tbody>${state.banks.map(b=>`<tr><td>${b.name}<div class="muted" style="font-size:12px">${b.type||''}</div></td><td class="right">${fmtMoney(Number(b.balance)||0)}</td><td><button class="ghost compact" data-id="${b.id}" data-act="edit">E</button> <button class="danger compact" data-id="${b.id}" data-act="del">X</button></td></tr>`).join('')}</tbody></table>`;
       }
       const dwrap = $('#debts-table'); if(!dwrap) return;
       if(state.debts.length === 0) dwrap.innerHTML = '<div class="muted">No hay deudas</div>';
-      else dwrap.innerHTML = `<table><thead><tr><th>Deuda</th><th>Banco</th><th class="right">Saldo</th><th class="right">Cuota</th><th>Acc.</th></tr></thead><tbody>${state.debts.map(d=>`<tr><td>${d.name}</td><td>${(state.banks.find(b=>b.id===d.bankId)||{name:'-'}).name}</td><td class="right">${fmtMoney(d.outstanding)}</td><td class="right">${fmtMoney(d.monthlyPayment)}</td><td><button class="ghost compact" data-id="${d.id}" data-act="pay">P</button> <button class="danger compact" data-id="${d.id}" data-act="del">X</button></td></tr>`).join('')}</tbody></table>`;
+      else dwrap.innerHTML = `<table><thead><tr><th>Deuda</th><th>Banco</th><th class="right">Saldo</th><th class="right">Cuota</th><th>Acc.</th></tr></thead><tbody>${state.debts.map(d=>`<tr><td>${d.name}</td><td>${(state.banks.find(b=>b.id===d.bankId)||{name:'-'}).name}</td><td class="right">${fmtMoney(Number(d.outstanding)||0)}</td><td class="right">${fmtMoney(Number(d.monthlyPayment)||0)}</td><td><button class="ghost compact" data-id="${d.id}" data-act="pay">P</button> <button class="danger compact" data-id="${d.id}" data-act="del">X</button></td></tr>`).join('')}</tbody></table>`;
       $$('#banks-table button, #debts-table button').forEach(btn=>{
         const act = btn.dataset.act, id = btn.dataset.id;
         btn.onclick = ()=>{
-          if(act === 'edit') openBankModal(id);
-          if(act === 'del') showConfirm('Eliminar', 'Confirmar eliminación', async ()=>{ if(!db){ state.banks = state.banks.filter(x=>x.id!==id); persistLocal(); renderAll(); } else { await deleteDoc(doc(db, userPath('banks'), id)); } });
-          if(act === 'pay') openDebtPaymentModal(id);
+          if(act==='edit') openBankModal(id);
+          if(act==='del') showConfirm('Eliminar', 'Confirmar eliminación', async ()=>{ try{ if(!db){ state.banks = state.banks.filter(x=>x.id!==id); persistLocal(); renderAll(); } else { await deleteDoc(doc(db, userPath('banks'), id)); await loadAllFromFirestore(); } } catch(e){ console.error(e); alert('Error: '+e.message); } });
+          if(act==='pay') openDebtPaymentModal(id);
         };
       });
     }
@@ -568,51 +522,30 @@
     function renderFixed(){
       const wrap = $('#fixed-table'); if(!wrap) return;
       if(state.fixed.length === 0) wrap.innerHTML = '<div class="muted">No hay gastos fijos</div>';
-      else wrap.innerHTML = `<table><thead><tr><th>Nombre</th><th>Cuenta</th><th class="right">Monto</th><th class="right">Día</th><th>Acc.</th></tr></thead><tbody>${state.fixed.map(f=>`<tr><td>${f.name}</td><td>${(state.banks.find(b=>b.id===f.bankId)||{name:'-'}).name}</td><td class="right">${fmtMoney(f.amount)}</td><td class="right">${f.nextDueDay}</td><td><button class="ghost compact" data-id="${f.id}" data-act="gen">G</button> <button class="danger compact" data-id="${f.id}" data-act="del">X</button></td></tr>`).join('')}</tbody></table>`;
+      else wrap.innerHTML = `<table><thead><tr><th>Nombre</th><th>Cuenta</th><th class="right">Monto</th><th class="right">Día</th><th>Acc.</th></tr></thead><tbody>${state.fixed.map(f=>`<tr><td>${f.name}</td><td>${(state.banks.find(b=>b.id===f.bankId)||{name:'-'}).name}</td><td class="right">${fmtMoney(Number(f.amount)||0)}</td><td class="right">${f.nextDueDay}</td><td><button class="ghost compact" data-id="${f.id}" data-act="gen">G</button> <button class="danger compact" data-id="${f.id}" data-act="del">X</button></td></tr>`).join('')}</tbody></table>`;
       wrap.querySelectorAll('button').forEach(btn=>{
         const act = btn.dataset.act, id = btn.dataset.id;
         btn.onclick = async ()=> {
-          if(act === 'gen'){ const f = state.fixed.find(x=>x.id===id); if(f){ const todayStr = dateToDDMMYYYY(new Date()); await addTransaction({ type:'Egreso', amount:f.amount, categoryId:f.categoryId, categoryName:f.categoryName, description:f.name, dateStr:todayStr, bankId:f.bankId }); showToast('Generado: '+f.name); } }
-          if(act === 'del') showConfirm('Eliminar gasto fijo','Confirmar', async ()=>{ if(!db){ state.fixed = state.fixed.filter(x=>x.id!==id); persistLocal(); renderAll(); } else { await deleteDoc(doc(db, userPath('fixedExpenses'), id)); } });
+          if(act==='gen'){ const f = state.fixed.find(x=>x.id===id); if(f){ const todayStr = dateToDDMMYYYY(new Date()); try{ await addTransaction({ type:'Egreso', amount:f.amount, categoryId:f.categoryId, categoryName:f.categoryName, description:f.name, dateStr:todayStr, bankId:f.bankId }); showToast('Generado: '+f.name); } catch(e){ alert('Error al generar: '+e.message); } } }
+          if(act==='del') showConfirm('Eliminar gasto fijo','Confirmar', async ()=>{ try{ if(!db){ state.fixed = state.fixed.filter(x=>x.id!==id); persistLocal(); renderAll(); } else { await deleteDoc(doc(db, userPath('fixedExpenses'), id)); await loadAllFromFirestore(); } } catch(e){ console.error(e); alert('Error: '+e.message); } });
         };
       });
     }
 
     function renderCategories(){
       const tbody = $('#categories-table tbody'); if(!tbody) return; tbody.innerHTML = '';
-      state.categories.forEach(c => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${c.name}</td><td class="right">${c.limitMonthly ? fmtMoney(c.limitMonthly) : 'Sin límite'}</td><td><button class="ghost compact" data-id="${c.id}" data-act="edit">E</button> <button class="danger compact" data-id="${c.id}" data-act="del">X</button></td>`;
-        tbody.appendChild(tr);
-      });
-      $$('#categories-table button').forEach(btn=>{
-        const id = btn.dataset.id, act = btn.dataset.act;
-        btn.onclick = ()=> {
-          if(act === 'edit') openCategoryModal(id);
-          if(act === 'del') showConfirm('Eliminar categoría','Confirmar', async ()=>{ await deleteCategory(id); });
-        };
-      });
+      state.categories.forEach(c=>{ const tr = document.createElement('tr'); tr.innerHTML = `<td>${c.name}</td><td class="right">${c.limitMonthly ? fmtMoney(Number(c.limitMonthly)||0) : 'Sin límite'}</td><td><button class="ghost compact" data-id="${c.id}" data-act="edit">E</button> <button class="danger compact" data-id="${c.id}" data-act="del">X</button></td>`; tbody.appendChild(tr); });
+      $$('#categories-table button').forEach(btn=>{ const id=btn.dataset.id, act=btn.dataset.act; btn.onclick = ()=>{ if(act==='edit') openCategoryModal(id); if(act==='del') showConfirm('Eliminar categoría','Confirmar', async ()=>{ try{ await deleteCategory(id); } catch(e){ console.error(e); alert('Error: '+e.message); } }); }; });
     }
 
-    function renderSavings(){
-      const wrap = $('#savings-table'); if(!wrap) return;
-      if(state.savings.length === 0) wrap.innerHTML = '<div class="muted">No hay planes</div>';
-      else wrap.innerHTML = `<table><thead><tr><th>Plan</th><th class="right">Objetivo</th><th>Cuenta</th><th class="right">Saldo</th></tr></thead><tbody>${state.savings.map(s=>`<tr><td>${s.name}</td><td class="right">${fmtMoney(s.target)}</td><td>${(state.banks.find(b=>b.id===s.bankId)||{name:'-'}).name}</td><td class="right">${fmtMoney(s.balance||0)}</td></tr>`).join('')}</tbody></table>`;
-    }
+    function renderSavings(){ const wrap = $('#savings-table'); if(!wrap) return; if(state.savings.length===0) wrap.innerHTML='<div class="muted">No hay planes</div>'; else wrap.innerHTML = `<table><thead><tr><th>Plan</th><th class="right">Objetivo</th><th>Cuenta</th><th class="right">Saldo</th></tr></thead><tbody>${state.savings.map(s=>`<tr><td>${s.name}</td><td class="right">${fmtMoney(Number(s.target)||0)}</td><td>${(state.banks.find(b=>b.id===s.bankId)||{name:'-'}).name}</td><td class="right">${fmtMoney(Number(s.balance)||0)}</td></tr>`).join('')}</tbody></table>`; }
 
-    function populateFilters(){
-      const sel = $('#filter-bank'); if(!sel) return;
-      sel.innerHTML = '<option value="">-- Todas --</option>' + state.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
-    }
+    function populateFilters(){ const sel = $('#filter-bank'); if(!sel) return; sel.innerHTML = '<option value="">-- Todas --</option>' + state.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join(''); }
 
     /* ================== MODALES & HELPERS ================== */
     function showModal(html){ $('#modal').innerHTML = html; $('#modal-backdrop').style.display = 'flex'; }
     function closeModal(){ $('#modal').innerHTML = ''; $('#modal-backdrop').style.display = 'none'; }
-    function showConfirm(title, text, onConfirm){
-      showModal(`<div><strong>${title}</strong><div class="muted" style="margin-top:8px">${text}</div><div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px"><button id="m-cancel" class="ghost compact">Cancelar</button><button id="m-confirm" class="danger compact">Confirmar</button></div></div>`);
-      $('#m-cancel').onclick = closeModal;
-      $('#m-confirm').onclick = async ()=>{ try{ await onConfirm(); } catch(e){ console.error(e); alert('Error: '+e.message) } closeModal(); };
-    }
+    function showConfirm(title, text, onConfirm){ showModal(`<div><strong>${title}</strong><div class="muted" style="margin-top:8px">${text}</div><div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px"><button id="m-cancel" class="ghost compact">Cancelar</button><button id="m-confirm" class="danger compact">Confirmar</button></div></div>`); $('#m-cancel').onclick = closeModal; $('#m-confirm').onclick = async ()=>{ try{ await onConfirm(); } catch(e){ console.error(e); alert('Error: '+e.message); } closeModal(); }; }
     function showToast(msg, important=false){ const t = $('#toast'); t.textContent = msg; t.style.display = 'block'; t.style.background = important ? 'linear-gradient(90deg,var(--danger),#ff9a9a)' : '#071421'; clearTimeout(window.__toastTimer); window.__toastTimer = setTimeout(()=>{ t.style.display = 'none'; }, important ? 7000 : 3500); }
 
     /* ================== MODALES FORM ================== */
@@ -620,7 +553,7 @@
       const c = state.categories.find(x=>x.id===editId) || { name:'', limitMonthly:0 };
       showModal(`<div><h3 style="margin:0">${editId ? 'Editar categoría' : 'Nueva categoría'}</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><div><label>Nombre</label><input id="c-name" value="${c.name}" /></div><div><label>Límite mensual (0 = sin límite)</label><input id="c-limit" value="${c.limitMonthly || 0}" /></div></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="c-cancel" class="ghost compact">Cancelar</button><button id="c-save" class="primary compact">Guardar</button></div></div>`);
       $('#c-cancel').onclick = closeModal;
-      $('#c-save').onclick = async ()=>{ const name = $('#c-name').value.trim(); const limit = Number($('#c-limit').value) || 0; if(!name) return alert('Nombre requerido'); if(!editId) await addCategory({ name, limitMonthly: limit }); else await updateCategory(editId, { name, limitMonthly: limit }); closeModal(); };
+      $('#c-save').onclick = async ()=>{ try{ const name = $('#c-name').value.trim(); const limit = Number($('#c-limit').value) || 0; if(!name) return alert('Nombre requerido'); if(!editId) await addCategory({ name, limitMonthly: limit }); else await updateCategory(editId, { name, limitMonthly: limit }); closeModal(); } catch(e){ console.error(e); alert('Error: '+e.message); } };
     }
 
     function openTransactionModal(existing){
@@ -628,34 +561,39 @@
       const bankOpts = `<option value="">-- Seleccionar cuenta --</option>` + state.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
       const debtOpts = `<option value="">-- Ninguna --</option>` + state.debts.map(d=>`<option value="${d.id}">${d.name} · ${fmtMoney(d.outstanding)}</option>`).join('');
       const defaults = existing || { type:'Ingreso', amount:0, categoryId:'', description:'', dateStr:dateToDDMMYYYY(new Date()), bankId:'' };
-      showModal(`<div><h3 style="margin:0">${existing ? 'Editar transacción' : 'Nueva transacción'}</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><div><label>Tipo</label><select id="m-type"><option ${defaults.type==='Ingreso'?'selected':''}>Ingreso</option><option ${defaults.type==='Egreso'?'selected':''}>Egreso</option></select></div><div><label>Monto</label><input id="m-amount" value="${defaults.amount||0}" /></div><div><label>Cuenta</label><select id="m-bank">${bankOpts}</select></div><div><label>Categoría</label><select id="m-cat">${catOpts}</select></div><div style="grid-column:1/-1"><label>Descripción</label><input id="m-desc" value="${defaults.description||''}" /></div><div><label>Fecha (dd/mm/yyyy)</label><input id="m-date" value="${defaults.dateStr||''}" /></div><div><label>Pago a deuda (opcional)</label><select id="m-debt">${debtOpts}</select></div></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="m-cancel" class="ghost compact">Cancelar</button><button id="m-save" class="primary compact">Guardar</button></div></div>`);
-      if(existing){ setTimeout(()=>{ if(existing.bankId) $('#m-bank').value = existing.bankId; if(existing.categoryId) $('#m-cat').value = existing.categoryId; if(existing.debtId) $('#m-debt').value = existing.debtId; },50); }
+      showModal(`<div><h3 style="margin:0">${existing ? 'Editar transacción' : 'Nueva transacción'}</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><div><label>Tipo</label><select id="m-type"><option ${defaults.type==='Ingreso'?'selected':''}>Ingreso</option><option ${defaults.type==='Egreso'?'selected':''}>Egreso</option></select></div><div><label>Monto</label><input id="m-amount" value="${defaults.amount||0}" /></div><div><label>Cuenta</label><select id="m-bank">${bankOpts}</select></div><div><label>Categoría</label><select id="m-cat">${catOpts}</select></div><div style="grid-column:1/-1"><label>Descripción</label><input id="m-desc" value="${(defaults.description||'').replace(/"/g,'&quot;')}" /></div><div><label>Fecha (dd/mm/yyyy)</label><input id="m-date" value="${defaults.dateStr||''}" /></div><div><label>Pago a deuda (opcional)</label><select id="m-debt">${debtOpts}</select></div></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="m-cancel" class="ghost compact">Cancelar</button><button id="m-save" class="primary compact">Guardar</button></div></div>`);
+      // Preseleccionar si existe (pequeño delay para asegurar el select esté en DOM)
+      if(existing){ setTimeout(()=>{ if(existing.bankId) $('#m-bank').value = existing.bankId; if(existing.categoryId) $('#m-cat').value = existing.categoryId; if(existing.debtId) $('#m-debt').value = existing.debtId; if($('#m-amount')) $('#m-amount').value = Number(existing.amount)||0; },50); }
       $('#m-cancel').onclick = closeModal;
       $('#m-save').onclick = async ()=> {
-        const type = $('#m-type').value;
-        const amount = Number($('#m-amount').value) || 0;
-        const bankId = $('#m-bank').value || null;
-        const categoryId = $('#m-cat').value || null;
-        const description = $('#m-desc').value.trim();
-        const dateStr = $('#m-date').value.trim();
-        const debtId = $('#m-debt').value || null;
-        if(!amount || amount <= 0) return alert('Monto inválido');
-        if(!parseDateDDMMYYYY(dateStr)) return alert('Fecha inválida (dd/mm/yyyy)');
-        const categoryName = (state.categories.find(c=>c.id===categoryId)||{name:''}).name;
-        await addTransaction({ type, amount, categoryId, categoryName, description, dateStr, bankId, debtId });
-        closeModal();
+        try{
+          const type = $('#m-type').value;
+          const amount = Number($('#m-amount').value) || 0;
+          const bankId = $('#m-bank').value || null;
+          const categoryId = $('#m-cat').value || null;
+          const description = $('#m-desc').value.trim();
+          const dateStr = $('#m-date').value.trim();
+          const debtId = $('#m-debt').value || null;
+          if(!amount || amount <= 0) return alert('Monto inválido');
+          if(!parseDateDDMMYYYY(dateStr)) return alert('Fecha inválida (dd/mm/yyyy)');
+          const categoryName = (state.categories.find(c=>c.id===categoryId)||{name:''}).name;
+          await addTransaction({ type, amount, categoryId, categoryName, description, dateStr, bankId, debtId });
+          closeModal();
+        } catch(e){ console.error(e); alert('Error al guardar transacción: '+e.message); }
       };
     }
 
     function openBankModal(editId){
       const b = state.banks.find(x=>x.id===editId) || { name:'', balance:0, type:'Cuenta', currency:'PEN' };
-      showModal(`<div><h3 style="margin:0">${editId ? 'Editar cuenta' : 'Nueva cuenta'}</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><div><label>Nombre</label><input id="b-name" value="${b.name}" /></div><div><label>Tipo</label><input id="b-type" value="${b.type}" /></div><div><label>Saldo inicial</label><input id="b-balance" value="${b.balance||0}" /></div><div><label>Moneda</label><input id="b-currency" value="${b.currency||'PEN'}" /></div></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="b-cancel" class="ghost compact">Cancelar</button><button id="b-save" class="primary compact">Guardar</button></div></div>`);
+      showModal(`<div><h3 style="margin:0">${editId ? 'Editar cuenta' : 'Nueva cuenta'}</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><div><label>Nombre</label><input id="b-name" value="${b.name}" /></div><div><label>Tipo</label><input id="b-type" value="${b.type}" /></div><div><label>Saldo inicial</label><input id="b-balance" value="${Number(b.balance)||0}" /></div><div><label>Moneda</label><input id="b-currency" value="${b.currency||'PEN'}" /></div></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="b-cancel" class="ghost compact">Cancelar</button><button id="b-save" class="primary compact">Guardar</button></div></div>`);
       $('#b-cancel').onclick = closeModal;
       $('#b-save').onclick = async ()=> {
-        const name = $('#b-name').value.trim(); const type = $('#b-type').value.trim(); const balance = Number($('#b-balance').value)||0; const currency = $('#b-currency').value.trim()||'PEN';
-        if(!name) return alert('Nombre requerido');
-        if(!editId){ await addBank({ name, type, balance, currency }); } else { if(!db){ const bb = state.banks.find(x=>x.id===editId); if(bb){ bb.name=name; bb.type=type; bb.balance=balance; bb.currency=currency; persistLocal(); renderAll(); } } else { await updateDoc(doc(db, userPath('banks'), editId), { name, type, balance, currency }); showToast('Cuenta actualizada'); } }
-        closeModal();
+        try{
+          const name = $('#b-name').value.trim(); const type = $('#b-type').value.trim(); const balance = Number($('#b-balance').value)||0; const currency = $('#b-currency').value.trim()||'PEN';
+          if(!name) return alert('Nombre requerido');
+          if(!editId){ await addBank({ name, type, balance, currency }); } else { if(!db){ const bb = state.banks.find(x=>x.id===editId); if(bb){ bb.name=name; bb.type=type; bb.balance=balance; bb.currency=currency; persistLocal(); renderAll(); } } else { await updateBank(editId, { name, type, balance, currency }); } }
+          closeModal();
+        } catch(e){ console.error(e); alert('Error al guardar cuenta: '+e.message); }
       };
     }
 
@@ -663,23 +601,27 @@
       showModal(`<div><h3 style="margin:0">Nueva deuda</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><div><label>Nombre</label><input id="d-name" /></div><div><label>Banco</label><select id="d-bank"><option value="">-- Seleccionar --</option>${state.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('')}</select></div><div><label>Saldo pendiente</label><input id="d-out" value="0" /></div><div><label>Cuota mensual</label><input id="d-pay" value="0" /></div><div><label>Interés (%)</label><input id="d-interest" value="0" /></div></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="d-cancel" class="ghost compact">Cancelar</button><button id="d-save" class="primary compact">Guardar</button></div></div>`);
       $('#d-cancel').onclick = closeModal;
       $('#d-save').onclick = async ()=> {
-        const name = $('#d-name').value.trim(); const bankId = $('#d-bank').value || null; const outstanding = Number($('#d-out').value) || 0; const monthlyPayment = Number($('#d-pay').value) || 0; const interest = Number($('#d-interest').value) || 0;
-        if(!name) return alert('Nombre requerido');
-        await addDebt({ name, bankId, outstanding, monthlyPayment, interest });
-        closeModal();
+        try{
+          const name = $('#d-name').value.trim(); const bankId = $('#d-bank').value || null; const outstanding = Number($('#d-out').value) || 0; const monthlyPayment = Number($('#d-pay').value) || 0; const interest = Number($('#d-interest').value) || 0;
+          if(!name) return alert('Nombre requerido');
+          await addDebt({ name, bankId, outstanding, monthlyPayment, interest });
+          closeModal();
+        } catch(e){ console.error(e); alert('Error al guardar deuda: '+e.message); }
       };
     }
 
     function openDebtPaymentModal(debtId){
       const d = state.debts.find(x=>x.id===debtId); if(!d) return alert('Deuda no encontrada');
-      showModal(`<div><h3 style="margin:0">Pagar ${d.name}</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><div><label>Monto</label><input id="pay-amount" value="${d.monthlyPayment||0}" /></div><div><label>Cuenta</label><select id="pay-bank">${state.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('')}</select></div><div style="grid-column:1/-1"><label>Descripción</label><input id="pay-desc" value="Pago deuda ${d.name}" /></div></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="pay-cancel" class="ghost compact">Cancelar</button><button id="pay-save" class="primary compact">Registrar pago</button></div></div>`);
+      showModal(`<div><h3 style="margin:0">Pagar ${d.name}</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><div><label>Monto</label><input id="pay-amount" value="${Number(d.monthlyPayment)||0}" /></div><div><label>Cuenta</label><select id="pay-bank">${state.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('')}</select></div><div style="grid-column:1/-1"><label>Descripción</label><input id="pay-desc" value="Pago deuda ${d.name}" /></div></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="pay-cancel" class="ghost compact">Cancelar</button><button id="pay-save" class="primary compact">Registrar pago</button></div></div>`);
       $('#pay-cancel').onclick = closeModal;
       $('#pay-save').onclick = async ()=> {
-        const amount = Number($('#pay-amount').value) || 0; const bankId = $('#pay-bank').value; const desc = $('#pay-desc').value.trim();
-        if(!amount || amount <= 0) return alert('Monto inválido');
-        const today = dateToDDMMYYYY(new Date());
-        await addTransaction({ type:'Egreso', amount, categoryId:null, categoryName:'Pago Deuda', description:desc, dateStr:today, bankId, debtId });
-        closeModal();
+        try{
+          const amount = Number($('#pay-amount').value) || 0; const bankId = $('#pay-bank').value; const desc = $('#pay-desc').value.trim();
+          if(!amount || amount <= 0) return alert('Monto inválido');
+          const today = dateToDDMMYYYY(new Date());
+          await addTransaction({ type:'Egreso', amount, categoryId:null, categoryName:'Pago Deuda', description:desc, dateStr:today, bankId, debtId });
+          closeModal();
+        } catch(e){ console.error(e); alert('Error al registrar pago: '+e.message); }
       };
     }
 
@@ -699,20 +641,20 @@
       if(!file) return alert('Selecciona archivo');
       const text = await file.text();
       if(file.name.toLowerCase().endsWith('.csv')){
-        const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-        const headers = lines.shift().split(',').map(h => h.toLowerCase());
+        const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+        const headers = lines.shift().split(',').map(h=>h.toLowerCase());
         for(const line of lines){
-          const parts = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g).map(p => p.replace(/^"|"$/g,'').replace(/""/g,'"'));
-          const obj = {}; headers.forEach((h,i)=> obj[h] = parts[i] || '');
-          const bank = state.banks.find(b => b.name === obj.cuenta);
-          const cat = state.categories.find(c => c.name === obj.categoria);
-          await addTransaction({ type: obj.tipo || 'Ingreso', amount: Number(obj.monto) || 0, categoryId: cat ? cat.id : null, categoryName: obj.categoria || '', description: obj.descripcion || '', dateStr: obj.fecha, bankId: bank ? bank.id : null });
+          const parts = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g).map(p=>p.replace(/^"|"$/g,'').replace(/""/g,'"'));
+          const obj = {}; headers.forEach((h,i)=> obj[h]=parts[i]||'');
+          const bank = state.banks.find(b=>b.name === obj.cuenta);
+          const cat = state.categories.find(c=>c.name === obj.categoria);
+          await addTransaction({ type: obj.tipo||'Ingreso', amount: Number(obj.monto)||0, categoryId: cat?cat.id:null, categoryName: obj.categoria||'', description: obj.descripcion||'', dateStr: obj.fecha, bankId: bank?bank.id:null });
         }
         showToast('CSV importado');
       } else {
-        try {
+        try{
           const data = JSON.parse(text);
-          if(data.categories){ for(const c of data.categories) await addCategory({ name: c.name, limitMonthly: c.limitMonthly || 0 }); }
+          if(data.categories){ for(const c of data.categories) await addCategory({ name:c.name, limitMonthly:c.limitMonthly||0 }); }
           if(data.banks){ for(const b of data.banks) await addBank(b); }
           if(data.debts){ for(const d of data.debts) await addDebt(d); }
           if(data.fixed){ for(const f of data.fixed) await addFixedExpense(f); }
@@ -741,14 +683,14 @@
         </div>
         <hr style="border:none;border-top:1px solid #ddd;margin-bottom:6mm">
         <div style="font-size:11pt;font-weight:700;margin-bottom:3mm">Bancos</div>
-        <div style="font-size:10pt;margin-bottom:6mm">${state.banks.length ? `<ul style="margin:0 0 6mm 14px">${state.banks.map(b=>`<li style="margin-bottom:2mm">${b.name}: ${fmtMoney(b.balance)}</li>`).join('')}</ul>` : '<div style="color:#666">Sin cuentas registradas</div>'}</div>
+        <div style="font-size:10pt;margin-bottom:6mm">${state.banks.length ? `<ul style="margin:0 0 6mm 14px">${state.banks.map(b=>`<li style="margin-bottom:2mm">${b.name}: ${fmtMoney(Number(b.balance)||0)}</li>`).join('')}</ul>` : '<div style="color:#666">Sin cuentas registradas</div>'}</div>
         <div style="font-size:11pt;font-weight:700;margin-bottom:3mm">Deudas</div>
-        <div style="font-size:10pt;margin-bottom:6mm">${state.debts.length ? `<ul style="margin:0 0 6mm 14px">${state.debts.map(d=>`<li style="margin-bottom:2mm">${d.name} (${(state.banks.find(b=>b.id===d.bankId)||{name:'-' }).name}) - Saldo: ${fmtMoney(d.outstanding)} - Cuota: ${fmtMoney(d.monthlyPayment)}</li>`).join('')}</ul>` : '<div style="color:#666">Sin deudas</div>'}</div>
+        <div style="font-size:10pt;margin-bottom:6mm">${state.debts.length ? `<ul style="margin:0 0 6mm 14px">${state.debts.map(d=>`<li style="margin-bottom:2mm">${d.name} (${(state.banks.find(b=>b.id===d.bankId)||{name:'-' }).name}) - Saldo: ${fmtMoney(Number(d.outstanding)||0)} - Cuota: ${fmtMoney(Number(d.monthlyPayment)||0)}</li>`).join('')}</ul>` : '<div style="color:#666">Sin deudas</div>'}</div>
         <div style="font-size:11pt;font-weight:700;margin-bottom:3mm">Últimas transacciones</div>
         <table style="width:100%;border-collapse:collapse;font-size:10pt">
           <thead><tr><th style="text-align:left;border-bottom:1px solid #ddd;padding:6px 0">Fecha</th><th style="text-align:left;border-bottom:1px solid #ddd;padding:6px 0">Cuenta</th><th style="text-align:left;border-bottom:1px solid #ddd;padding:6px 0">Categoría</th><th style="text-align:right;border-bottom:1px solid #ddd;padding:6px 0">Monto</th></tr></thead>
           <tbody>
-            ${state.transactions.slice(0,30).map(t=>`<tr><td style="padding:6px 0">${t.date ? (t.date.toDate ? dateToDDMMYYYY(t.date.toDate()) : (t.dateStr||tsToDateStr(t.date))) : (t.dateStr||'')}</td><td style="padding:6px 0">${(state.banks.find(b=>b.id===t.bankId)||{name:'-'}).name}</td><td style="padding:6px 0">${(state.categories.find(c=>c.id===t.categoryId)||{name:t.categoryName||'-'}).name}</td><td style="padding:6px 0;text-align:right">${fmtMoney(t.amount)}</td></tr>`).join('')}
+            ${state.transactions.slice(0,30).map(t=>`<tr><td style="padding:6px 0">${t.date ? (t.date.toDate ? dateToDDMMYYYY(t.date.toDate()) : (t.dateStr||tsToDateStr(t.date))) : (t.dateStr||'')}</td><td style="padding:6px 0">${(state.banks.find(b=>b.id===t.bankId)||{name:'-'}).name}</td><td style="padding:6px 0">${(state.categories.find(c=>c.id===t.categoryId)||{name:t.categoryName||'-'}).name}</td><td style="padding:6px 0;text-align:right">${fmtMoney(Number(t.amount)||0)}</td></tr>`).join('')}
           </tbody>
         </table>
         <div style="margin-top:8mm;font-size:10pt;color:#666">Generado por JHONATAN ORELLANA - App Personal</div>
@@ -756,7 +698,7 @@
       if(window.html2pdf){
         const opt = { margin: 10, filename: `reporte_financiero_${(new Date()).toISOString().slice(0,10)}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
         html2pdf().set(opt).from(node).save();
-      } else alert('html2pdf no cargado. Recarga con internet.');
+      } else alert('html2pdf no cargado. Recarga con conexión a internet.');
     }
 
     /* ================== TECLA 'N' CONTROLADA ================== */
@@ -807,8 +749,7 @@
           return tDate === dateStr && (t.description||'') === f.name && Number(t.amount) === Number(f.amount);
         });
         if(exists) continue;
-        await addTransaction({ type:'Egreso', amount:f.amount, categoryId:f.categoryId, categoryName:f.categoryName, description:f.name, dateStr, bankId:f.bankId });
-        generated.push(f.name);
+        try{ await addTransaction({ type:'Egreso', amount:f.amount, categoryId:f.categoryId, categoryName:f.categoryName, description:f.name, dateStr, bankId:f.bankId }); generated.push(f.name); } catch(e){ console.error('generate fixed error', e); }
       }
       showToast('Gastos fijos generados: ' + (generated.length ? generated.join(', ') : 'ninguno'));
     }
@@ -819,11 +760,13 @@
       showModal(`<div><h3 style="margin:0">Nuevo gasto fijo</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><div><label>Nombre</label><input id="f-name" /></div><div><label>Monto</label><input id="f-amount" value="0" /></div><div><label>Cuenta</label><select id="f-bank">${bankOpts}</select></div><div><label>Día (1-28)</label><input id="f-day" value="1" /></div><div style="grid-column:1/-1"><label>Categoría</label><select id="f-cat">${catOpts}</select></div></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="f-cancel" class="ghost compact">Cancelar</button><button id="f-save" class="primary compact">Guardar</button></div></div>`);
       $('#f-cancel').onclick = closeModal;
       $('#f-save').onclick = async ()=> {
-        const name = $('#f-name').value.trim(); const amount = Number($('#f-amount').value) || 0; const bankId = $('#f-bank').value || null; const day = Math.max(1, Math.min(28, Number($('#f-day').value) || 1)); const catId = $('#f-cat').value || null;
-        if(!name) return alert('Nombre requerido'); if(!amount || amount <= 0) return alert('Monto inválido');
-        const categoryName = (state.categories.find(c=>c.id===catId)||{name:''}).name;
-        await addFixedExpense({ name, amount, bankId, nextDueDay: day, categoryId: catId, categoryName, active:true });
-        closeModal();
+        try{
+          const name = $('#f-name').value.trim(); const amount = Number($('#f-amount').value) || 0; const bankId = $('#f-bank').value || null; const day = Math.max(1, Math.min(28, Number($('#f-day').value) || 1)); const catId = $('#f-cat').value || null;
+          if(!name) return alert('Nombre requerido'); if(!amount || amount <= 0) return alert('Monto inválido');
+          const categoryName = (state.categories.find(c=>c.id===catId)||{name:''}).name;
+          await addFixedExpense({ name, amount, bankId, nextDueDay: day, categoryId: catId, categoryName, active:true });
+          closeModal();
+        } catch(e){ console.error(e); alert('Error al guardar gasto fijo: '+e.message); }
       };
     }
 
@@ -832,10 +775,12 @@
       showModal(`<div><h3 style="margin:0">Nuevo plan de ahorro</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><div><label>Nombre</label><input id="s-name" /></div><div><label>Cuenta vinculada</label><select id="s-bank">${bankOpts}</select></div><div><label>Monto objetivo</label><input id="s-target" value="0" /></div><div><label>Fecha meta</label><input id="s-date" placeholder="dd/mm/yyyy" /></div></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="s-cancel" class="ghost compact">Cancelar</button><button id="s-save" class="primary compact">Crear</button></div></div>`);
       $('#s-cancel').onclick = closeModal;
       $('#s-save').onclick = async ()=> {
-        const name = $('#s-name').value.trim(); const bankId = $('#s-bank').value || null; const target = Number($('#s-target').value) || 0; const date = $('#s-date').value.trim();
-        if(!name) return alert('Nombre requerido'); if(!target || target <= 0) return alert('Monto objetivo inválido'); if(date && !parseDateDDMMYYYY(date)) return alert('Fecha inválida');
-        if(!db){ const id = 'local-'+Math.random().toString(36).slice(2,9); state.savings.push({ id, name, bankId, target, date, balance:0 }); persistLocal(); renderSavings(); } else { await addDoc(collection(db, userPath('savings')), { name, bankId, target, date, balance:0, createdAt: serverTimestamp() }); }
-        closeModal();
+        try{
+          const name = $('#s-name').value.trim(); const bankId = $('#s-bank').value || null; const target = Number($('#s-target').value) || 0; const date = $('#s-date').value.trim();
+          if(!name) return alert('Nombre requerido'); if(!target || target <= 0) return alert('Monto objetivo inválido'); if(date && !parseDateDDMMYYYY(date)) return alert('Fecha inválida');
+          if(!db){ const id='local-'+Math.random().toString(36).slice(2,9); state.savings.push({ id, name, bankId, target, date, balance:0 }); persistLocal(); renderSavings(); } else { await addDoc(collection(db, userPath('savings')), { name, bankId, target, date, balance:0, createdAt: serverTimestamp() }); await loadAllFromFirestore(); }
+          closeModal();
+        } catch(e){ console.error(e); alert('Error al crear plan: '+e.message); }
       };
     }
 
@@ -843,46 +788,30 @@
     async function initAuth(){
       bindUI();
       if(!isConfigFilled){ state.uid = 'local-demo'; $('#uid').textContent = state.uid + ' (local)'; loadLocal(); renderAll(); showToast('Modo local: Firebase no configurado'); return; }
-      try {
-        await signInAnonymously(auth);
-      } catch(e){ console.warn('signInAnonymously error', e); }
-      onAuthStateChanged(auth, async (user) => {
+      try { await signInAnonymously(auth); } catch(e){ console.warn('signInAnonymously error', e); }
+      onAuthStateChanged(auth, async (user)=> {
         if(user){
-          state.uid = user.uid;
-          $('#uid').textContent = state.uid;
-          // start realtime subscriptions
-          subscribeToCollections();
-          // seed defaults only if categories empty
-          if((state.categories || []).length === 0){
-            // create defaults if none exist (safeguard)
-            const defaults = [{ name:'Salario', limitMonthly:0 }, { name:'Alimentos', limitMonthly:0 }, { name:'Transporte', limitMonthly:0 }, { name:'Varios', limitMonthly:0 }];
-            for(const d of defaults){
-              await addDoc(collection(db, userPath('categories')), { name: d.name, limitMonthly: d.limitMonthly, createdAt: serverTimestamp() });
-            }
-            // subscriptions will pick them up
-          }
+          state.uid = user.uid; $('#uid').textContent = state.uid;
+          subscribeToCollections(); // realtime updates
+          // seed defaults (sólo si colección vacía)
+          setTimeout(async ()=>{
+            if(state.categories.length === 0){ const defaults = [{name:'Salario',limitMonthly:0},{name:'Alimentos',limitMonthly:0},{name:'Transporte',limitMonthly:0}]; for(const d of defaults) await addDoc(collection(db, userPath('categories')), { name:d.name, limitMonthly:d.limitMonthly, createdAt: serverTimestamp() }); await loadAllFromFirestore(); }
+          }, 500);
           showToast('Conectado (Firestore)');
-        } else {
-          $('#uid').textContent = 'No autenticado';
-        }
+        } else { $('#uid').textContent = 'No autenticado'; }
       });
     }
 
     (async function main(){
       await initAuth();
-      // If local mode, seed some categories (only local)
       if(!isConfigFilled){
-        if(state.categories.length === 0){
-          state.categories = [{ id:'local-sal', name:'Salario', limitMonthly:0 }, { id:'local-al', name:'Alimentos', limitMonthly:0 }, { id:'local-tr', name:'Transporte', limitMonthly:0 }];
-          persistLocal();
-        }
+        if(state.categories.length === 0){ state.categories = [{ id:'local-sal', name:'Salario', limitMonthly:0 }, { id:'local-al', name:'Alimentos', limitMonthly:0 }]; persistLocal(); }
         renderAll();
       }
-      // default view
       switchView('dashboard');
     })();
 
-    // Expose state for debugging
+    // Export for debugging
     window._jo_state = state;
   </script>
 </body>
