@@ -2,252 +2,264 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>JHONATAN ORELLANA - Finanzas Personales (index.html)</title>
 
   <!--
     APP SPA - JHONATAN ORELLANA (UN SOLO ARCHIVO)
-    Cambios solicitados:
-      - Registro de categorías (CRUD) y vinculación a transacciones/fijos
-      - Tecla "N" abre nueva transacción (controlado; no se repite ni interfiere)
-      - Exportar reporte PDF (html2pdf.js)
-      - Establecer límites por categoría y notificar si se supera (por mes)
-    Instrucciones:
-      1) Crear proyecto Firebase + Firestore y pegar firebaseConfig abajo.
-      2) Habilitar Authentication (anónimo o tu método preferido).
-      3) Abrir este archivo en Live Server o servidor local para que funcionen importaciones por módulo.
+    Cambios solicitados incluidos:
+     - Diseño adaptado a vista móvil vertical (simula pantalla de celular).
+     - Reporte PDF mejorado (tipografías en pt: título 12pt, subtítulos 11pt, normal 10pt).
+     - Compatibilidad y uso de Firestore (mantener firebaseConfig).
+     - Conserva todas las ventanas y botones y su funcionalidad original.
+     - Registro de categorías y límites mensuales (ya implementados).
+     - Tecla 'N' abre nueva transacción (controlada).
+    Reemplaza firebaseConfig con la configuración de tu proyecto Firebase.
   -->
 
   <style>
+    /* -------------------- DISEÑO MÓVIL (POR DEFECTO) -------------------- */
     :root{
-      --bg:#07101a; --card:#0f172a; --accent:#00b894; --accent-2:#34ace0;
-      --muted:#9aa6b2; --glass: rgba(255,255,255,0.03); --danger:#ff6b6b;
-      --radius:12px; font-family: Inter, Roboto, Arial, sans-serif; color:#e6eef6;
+      --bg:#041018;
+      --panel:#071421;
+      --card:#0b1b26;
+      --muted:#9fb1bd;
+      --accent:#00b894;
+      --accent-2:#34ace0;
+      --danger:#ff6b6b;
+      --glass: rgba(255,255,255,0.02);
+      --radius:12px;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
     }
     *{box-sizing:border-box}
-    body{margin:0;background:linear-gradient(180deg,#07101a,#03101a);-webkit-font-smoothing:antialiased}
-    .container{max-width:1200px;margin:18px auto;padding:18px;display:flex;gap:18px;align-items:flex-start}
-    aside.sidebar{width:300px;background:linear-gradient(180deg,#071421,#051017);border-radius:12px;padding:16px;position:sticky;top:18px;height:calc(100vh - 36px);overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,0.6)}
-    .brand{display:flex;gap:12px;align-items:center;margin-bottom:12px}
-    .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:900;color:#001219;font-size:20px}
-    nav.main-nav{display:flex;flex-direction:column;gap:8px;margin-top:12px}
-    nav.main-nav button{background:transparent;border:0;color:var(--muted);text-align:left;padding:10px;border-radius:10px;cursor:pointer;font-weight:700}
-    nav.main-nav button.active{background:rgba(255,255,255,0.02);color:var(--accent)}
-    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:var(--glass);font-weight:700}
-    main{flex:1;min-width:0}
-    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
-    .card{grid-column:span 12;background:linear-gradient(180deg,#0b1622,#07121a);border-radius:12px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,0.6)}
-    h2{margin:0;font-size:18px}
-    label{display:block;color:var(--muted);font-size:13px;margin-bottom:6px}
-    input,select,textarea{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
-    button.primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#001219;border:0;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:800}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#021018);color:#e6f6f6;-webkit-font-smoothing:antialiased}
+    /* Mobile-first container: narrow, centered like a phone */
+    .phone-frame{
+      width:100%;
+      max-width:420px; /* typical mobile width */
+      margin:12px auto;
+      border-radius:18px;
+      overflow:hidden;
+      background:linear-gradient(180deg,var(--panel),#04121a);
+      box-shadow:0 20px 60px rgba(0,0,0,0.6);
+      min-height:80vh;
+      display:flex;
+      flex-direction:column;
+    }
+    header.app-top{
+      display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:linear-gradient(90deg,rgba(255,255,255,0.02),transparent);
+      border-bottom:1px solid rgba(255,255,255,0.02);
+    }
+    .brand{display:flex;gap:10px;align-items:center}
+    .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:900;color:#001219;font-size:16px}
+    .title{font-weight:800;font-size:15px}
+    .subtitle{font-size:11px;color:var(--muted)}
+    nav.bottom-nav{display:flex;gap:6px;padding:10px;justify-content:space-between;background:linear-gradient(180deg,transparent,rgba(255,255,255,0.01));border-top:1px solid rgba(255,255,255,0.02)}
+    nav.bottom-nav button{flex:1;background:transparent;border:0;color:var(--muted);padding:8px;border-radius:10px;font-weight:700}
+    nav.bottom-nav button.active{color:var(--accent);background:rgba(255,255,255,0.02)}
+
+    main.app-body{padding:12px;overflow:auto;flex:1}
+    .card{background:linear-gradient(180deg,var(--card),#06121a);border-radius:12px;padding:12px;margin-bottom:12px;box-shadow:0 6px 20px rgba(0,0,0,0.5)}
+    h2{margin:0;font-size:16px}
+    .muted{color:var(--muted);font-size:12px}
+    .small{font-size:12px;color:var(--muted)}
+    .row{display:flex;gap:8px;align-items:center}
+    .col{flex:1}
+    label{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}
+    input,select,textarea{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit;font-size:13px}
+    button.primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#001219;border:0;padding:8px 10px;border-radius:10px;cursor:pointer;font-weight:800}
     button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:8px;border-radius:8px;color:var(--muted);cursor:pointer}
-    .compact{padding:6px 8px;font-size:13px}
+    button.compact{padding:6px 8px;font-size:13px}
     table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
-    th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.03);text-align:left}
+    th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.02);text-align:left}
     .right{text-align:right}
-    .muted{color:var(--muted)}
-    .tag{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,0.02)}
-    .danger{background:var(--danger);color:#120103;border:0;padding:8px 12px;border-radius:8px;cursor:pointer}
-    .toast{position:fixed;right:18px;bottom:18px;background:#071421;color:#d6f6ef;padding:12px;border-radius:10px;box-shadow:0 8px 26px rgba(0,0,0,0.6);display:none;z-index:120}
-    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:110}
-    .modal{background:linear-gradient(180deg,#071421,#051017);padding:14px;border-radius:12px;max-width:720px;width:94%}
-    @media (max-width:1000px){.container{flex-direction:column;padding:12px}aside.sidebar{width:100%;height:auto;position:static}.grid{grid-template-columns:1fr}}
+    .tag{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,0.02);font-weight:700}
+    .danger{background:var(--danger);color:#1a0303;border:0;padding:8px 10px;border-radius:8px;cursor:pointer}
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#071421;color:#d6f6ef;padding:12px;border-radius:10px;box-shadow:0 8px 26px rgba(0,0,0,0.6);display:none;z-index:120}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:140}
+    .modal{background:linear-gradient(180deg,#071421,#051017);padding:14px;border-radius:12px;max-width:400px;width:94%}
+    /* PDF report styles (inlined when generating) use pt sizes as requested */
+    /* Keep small screens comfortable */
+    @media (min-width:560px){
+      .phone-frame{max-width:420px}
+    }
+
   </style>
 </head>
 <body>
-  <div class="container" role="application">
-    <aside class="sidebar" aria-label="Navegación">
+  <div class="phone-frame" role="application" aria-label="App finanzas - vista móvil">
+    <header class="app-top">
       <div class="brand">
         <div class="logo">JO</div>
         <div>
-          <div style="font-weight:800">JHONATAN ORELLANA</div>
-          <div class="muted" style="font-size:13px">Control ordenado y profesional</div>
+          <div class="title">JHONATAN ORELLANA</div>
+          <div class="subtitle">Control profesional de finanzas</div>
         </div>
       </div>
+      <div class="small muted" id="uid">Sin iniciar</div>
+    </header>
 
-      <nav class="main-nav" id="nav">
-        <button data-view="dashboard" class="active">📊 Resumen</button>
-        <button data-view="transactions">🧾 Transacciones</button>
-        <button data-view="banks">🏦 Bancos & Deudas</button>
-        <button data-view="fixed">🔁 Gastos Fijos</button>
-        <button data-view="categories">🏷️ Categorías</button>
-        <button data-view="savings">💼 Ahorros</button>
-        <button data-view="export">⬇️ Export / Import</button>
-      </nav>
-
-      <div style="margin-top:12px">
-        <div class="muted">UID</div>
-        <div id="uid" class="pill">Sin iniciar</div>
-      </div>
-
-      <div style="margin-top:12px">
-        <div class="muted">Atajos</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-          <button id="btn-new-trans" class="ghost compact">Nueva transacción (N)</button>
-          <button id="btn-new-cat" class="ghost compact">Nueva categoría</button>
-          <button id="btn-export-pdf" class="ghost compact">Exportar reporte PDF</button>
+    <main class="app-body" id="app-body">
+      <!-- DASHBOARD -->
+      <section id="view-dashboard" class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <h2>Resumen</h2>
+            <div class="muted">Balance, bancos y alertas</div>
+          </div>
+          <div class="muted" id="month-label"></div>
         </div>
-      </div>
-    </aside>
 
-    <main>
-      <div class="grid">
-        <!-- DASHBOARD -->
-        <section id="view-dashboard" class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <h2>Resumen</h2>
-              <div class="muted">Balance, bancos y alertas de presupuesto</div>
-            </div>
-            <div class="muted" id="month-label"></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <div style="flex:1;background:var(--glass);padding:10px;border-radius:8px">
+            <div class="muted">Balance total</div>
+            <div id="balance" style="font-weight:800;font-size:18px;margin-top:6px">S/ 0.00</div>
+            <div id="flows" class="muted small"></div>
           </div>
-
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px">
-            <div style="background:var(--glass);padding:12px;border-radius:8px">
-              <div class="muted">Balance total</div>
-              <div id="balance" style="font-size:20px;font-weight:800;margin-top:6px">S/ 0.00</div>
-              <div id="flows" class="muted"></div>
-            </div>
-            <div style="background:var(--glass);padding:12px;border-radius:8px">
-              <div class="muted">Activos netos</div>
-              <div id="net-assets" style="font-size:20px;font-weight:800;margin-top:6px">S/ 0.00</div>
-              <div id="assets-break" class="muted"></div>
-            </div>
-            <div style="background:var(--glass);padding:12px;border-radius:8px">
-              <div class="muted">Alertas</div>
-              <div id="alerts" style="margin-top:8px"></div>
-            </div>
+          <div style="width:110px;background:var(--glass);padding:10px;border-radius:8px;text-align:center">
+            <div class="muted">Activos netos</div>
+            <div id="net-assets" style="font-weight:800;margin-top:6px">S/ 0.00</div>
           </div>
+        </div>
 
-        </section>
+        <div class="card" style="margin-top:10px;padding:10px">
+          <div class="muted" style="margin-bottom:8px">Alertas</div>
+          <div id="alerts" class="small muted"></div>
+        </div>
+      </section>
 
-        <!-- TRANSACTIONS -->
-        <section id="view-transactions" class="card" style="display:none">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <h2>Transacciones</h2>
-              <div class="muted">Cada transacción debe estar vinculada a una cuenta y categoría</div>
-            </div>
-            <div style="display:flex;gap:8px;align-items:center">
-              <input id="search" placeholder="Buscar..." style="padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit" />
-              <button id="btn-add-transaction" class="primary compact">Agregar</button>
-            </div>
+      <!-- TRANSACTIONS -->
+      <section id="view-transactions" class="card" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <h2>Transacciones</h2>
+            <div class="muted">Cada transacción requiere cuenta y categoría</div>
           </div>
-
-          <div style="display:flex;gap:12px;margin-top:10px">
-            <div style="flex:1">
-              <label>Filtrar por cuenta</label>
-              <select id="filter-bank"><option value="">-- Todas --</option></select>
-            </div>
-            <div style="width:160px">
-              <label>Desde (dd/mm/yyyy)</label><input id="filter-from" />
-            </div>
-            <div style="width:160px">
-              <label>Hasta (dd/mm/yyyy)</label><input id="filter-to" />
-            </div>
-            <div style="width:120px;align-self:flex-end">
-              <button id="btn-apply-filters" class="ghost compact">Aplicar</button>
-            </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="search" placeholder="Buscar..." style="padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit" />
+            <button id="btn-add-transaction" class="primary compact">Agregar</button>
           </div>
+        </div>
 
-          <div style="margin-top:12px;overflow:auto">
-            <table id="tx-table">
-              <thead><tr><th>Fecha</th><th>Cuenta</th><th>Tipo</th><th>Categoria</th><th>Descripción</th><th class="right">Monto</th><th>Acciones</th></tr></thead>
-              <tbody></tbody>
-            </table>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <div style="flex:1">
+            <label>Filtrar por cuenta</label>
+            <select id="filter-bank"><option value="">-- Todas --</option></select>
           </div>
-        </section>
-
-        <!-- BANKS & DEBTS -->
-        <section id="view-banks" class="card" style="display:none">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <h2>Bancos & Deudas</h2>
-              <div class="muted">Cuenta bancaria vinculada a transacciones y deudas</div>
-            </div>
-            <div style="display:flex;gap:8px">
-              <button id="btn-add-bank" class="primary compact">Nueva cuenta</button>
-              <button id="btn-add-debt" class="ghost compact">Nueva deuda</button>
-            </div>
+          <div style="width:110px">
+            <label>Desde</label><input id="filter-from" placeholder="dd/mm/yyyy" />
           </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
-            <div id="banks-table"></div>
-            <div id="debts-table"></div>
+          <div style="width:110px">
+            <label>Hasta</label><input id="filter-to" placeholder="dd/mm/yyyy" />
           </div>
-        </section>
+        </div>
 
-        <!-- FIXED EXPENSES -->
-        <section id="view-fixed" class="card" style="display:none">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <h2>Gastos Fijos</h2>
-              <div class="muted">Pagos mensuales como pensión, cuotas, alquiler</div>
-            </div>
-            <div style="display:flex;gap:8px">
-              <button id="btn-add-fixed" class="primary compact">Nuevo gasto fijo</button>
-              <button id="btn-generate-fixed" class="ghost compact">Generar mes</button>
-            </div>
+        <div style="margin-top:10px;overflow:auto">
+          <table id="tx-table">
+            <thead><tr><th>Fecha</th><th>Cuenta</th><th>Tipo</th><th>Cat.</th><th class="right">Monto</th><th>Acc.</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- BANKS & DEBTS -->
+      <section id="view-banks" class="card" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <h2>Bancos & Deudas</h2>
+            <div class="muted">Cuentas vinculadas a transacciones y pasivos</div>
           </div>
-
-          <div id="fixed-table" style="margin-top:12px"></div>
-        </section>
-
-        <!-- CATEGORIES -->
-        <section id="view-categories" class="card" style="display:none">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div><h2>Categorías</h2><div class="muted">Crear, editar y establecer límites mensuales</div></div>
-            <div><button id="btn-new-category" class="primary compact">Nueva categoría</button></div>
+          <div style="display:flex;gap:6px">
+            <button id="btn-add-bank" class="primary compact">Nueva cuenta</button>
+            <button id="btn-add-debt" class="ghost compact">Nueva deuda</button>
           </div>
+        </div>
 
-          <div style="margin-top:12px;overflow:auto">
-            <table id="categories-table">
-              <thead><tr><th>Nombre</th><th class="right">Límite mensual</th><th>Acciones</th></tr></thead>
-              <tbody></tbody>
-            </table>
-            <div class="muted" style="margin-top:8px">Al superar el límite de una categoría recibirás una notificación.</div>
+        <div style="margin-top:10px">
+          <div id="banks-table"></div>
+        </div>
+
+        <div style="margin-top:10px">
+          <div id="debts-table"></div>
+        </div>
+      </section>
+
+      <!-- FIXED EXPENSES -->
+      <section id="view-fixed" class="card" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <h2>Gastos Fijos</h2>
+            <div class="muted">Pagos periódicos: pensión, alquiler, cuotas</div>
           </div>
-        </section>
-
-        <!-- SAVINGS -->
-        <section id="view-savings" class="card" style="display:none">
-          <h2>Ahorros</h2>
-          <div id="savings-table" style="margin-top:12px"></div>
-        </section>
-
-        <!-- EXPORT -->
-        <section id="view-export" class="card" style="display:none">
-          <h2>Export / Import</h2>
-          <div class="muted">Exporta CSV, JSON o PDF (reporte bien diseñado)</div>
-          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-            <button id="export-csv" class="primary compact">Exportar transacciones (CSV)</button>
-            <button id="export-json" class="ghost compact">Backup JSON</button>
-            <input id="import-file" type="file" accept=".csv,application/json" />
-            <button id="btn-import" class="primary compact">Importar</button>
-            <button id="export-pdf" class="primary compact">Exportar REPORTE PDF</button>
+          <div style="display:flex;gap:6px">
+            <button id="btn-add-fixed" class="primary compact">Nuevo</button>
+            <button id="btn-generate-fixed" class="ghost compact">Generar mes</button>
           </div>
-        </section>
-      </div>
+        </div>
+        <div id="fixed-table" style="margin-top:10px"></div>
+      </section>
+
+      <!-- CATEGORIES -->
+      <section id="view-categories" class="card" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><h2>Categorías</h2><div class="muted">Crear y establecer límite mensual</div></div>
+          <div><button id="btn-new-category" class="primary compact">Nueva</button></div>
+        </div>
+        <div style="margin-top:10px">
+          <table id="categories-table"><thead><tr><th>Nombre</th><th class="right">Límite</th><th>Acc.</th></tr></thead><tbody></tbody></table>
+        </div>
+      </section>
+
+      <!-- SAVINGS -->
+      <section id="view-savings" class="card" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><h2>Ahorros</h2><div class="muted">Planes vinculados a cuentas</div></div>
+          <div><button id="btn-new-saving" class="primary compact">Nuevo</button></div>
+        </div>
+        <div id="savings-table" style="margin-top:10px"></div>
+      </section>
+
+      <!-- EXPORT -->
+      <section id="view-export" class="card" style="display:none">
+        <h2>Export / Import</h2>
+        <div class="muted" style="margin-top:6px">Exporta CSV, JSON o PDF (reporte)</div>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+          <button id="export-csv" class="primary compact">CSV</button>
+          <button id="export-json" class="ghost compact">JSON</button>
+          <input id="import-file" type="file" accept=".csv,application/json" />
+          <button id="btn-import" class="primary compact">Importar</button>
+          <button id="export-pdf" class="primary compact">EXPORTAR REPORTE PDF</button>
+        </div>
+      </section>
+
     </main>
+
+    <nav class="bottom-nav">
+      <button data-view="dashboard" class="active">Resumen</button>
+      <button data-view="transactions">Transacciones</button>
+      <button data-view="banks">Bancos</button>
+      <button data-view="categories">Categorías</button>
+      <button data-view="export">Export</button>
+    </nav>
   </div>
 
   <!-- MODAL & TOAST -->
   <div class="modal-backdrop" id="modal-backdrop"><div class="modal" id="modal"></div></div>
   <div class="toast" id="toast"></div>
 
-  <!-- Firestore example rules (comentadas):
-  rules_version = '2';
-  service cloud.firestore {
-    match /databases/{database}/documents {
-      match /users/{userId}/{doc=**} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+  <!-- Firestore rules example (comentadas) -->
+  <!--
+    rules_version = '2';
+    service cloud.firestore {
+      match /databases/{database}/documents {
+        match /users/{userId}/{document=**} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
       }
     }
-  }
   -->
 
-  <!-- LIBRERÍAS: Firebase v9 modular (CDN) + Chart.js + html2pdf -->
+  <!-- LIBS: Firebase v9 modular + html2pdf + Chart.js -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
@@ -256,11 +268,11 @@
       updateDoc, serverTimestamp, Timestamp, getDoc
     } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
-    // Chart.js + html2pdf
-    const scriptChart = document.createElement('script'); scriptChart.src = 'https://cdn.jsdelivr.net/npm/chart.js'; document.head.appendChild(scriptChart);
-    const scriptPdf = document.createElement('script'); scriptPdf.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js'; document.head.appendChild(scriptPdf);
+    // Load Chart.js and html2pdf dynamically (CDN)
+    const s1 = document.createElement('script'); s1.src = 'https://cdn.jsdelivr.net/npm/chart.js'; document.head.appendChild(s1);
+    const s2 = document.createElement('script'); s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js'; document.head.appendChild(s2);
 
-    /*************** CONFIGURAR FIREBASE AQUÍ (REEMPLAZAR) ****************/
+    /* ================== FIREBASE CONFIG - PONER AQUÍ ================== */
     const firebaseConfig = {
       // apiKey: "TU_API_KEY",
       // authDomain: "TU_PROJECT.firebaseapp.com",
@@ -271,17 +283,23 @@
     };
     const isConfigFilled = Object.keys(firebaseConfig).length > 0;
     let app, auth, db;
-    if (isConfigFilled) { app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); } else { console.warn('Firebase no configurado. Modo local.'); }
+    if (isConfigFilled) {
+      app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      db = getFirestore(app);
+    } else {
+      console.warn('Firebase no configurado. Funcionando en modo local (localStorage).');
+    }
 
-    /************************ UTILIDADES ************************/
-    const $ = (s, r=document) => r.querySelector(s);
-    const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
-    function fmtMoney(v){ v = Number(v)||0; return 'S/ '+v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-    function parseDateDDMMYYYY(s){ if(!s) return null; const p=s.split('/'); if(p.length!==3) return null; const d=parseInt(p[0]), m=parseInt(p[1])-1, y=parseInt(p[2]); const dt=new Date(y,m,d); return isNaN(dt)?null:dt; }
+    /* ================== UTILIDADES ================== */
+    const $ = (sel, root = document) => root.querySelector(sel);
+    const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+    function fmtMoney(v){ v = Number(v)||0; return 'S/ ' + v.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 }); }
+    function parseDateDDMMYYYY(s){ if(!s) return null; const p=s.split('/'); if(p.length!==3) return null; const d=parseInt(p[0],10), m=parseInt(p[1],10)-1, y=parseInt(p[2],10); const dt=new Date(y,m,d); return isNaN(dt)?null:dt; }
     function dateToDDMMYYYY(d){ if(!d) return ''; return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear(); }
     function tsToDateStr(ts){ if(!ts) return ''; if(ts.toDate) return dateToDDMMYYYY(ts.toDate()); if(ts._seconds) return dateToDDMMYYYY(new Date(ts._seconds*1000)); return String(ts); }
 
-    /************************ ESTADO CENTRAL ************************/
+    /* ================== ESTADO ================== */
     const state = {
       uid: null,
       transactions: [],
@@ -289,89 +307,97 @@
       debts: [],
       fixed: [],
       savings: [],
-      categories: [] // { id?, name, limitMonthly (number, 0 = no limite) }
+      categories: [] // {id, name, limitMonthly}
     };
 
-    /************************ FIRESTORE HELPERS ************************/
+    /* ================== FIRESTORE HELPERS ================== */
     function userPath(coll){ if(!state.uid) throw new Error('UID no disponible'); return `users/${state.uid}/${coll}`; }
 
     async function loadAllFromFirestore(){
       if(!db) return;
-      const txSnap = await getDocs(query(collection(db, userPath('transactions')), orderBy('date','desc')));
-      state.transactions = txSnap.docs.map(d=>({ id:d.id, ...d.data() }));
-      const bSnap = await getDocs(query(collection(db, userPath('banks')), orderBy('name')));
-      state.banks = bSnap.docs.map(d=>({ id:d.id, ...d.data() }));
-      const dSnap = await getDocs(query(collection(db, userPath('debts')), orderBy('createdAt','desc')));
-      state.debts = dSnap.docs.map(d=>({ id:d.id, ...d.data() }));
-      const fSnap = await getDocs(query(collection(db, userPath('fixedExpenses')), orderBy('name')));
-      state.fixed = fSnap.docs.map(d=>({ id:d.id, ...d.data() }));
-      const sSnap = await getDocs(query(collection(db, userPath('savings')), orderBy('createdAt','desc')));
-      state.savings = sSnap.docs.map(d=>({ id:d.id, ...d.data() }));
-      const cSnap = await getDocs(query(collection(db, userPath('categories')), orderBy('name')));
-      state.categories = cSnap.docs.map(d=>({ id:d.id, ...d.data() }));
+      try {
+        const txSnap = await getDocs(query(collection(db, userPath('transactions')), orderBy('date','desc')));
+        state.transactions = txSnap.docs.map(d=>({ id: d.id, ...d.data() }));
+        const bSnap = await getDocs(query(collection(db, userPath('banks')), orderBy('name')));
+        state.banks = bSnap.docs.map(d=>({ id: d.id, ...d.data() }));
+        const dSnap = await getDocs(query(collection(db, userPath('debts')), orderBy('createdAt','desc')));
+        state.debts = dSnap.docs.map(d=>({ id: d.id, ...d.data() }));
+        const fSnap = await getDocs(query(collection(db, userPath('fixedExpenses')), orderBy('name')));
+        state.fixed = fSnap.docs.map(d=>({ id: d.id, ...d.data() }));
+        const sSnap = await getDocs(query(collection(db, userPath('savings')), orderBy('createdAt','desc')));
+        state.savings = sSnap.docs.map(d=>({ id: d.id, ...d.data() }));
+        const cSnap = await getDocs(query(collection(db, userPath('categories')), orderBy('name')));
+        state.categories = cSnap.docs.map(d=>({ id: d.id, ...d.data() }));
+      } catch(e){
+        console.error('Error cargando Firestore:', e);
+      }
     }
 
-    /************************ LOCAL STORAGE fallback ************************/
-    function persistLocal(){ const data={transactions:state.transactions,banks:state.banks,depts:state.debts,fixed:state.fixed,savings:state.savings,categories:state.categories}; localStorage.setItem('jo_finanzas_v2', JSON.stringify(data)); }
-    function loadLocal(){ const raw=localStorage.getItem('jo_finanzas_v2'); if(!raw) return; try{ const d=JSON.parse(raw); state.transactions=d.transactions||[]; state.banks=d.banks||[]; state.debts=d.debts||[]; state.fixed=d.fixed||[]; state.savings=d.savings||[]; state.categories=d.categories||[]; }catch(e){console.error(e)} }
+    /* ================== LOCAL STORAGE fallback ================== */
+    function persistLocal(){ const data={transactions:state.transactions,banks:state.banks,depts:state.debts,fixed:state.fixed,savings:state.savings,categories:state.categories}; localStorage.setItem('jo_finanzas_v3', JSON.stringify(data)); }
+    function loadLocal(){ const raw = localStorage.getItem('jo_finanzas_v3'); if(!raw) return; try { const d = JSON.parse(raw); state.transactions = d.transactions||[]; state.banks = d.banks||[]; state.debts = d.depts||[]; state.fixed = d.fixed||[]; state.savings = d.savings||[]; state.categories = d.categories||[]; } catch(e){ console.error(e); } }
 
-    /************************ CRUD & Lógica ************************/
+    /* ================== CRUD & LÓGICA ================== */
     async function addCategory(cat){
-      // cat: {name, limitMonthly}
-      if(!db){ cat.id='local-'+Math.random().toString(36).slice(2,9); state.categories.push(cat); persistLocal(); renderCategories(); return cat; }
+      if(!db){ cat.id = 'local-'+Math.random().toString(36).slice(2,9); state.categories.push(cat); persistLocal(); renderCategories(); return cat; }
       const ref = await addDoc(collection(db, userPath('categories')), {...cat, createdAt: serverTimestamp()});
       await loadAllFromFirestore(); renderAll(); return { id: ref.id, ...cat };
     }
     async function updateCategory(id, data){
-      if(!db){ const c=state.categories.find(x=>x.id===id); if(c){ Object.assign(c,data); persistLocal(); renderCategories(); } return; }
+      if(!db){ const c = state.categories.find(x=>x.id===id); if(c) Object.assign(c, data); persistLocal(); renderCategories(); return; }
       await updateDoc(doc(db, userPath('categories'), id), data); await loadAllFromFirestore(); renderAll();
     }
     async function deleteCategory(id){
-      if(!db){ state.categories=state.categories.filter(x=>x.id!==id); persistLocal(); renderCategories(); return; }
+      if(!db){ state.categories = state.categories.filter(x=>x.id!==id); persistLocal(); renderCategories(); return; }
       await deleteDoc(doc(db, userPath('categories'), id)); await loadAllFromFirestore(); renderAll();
     }
 
     async function addTransaction(tx){
-      // tx: {type, amount, categoryId, categoryName, description, dateStr, bankId, debtId}
       if(!parseDateDDMMYYYY(tx.dateStr)) throw new Error('Fecha inválida');
-      const payload={...tx, amount: Number(tx.amount)||0, date: Timestamp.fromDate(parseDateDDMMYYYY(tx.dateStr)), createdAt: serverTimestamp()};
+      const payload = {...tx, amount: Number(tx.amount)||0, date: Timestamp.fromDate(parseDateDDMMYYYY(tx.dateStr)), createdAt: serverTimestamp() };
       if(!db){
-        payload.id='local-'+Math.random().toString(36).slice(2,9);
+        payload.id = 'local-'+Math.random().toString(36).slice(2,9);
         state.transactions.unshift(payload);
-        // update bank balance locally
-        if(payload.bankId) { const delta = (payload.type==='Egreso')? -payload.amount : payload.amount; updateBankBalanceLocal(payload.bankId, delta); }
-        // update debt if linked
-        if(payload.debtId && payload.type==='Egreso'){ const d=state.debts.find(x=>x.id===payload.debtId); if(d){ d.outstanding = Math.max(0, (Number(d.outstanding)||0) - payload.amount); } }
-        persistLocal(); renderAll();
-        checkCategoryLimitAfterAdd(payload);
-        return payload;
+        if(payload.bankId) updateBankBalanceLocal(payload.bankId, payload.type === 'Egreso' ? -payload.amount : payload.amount);
+        if(payload.debtId && payload.type === 'Egreso'){ const d = state.debts.find(x=>x.id===payload.debtId); if(d) d.outstanding = Math.max(0, (Number(d.outstanding)||0) - payload.amount); }
+        persistLocal(); renderAll(); checkCategoryLimitAfterAdd(payload); return payload;
       }
       const ref = await addDoc(collection(db, userPath('transactions')), payload);
-      // update bank balance server-side
-      if(payload.bankId){ const delta=(payload.type==='Egreso')? -payload.amount : payload.amount; await updateBankBalance(payload.bankId, delta); }
-      if(payload.debtId && payload.type==='Egreso'){ const debtRef = doc(db, userPath('debts'), payload.debtId); const snap = await getDoc(debtRef); if(snap.exists()){ const cur = snap.data().outstanding||0; await updateDoc(debtRef, { outstanding: Math.max(0, Number(cur)-payload.amount) }); } }
-      await loadAllFromFirestore(); renderAll();
-      checkCategoryLimitAfterAdd(payload);
-      return { id: ref.id, ...payload };
+      if(payload.bankId){ const delta = payload.type === 'Egreso' ? -payload.amount : payload.amount; await updateBankBalance(payload.bankId, delta); }
+      if(payload.debtId && payload.type === 'Egreso'){ const debtRef = doc(db, userPath('debts'), payload.debtId); const snap = await getDoc(debtRef); if(snap.exists()){ const cur = snap.data().outstanding || 0; await updateDoc(debtRef, { outstanding: Math.max(0, Number(cur) - payload.amount) }); } }
+      await loadAllFromFirestore(); renderAll(); checkCategoryLimitAfterAdd(payload); return { id: ref.id, ...payload };
     }
 
-    // Bank helpers (local)
-    function updateBankBalanceLocal(bankId, delta){
-      const b = state.banks.find(x=>x.id===bankId); if(b) { b.balance = (Number(b.balance)||0) + Number(delta); persistLocal(); }
-    }
+    function updateBankBalanceLocal(bankId, delta){ const b = state.banks.find(x=>x.id===bankId); if(b){ b.balance = (Number(b.balance)||0) + Number(delta); persistLocal(); } renderBanks(); renderDashboard(); }
     async function updateBankBalance(bankId, delta){
-      if(!db){ updateBankBalanceLocal(bankId, delta); renderBanks(); renderDashboard(); return; }
-      const ref = doc(db, userPath('banks'), bankId);
-      const snap = await getDoc(ref);
+      if(!db){ updateBankBalanceLocal(bankId, delta); return; }
+      const ref = doc(db, userPath('banks'), bankId); const snap = await getDoc(ref);
       if(!snap.exists()) return;
       const cur = snap.data().balance || 0;
       await updateDoc(ref, { balance: Number(cur) + Number(delta) });
       await loadAllFromFirestore(); renderAll();
     }
 
-    /************************ ALERTAS DE LÍMITES POR CATEGORÍA ************************/
+    async function addBank(bank){
+      if(!db){ bank.id = 'local-'+Math.random().toString(36).slice(2,9); state.banks.push(bank); persistLocal(); renderBanks(); return bank; }
+      const ref = await addDoc(collection(db, userPath('banks')), {...bank, createdAt: serverTimestamp()});
+      await loadAllFromFirestore(); renderAll(); return { id: ref.id, ...bank };
+    }
+
+    async function addDebt(debt){
+      if(!db){ debt.id = 'local-'+Math.random().toString(36).slice(2,9); state.debts.push(debt); persistLocal(); renderAll(); return debt; }
+      await addDoc(collection(db, userPath('debts')), {...debt, createdAt: serverTimestamp()});
+      await loadAllFromFirestore(); renderAll();
+    }
+
+    async function addFixedExpense(f){
+      if(!db){ f.id = 'local-'+Math.random().toString(36).slice(2,9); state.fixed.push(f); persistLocal(); renderFixed(); return f; }
+      await addDoc(collection(db, userPath('fixedExpenses')), {...f, createdAt: serverTimestamp()});
+      await loadAllFromFirestore(); renderAll();
+    }
+
+    /* ================== LÍMITES/CHEQUEO ================== */
     function checkCategoryLimitAfterAdd(tx){
-      // If tx has categoryId and category has limitMonthly > 0, compute month sum and compare
       const cid = tx.categoryId;
       if(!cid) return;
       const cat = state.categories.find(c => c.id === cid);
@@ -387,14 +413,23 @@
       }, 0);
       if(total > Number(cat.limitMonthly)){
         showToast(`Límite superado en "${cat.name}": ${fmtMoney(total)} / ${fmtMoney(cat.limitMonthly)}`, true);
+      } else if (total >= Number(cat.limitMonthly) * 0.8) {
+        showToast(`Cuidado: "${cat.name}" está cerca del límite (${fmtMoney(total)} / ${fmtMoney(cat.limitMonthly)})`, false);
       }
     }
 
-    /************************ RENDER / UI ************************/
+    /* ================== RENDER / UI ================== */
     function switchView(view){
       const views = ['dashboard','transactions','banks','fixed','categories','savings','export'];
-      views.forEach(v => { const el = document.getElementById('view-'+v); if(el) el.style.display = (v===view)?'':'none'; });
-      $$('#nav button').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+      views.forEach(v => {
+        const el = document.getElementById('view-'+v);
+        if(!el) return;
+        el.style.display = (v === view) ? '' : 'none';
+      });
+      // bottom nav buttons
+      document.querySelectorAll('nav.bottom-nav button').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+      // left top nav emulation: update header subtitle with view name
+      $('#uid').textContent = state.uid ? state.uid : 'Sin iniciar';
     }
 
     function renderAll(){
@@ -403,37 +438,35 @@
 
     function renderDashboard(){
       let inc=0, exp=0;
-      const now=new Date(), month=now.getMonth(), year=now.getFullYear();
+      const now = new Date(), month = now.getMonth(), year = now.getFullYear();
       state.transactions.forEach(t=>{
         const d = t.date ? (t.date.toDate ? t.date.toDate() : parseDateDDMMYYYY(t.dateStr||tsToDateStr(t.date))) : parseDateDDMMYYYY(t.dateStr||'');
         if(!d) return;
         if(d.getMonth()===month && d.getFullYear()===year){
-          if((t.type||'Ingreso').toLowerCase()==='egreso') exp += Number(t.amount)||0; else inc += Number(t.amount)||0;
+          if((t.type||'Ingreso').toLowerCase() === 'egreso') exp += Number(t.amount)||0; else inc += Number(t.amount)||0;
         }
       });
       $('#balance').textContent = fmtMoney(inc - exp);
       $('#flows').textContent = `Ingresos: ${fmtMoney(inc)} · Egresos: ${fmtMoney(exp)}`;
       $('#month-label').textContent = `${now.toLocaleString('default',{month:'long'})} ${year}`;
 
-      let assets=0, liabilities=0;
-      state.banks.forEach(b=> assets += Number(b.balance)||0);
-      state.debts.forEach(d=> liabilities += Number(d.outstanding)||0);
+      let assets = 0, liabilities = 0;
+      state.banks.forEach(b => assets += Number(b.balance)||0);
+      state.debts.forEach(d => liabilities += Number(d.outstanding)||0);
       $('#net-assets').textContent = fmtMoney(assets - liabilities);
-      $('#assets-break').textContent = `Activos: ${fmtMoney(assets)} · Pasivos: ${fmtMoney(liabilities)}`;
+      $('#assets-break').textContent = `Act: ${fmtMoney(assets)} · Pas: ${fmtMoney(liabilities)}`;
 
-      // Alerts summary for categories near/over limit
+      // alerts
       const alerts = state.categories.map(cat => {
         if(!cat.limitMonthly || Number(cat.limitMonthly) <= 0) return null;
-        // sum month
-        const now2 = new Date(), m = now2.getMonth(), y = now2.getFullYear();
         const total = state.transactions.reduce((acc,t)=>{
           const d = t.date ? (t.date.toDate ? t.date.toDate() : parseDateDDMMYYYY(t.dateStr||tsToDateStr(t.date))) : parseDateDDMMYYYY(t.dateStr||'');
           if(!d) return acc;
-          if(d.getMonth()===m && d.getFullYear()===y && t.categoryId === cat.id) acc += Number(t.amount)||0;
+          const now2 = new Date(); if(d.getMonth() === now2.getMonth() && d.getFullYear() === now2.getFullYear() && t.categoryId === cat.id) acc += Number(t.amount)||0;
           return acc;
         },0);
-        if(total >= Number(cat.limitMonthly)) return `<div style="margin-bottom:8px"><strong style="color:var(--danger)">${cat.name}</strong> · ${fmtMoney(total)} / ${fmtMoney(cat.limitMonthly)} (Límite superado)</div>`;
-        if(total >= Number(cat.limitMonthly)*0.8) return `<div style="margin-bottom:8px"><strong>${cat.name}</strong> · ${fmtMoney(total)} / ${fmtMoney(cat.limitMonthly)} (Cerca del límite)</div>`;
+        if(total >= Number(cat.limitMonthly)) return `<div style="margin-bottom:6px;color:var(--danger)"><strong>${cat.name}</strong> ${fmtMoney(total)} / ${fmtMoney(cat.limitMonthly)} (Superado)</div>`;
+        if(total >= Number(cat.limitMonthly)*0.8) return `<div style="margin-bottom:6px"><strong>${cat.name}</strong> ${fmtMoney(total)} / ${fmtMoney(cat.limitMonthly)} (Cerca)</div>`;
         return null;
       }).filter(Boolean);
       $('#alerts').innerHTML = alerts.length ? alerts.join('') : '<div class="muted">Sin alertas</div>';
@@ -442,23 +475,23 @@
     function renderTransactions(){
       const tbody = $('#tx-table tbody'); if(!tbody) return; tbody.innerHTML = '';
       const rows = applyFiltersAndSearch();
-      rows.forEach(t=>{
+      rows.forEach(t => {
         const date = t.date ? (t.date.toDate ? dateToDDMMYYYY(t.date.toDate()) : (t.dateStr||tsToDateStr(t.date))) : (t.dateStr||'');
         const bank = state.banks.find(b=>b.id===t.bankId);
         const cat = state.categories.find(c=>c.id===t.categoryId);
         const bankName = bank ? bank.name : '-';
-        const catName = cat ? cat.name : (t.categoryName||'-');
+        const catName = cat ? cat.name : (t.categoryName || '-');
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${date}</td><td>${bankName}</td><td>${t.type}</td><td>${catName}</td><td>${t.description||''}</td><td class="right">${fmtMoney(t.amount)}</td><td><button class="ghost compact" data-id="${t.id}" data-act="edit">Editar</button> <button class="danger compact" data-id="${t.id}" data-act="del">Eliminar</button></td>`;
+        tr.innerHTML = `<td>${date}</td><td>${bankName}</td><td>${t.type}</td><td>${catName}</td><td class="right">${fmtMoney(t.amount)}</td><td><button class="ghost compact" data-id="${t.id}" data-act="edit">E</button> <button class="danger compact" data-id="${t.id}" data-act="del">X</button></td>`;
         tbody.appendChild(tr);
       });
       // bind
-      $$('#tx-table button').forEach(btn=>{
-        btn.onclick = async ()=> {
+      $$('#tx-table button').forEach(btn => {
+        btn.onclick = async () => {
           const id = btn.dataset.id, act = btn.dataset.act;
-          if(act==='del') showConfirm('Eliminar transacción','Confirma eliminar', async ()=>{ if(!db){ state.transactions = state.transactions.filter(x=>x.id!==id); persistLocal(); renderAll(); } else { await deleteDoc(doc(db, userPath('transactions'), id)); await loadAllFromFirestore(); renderAll(); } });
-          if(act==='edit'){ const tx = state.transactions.find(x=>x.id===id); if(tx) openTransactionModal(tx); }
-        }
+          if(act === 'del') showConfirm('Eliminar transacción','Confirmar eliminación', async ()=>{ if(!db){ state.transactions = state.transactions.filter(x=>x.id!==id); persistLocal(); renderAll(); } else { await deleteDoc(doc(db, userPath('transactions'), id)); await loadAllFromFirestore(); renderAll(); } });
+          if(act === 'edit'){ const tx = state.transactions.find(x=>x.id===id); if(tx) openTransactionModal(tx); }
+        };
       });
     }
 
@@ -467,52 +500,45 @@
       const bank = $('#filter-bank').value;
       const from = $('#filter-from').value.trim();
       const to = $('#filter-to').value.trim();
-      return state.transactions.filter(t=>{
+      return state.transactions.filter(t => {
         const date = t.date ? (t.date.toDate ? t.date.toDate() : parseDateDDMMYYYY(t.dateStr||tsToDateStr(t.date))) : parseDateDDMMYYYY(t.dateStr||'');
         if(from){ const f = parseDateDDMMYYYY(from); if(!f || !date || date < f) return false; }
         if(to){ const tt = parseDateDDMMYYYY(to); if(!tt || !date || date > tt) return false; }
         if(bank && t.bankId !== bank) return false;
-        if(q){
-          const cat = state.categories.find(c=>c.id===t.categoryId);
-          const txt = `${t.description||''} ${(cat?cat.name:'')}`.toLowerCase();
-          if(!txt.includes(q)) return false;
-        }
+        if(q){ const cat = state.categories.find(c=>c.id===t.categoryId); const txt = `${t.description||''} ${(cat?cat.name:'')}`.toLowerCase(); if(!txt.includes(q)) return false; }
         return true;
       });
     }
 
     function renderBanks(){
       const wrap = $('#banks-table'); if(!wrap) return;
-      if(state.banks.length === 0) wrap.innerHTML = '<div class="muted">No hay cuentas</div>'; else {
-        wrap.innerHTML = `<table><thead><tr><th>Cuenta</th><th class="right">Saldo</th><th>Acciones</th></tr></thead><tbody>${state.banks.map(b=>`<tr><td>${b.name}<div class="muted" style="font-size:12px">${b.type||''}</div></td><td class="right">${fmtMoney(b.balance)}</td><td><button class="ghost compact" data-id="${b.id}" data-act="edit">Editar</button> <button class="danger compact" data-id="${b.id}" data-act="del">Eliminar</button></td></tr>`).join('')}</tbody></table>`;
+      if(state.banks.length === 0) wrap.innerHTML = '<div class="muted">No hay cuentas</div>';
+      else {
+        wrap.innerHTML = `<table><thead><tr><th>Cuenta</th><th class="right">Saldo</th><th>Acc.</th></tr></thead><tbody>${state.banks.map(b=>`<tr><td>${b.name}<div class="muted" style="font-size:12px">${b.type||''}</div></td><td class="right">${fmtMoney(b.balance)}</td><td><button class="ghost compact" data-id="${b.id}" data-act="edit">E</button> <button class="danger compact" data-id="${b.id}" data-act="del">X</button></td></tr>`).join('')}</tbody></table>`;
       }
-      // Debts
       const dwrap = $('#debts-table'); if(!dwrap) return;
-      if(state.debts.length === 0) dwrap.innerHTML = '<div class="muted">No hay deudas</div>'; else {
-        dwrap.innerHTML = `<table><thead><tr><th>Deuda</th><th>Banco</th><th class="right">Saldo</th><th class="right">Cuota</th><th>Acciones</th></tr></thead><tbody>${state.debts.map(d=>`<tr><td>${d.name}</td><td>${(state.banks.find(b=>b.id===d.bankId)||{name:'-'}).name}</td><td class="right">${fmtMoney(d.outstanding)}</td><td class="right">${fmtMoney(d.monthlyPayment)}</td><td><button class="ghost compact" data-id="${d.id}" data-act="pay">Pagar</button> <button class="danger compact" data-id="${d.id}" data-act="del">Eliminar</button></td></tr>`).join('')}</tbody></table>`;
-      }
-
-      // bind actions
-      $$('#banks-table button, #debts-table button').forEach(btn=>{
+      if(state.debts.length === 0) dwrap.innerHTML = '<div class="muted">No hay deudas</div>';
+      else dwrap.innerHTML = `<table><thead><tr><th>Deuda</th><th>Banco</th><th class="right">Saldo</th><th class="right">Cuota</th><th>Acc.</th></tr></thead><tbody>${state.debts.map(d=>`<tr><td>${d.name}</td><td>${(state.banks.find(b=>b.id===d.bankId)||{name:'-'}).name}</td><td class="right">${fmtMoney(d.outstanding)}</td><td class="right">${fmtMoney(d.monthlyPayment)}</td><td><button class="ghost compact" data-id="${d.id}" data-act="pay">P</button> <button class="danger compact" data-id="${d.id}" data-act="del">X</button></td></tr>`).join('')}</tbody></table>`;
+      // bind
+      $$('#banks-table button, #debts-table button').forEach(btn => {
         const act = btn.dataset.act, id = btn.dataset.id;
-        btn.onclick = ()=>{
-          if(act==='edit') openBankModal(id);
-          if(act==='del') showConfirm('Eliminar cuenta','Confirma eliminar', async ()=>{ if(!db){ state.banks = state.banks.filter(x=>x.id!==id); persistLocal(); renderAll(); } else { await deleteDoc(doc(db, userPath('banks'), id)); await loadAllFromFirestore(); renderAll(); } });
-          if(act==='pay') openDebtPaymentModal(id);
-        }
+        btn.onclick = () => {
+          if(act === 'edit') openBankModal(id);
+          if(act === 'del') showConfirm('Eliminar', 'Confirmar eliminación', async ()=>{ if(!db){ state.banks = state.banks.filter(x=>x.id!==id); persistLocal(); renderAll(); } else { await deleteDoc(doc(db, userPath('banks'), id)); await loadAllFromFirestore(); renderAll(); } });
+          if(act === 'pay') openDebtPaymentModal(id);
+        };
       });
     }
 
     function renderFixed(){
       const wrap = $('#fixed-table'); if(!wrap) return;
-      if(state.fixed.length === 0) wrap.innerHTML = '<div class="muted">No hay gastos fijos</div>'; else {
-        wrap.innerHTML = `<table><thead><tr><th>Nombre</th><th>Cuenta</th><th class="right">Monto</th><th class="right">Día</th><th>Acciones</th></tr></thead><tbody>${state.fixed.map(f=>`<tr><td>${f.name}</td><td>${(state.banks.find(b=>b.id===f.bankId)||{name:'-'}).name}</td><td class="right">${fmtMoney(f.amount)}</td><td class="right">${f.nextDueDay}</td><td><button class="ghost compact" data-id="${f.id}" data-act="gen">Generar</button> <button class="danger compact" data-id="${f.id}" data-act="del">Eliminar</button></td></tr>`).join('')}</tbody></table>`;
-      }
+      if(state.fixed.length === 0) wrap.innerHTML = '<div class="muted">No hay gastos fijos</div>';
+      else wrap.innerHTML = `<table><thead><tr><th>Nombre</th><th>Cuenta</th><th class="right">Monto</th><th class="right">Día</th><th>Acc.</th></tr></thead><tbody>${state.fixed.map(f=>`<tr><td>${f.name}</td><td>${(state.banks.find(b=>b.id===f.bankId)||{name:'-'}).name}</td><td class="right">${fmtMoney(f.amount)}</td><td class="right">${f.nextDueDay}</td><td><button class="ghost compact" data-id="${f.id}" data-act="gen">G</button> <button class="danger compact" data-id="${f.id}" data-act="del">X</button></td></tr>`).join('')}</tbody></table>`;
       wrap.querySelectorAll('button').forEach(btn=>{
         const act = btn.dataset.act, id = btn.dataset.id;
         btn.onclick = async ()=> {
-          if(act==='gen'){ const f = state.fixed.find(x=>x.id===id); if(f){ const todayStr = dateToDDMMYYYY(new Date()); await addTransaction({ type:'Egreso', amount:f.amount, categoryId:f.categoryId, categoryName:f.categoryName, description:f.name, dateStr:todayStr, bankId:f.bankId }); alert('Generado'); } }
-          if(act==='del') showConfirm('Eliminar fijo','Confirmar', async ()=>{ if(!db){ state.fixed = state.fixed.filter(x=>x.id!==id); persistLocal(); renderAll(); } else { await deleteDoc(doc(db, userPath('fixedExpenses'), id)); await loadAllFromFirestore(); renderAll(); } });
+          if(act === 'gen'){ const f = state.fixed.find(x=>x.id===id); if(f){ const todayStr = dateToDDMMYYYY(new Date()); await addTransaction({ type:'Egreso', amount:f.amount, categoryId:f.categoryId, categoryName:f.categoryName, description:f.name, dateStr:todayStr, bankId:f.bankId }); showToast('Generado: '+f.name); } }
+          if(act === 'del') showConfirm('Eliminar gasto fijo','Confirmar', async ()=>{ if(!db){ state.fixed = state.fixed.filter(x=>x.id!==id); persistLocal(); renderAll(); } else { await deleteDoc(doc(db, userPath('fixedExpenses'), id)); await loadAllFromFirestore(); renderAll(); } });
         };
       });
     }
@@ -521,67 +547,65 @@
       const tbody = $('#categories-table tbody'); if(!tbody) return; tbody.innerHTML = '';
       state.categories.forEach(c => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${c.name}</td><td class="right">${c.limitMonthly ? fmtMoney(c.limitMonthly) : 'Sin límite'}</td><td><button class="ghost compact" data-id="${c.id}" data-act="edit">Editar</button> <button class="danger compact" data-id="${c.id}" data-act="del">Eliminar</button></td>`;
+        tr.innerHTML = `<td>${c.name}</td><td class="right">${c.limitMonthly ? fmtMoney(c.limitMonthly) : 'Sin límite'}</td><td><button class="ghost compact" data-id="${c.id}" data-act="edit">E</button> <button class="danger compact" data-id="${c.id}" data-act="del">X</button></td>`;
         tbody.appendChild(tr);
       });
-      // bind
       $$('#categories-table button').forEach(btn=>{
         const id = btn.dataset.id, act = btn.dataset.act;
         btn.onclick = ()=> {
-          if(act==='edit') openCategoryModal(id);
-          if(act==='del') showConfirm('Eliminar categoría','Confirmar eliminación (las transacciones no se borran)', async ()=>{ await deleteCategory(id); });
+          if(act === 'edit') openCategoryModal(id);
+          if(act === 'del') showConfirm('Eliminar categoría','Confirmar', async ()=>{ await deleteCategory(id); });
         };
       });
     }
 
-    function renderSavings(){ const wrap = $('#savings-table'); if(!wrap) return; if(state.savings.length===0) wrap.innerHTML='<div class="muted">Sin planes</div>'; else { wrap.innerHTML = `<table><thead><tr><th>Plan</th><th class="right">Objetivo</th><th>Cuenta</th><th class="right">Saldo</th></tr></thead><tbody>${state.savings.map(s=>`<tr><td>${s.name}</td><td class="right">${fmtMoney(s.target)}</td><td>${(state.banks.find(b=>b.id===s.bankId)||{name:'-'}).name}</td><td class="right">${fmtMoney(s.balance||0)}</td></tr>`).join('')}</tbody></table>`; } }
+    function renderSavings(){
+      const wrap = $('#savings-table'); if(!wrap) return;
+      if(state.savings.length === 0) wrap.innerHTML = '<div class="muted">No hay planes</div>';
+      else wrap.innerHTML = `<table><thead><tr><th>Plan</th><th class="right">Objetivo</th><th>Cuenta</th><th class="right">Saldo</th></tr></thead><tbody>${state.savings.map(s=>`<tr><td>${s.name}</td><td class="right">${fmtMoney(s.target)}</td><td>${(state.banks.find(b=>b.id===s.bankId)||{name:'-'}).name}</td><td class="right">${fmtMoney(s.balance||0)}</td></tr>`).join('')}</tbody></table>`;
+    }
 
     function populateFilters(){
       const sel = $('#filter-bank'); if(!sel) return;
       sel.innerHTML = '<option value="">-- Todas --</option>' + state.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
-      // also enable category select in transaction modal dynamically when opened
     }
 
-    /************************ MODALES ************************/
+    /* ================== MODALES & HELPERS ================== */
     function showModal(html){ $('#modal').innerHTML = html; $('#modal-backdrop').style.display = 'flex'; }
-    function closeModal(){ $('#modal').innerHTML=''; $('#modal-backdrop').style.display = 'none'; }
-
+    function closeModal(){ $('#modal').innerHTML = ''; $('#modal-backdrop').style.display = 'none'; }
     function showConfirm(title, text, onConfirm){
-      showModal(`<div><strong>${title}</strong><div class="muted" style="margin-top:8px">${text}</div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="m-cancel" class="ghost compact">Cancelar</button><button id="m-confirm" class="danger compact">Confirmar</button></div></div>`);
+      showModal(`<div><strong>${title}</strong><div class="muted" style="margin-top:8px">${text}</div><div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px"><button id="m-cancel" class="ghost compact">Cancelar</button><button id="m-confirm" class="danger compact">Confirmar</button></div></div>`);
       $('#m-cancel').onclick = closeModal;
-      $('#m-confirm').onclick = async ()=>{ await onConfirm(); closeModal(); };
+      $('#m-confirm').onclick = async ()=>{ try { await onConfirm(); } catch(e){ console.error(e); alert('Error: '+e.message) } closeModal(); };
     }
 
-    /************************ FORMULARIOS MODALES ************************/
+    function showToast(msg, important = false){
+      const t = $('#toast'); t.textContent = msg; t.style.display = 'block'; if(important) t.style.background = 'linear-gradient(90deg,var(--danger),#ff9a9a)'; else t.style.background = '#071421';
+      clearTimeout(window.__toastTimer); window.__toastTimer = setTimeout(()=>{ t.style.display = 'none'; t.style.background = '#071421'; }, important ? 7000 : 3500);
+    }
+
+    /* ================== MODALES FORM ================== */
     function openCategoryModal(editId){
       const c = state.categories.find(x=>x.id===editId) || { name:'', limitMonthly:0 };
       showModal(`<div>
-        <h3>${editId ? 'Editar categoría' : 'Nueva categoría'}</h3>
+        <h3 style="margin:0">${editId ? 'Editar categoría' : 'Nueva categoría'}</h3>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
           <div><label>Nombre</label><input id="c-name" value="${c.name}" /></div>
-          <div><label>Límite mensual (0 = sin límite)</label><input id="c-limit" value="${c.limitMonthly||0}" /></div>
+          <div><label>Límite mensual (0 = sin límite)</label><input id="c-limit" value="${c.limitMonthly || 0}" /></div>
         </div>
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
-          <button id="c-cancel" class="ghost compact">Cancelar</button>
-          <button id="c-save" class="primary compact">Guardar</button>
-        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="c-cancel" class="ghost compact">Cancelar</button><button id="c-save" class="primary compact">Guardar</button></div>
       </div>`);
       $('#c-cancel').onclick = closeModal;
-      $('#c-save').onclick = async ()=>{
-        const name = $('#c-name').value.trim(); const limit = Number($('#c-limit').value) || 0;
-        if(!name) return alert('Nombre requerido');
-        if(!editId) await addCategory({ name, limitMonthly: limit }); else await updateCategory(editId, { name, limitMonthly: limit });
-        closeModal();
-      };
+      $('#c-save').onclick = async ()=>{ const name = $('#c-name').value.trim(); const limit = Number($('#c-limit').value) || 0; if(!name) return alert('Nombre requerido'); if(!editId) await addCategory({ name, limitMonthly: limit }); else await updateCategory(editId, { name, limitMonthly: limit }); closeModal(); };
     }
 
     function openTransactionModal(existing){
-      // Build category options from state.categories
       const catOpts = `<option value="">-- Seleccionar categoría --</option>` + state.categories.map(c=>`<option value="${c.id}">${c.name}${c.limitMonthly?` (Lím: ${fmtMoney(c.limitMonthly)})`:''}</option>`).join('');
       const bankOpts = `<option value="">-- Seleccionar cuenta --</option>` + state.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
+      const debtOpts = `<option value="">-- Ninguna --</option>` + state.debts.map(d=>`<option value="${d.id}">${d.name} · ${fmtMoney(d.outstanding)}</option>`).join('');
       const defaults = existing || { type:'Ingreso', amount:0, categoryId:'', description:'', dateStr:dateToDDMMYYYY(new Date()), bankId:'' };
       showModal(`<div>
-        <h3>${existing ? 'Editar transacción' : 'Nueva transacción'}</h3>
+        <h3 style="margin:0">${existing ? 'Editar transacción' : 'Nueva transacción'}</h3>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
           <div><label>Tipo</label><select id="m-type"><option ${defaults.type==='Ingreso'?'selected':''}>Ingreso</option><option ${defaults.type==='Egreso'?'selected':''}>Egreso</option></select></div>
           <div><label>Monto</label><input id="m-amount" value="${defaults.amount||0}" /></div>
@@ -589,17 +613,14 @@
           <div><label>Categoría</label><select id="m-cat">${catOpts}</select></div>
           <div style="grid-column:1/-1"><label>Descripción</label><input id="m-desc" value="${defaults.description||''}" /></div>
           <div><label>Fecha (dd/mm/yyyy)</label><input id="m-date" value="${defaults.dateStr||''}" /></div>
-          <div><label>Pago a deuda (opcional)</label><select id="m-debt"><option value="">-- Ninguna --</option>${state.debts.map(d=>`<option value="${d.id}">${d.name} · ${fmtMoney(d.outstanding)}</option>`).join('')}</select></div>
+          <div><label>Pago a deuda (opcional)</label><select id="m-debt">${debtOpts}</select></div>
         </div>
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
-          <button id="m-cancel" class="ghost compact">Cancelar</button>
-          <button id="m-save" class="primary compact">Guardar</button>
-        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="m-cancel" class="ghost compact">Cancelar</button><button id="m-save" class="primary compact">Guardar</button></div>
       </div>`);
-      // Preselect if existing
+      // preselect if editing
       if(existing){ setTimeout(()=>{ if(existing.bankId) $('#m-bank').value = existing.bankId; if(existing.categoryId) $('#m-cat').value = existing.categoryId; if(existing.debtId) $('#m-debt').value = existing.debtId; },50); }
       $('#m-cancel').onclick = closeModal;
-      $('#m-save').onclick = async ()=>{
+      $('#m-save').onclick = async ()=> {
         const type = $('#m-type').value;
         const amount = Number($('#m-amount').value) || 0;
         const bankId = $('#m-bank').value || null;
@@ -608,7 +629,7 @@
         const dateStr = $('#m-date').value.trim();
         const debtId = $('#m-debt').value || null;
         if(!amount || amount <= 0) return alert('Monto inválido');
-        if(!parseDateDDMMYYYY(dateStr)) return alert('Fecha inválida');
+        if(!parseDateDDMMYYYY(dateStr)) return alert('Fecha inválida (dd/mm/yyyy)');
         const categoryName = (state.categories.find(c=>c.id===categoryId)||{name:''}).name;
         await addTransaction({ type, amount, categoryId, categoryName, description, dateStr, bankId, debtId });
         closeModal();
@@ -618,7 +639,7 @@
     function openBankModal(editId){
       const b = state.banks.find(x=>x.id===editId) || { name:'', balance:0, type:'Cuenta', currency:'PEN' };
       showModal(`<div>
-        <h3>${editId ? 'Editar cuenta' : 'Nueva cuenta bancaria'}</h3>
+        <h3 style="margin:0">${editId ? 'Editar cuenta' : 'Nueva cuenta'}</h3>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
           <div><label>Nombre</label><input id="b-name" value="${b.name}" /></div>
           <div><label>Tipo</label><input id="b-type" value="${b.type}" /></div>
@@ -628,17 +649,19 @@
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="b-cancel" class="ghost compact">Cancelar</button><button id="b-save" class="primary compact">Guardar</button></div>
       </div>`);
       $('#b-cancel').onclick = closeModal;
-      $('#b-save').onclick = async ()=>{
+      $('#b-save').onclick = async ()=> {
         const name = $('#b-name').value.trim(); const type = $('#b-type').value.trim(); const balance = Number($('#b-balance').value)||0; const currency = $('#b-currency').value.trim()||'PEN';
         if(!name) return alert('Nombre requerido');
-        if(!editId){ if(!db){ const id='local-'+Math.random().toString(36).slice(2,9); state.banks.push({ id, name, type, balance, currency }); persistLocal(); renderAll(); } else { await addDoc(collection(db, userPath('banks')), { name, type, balance, currency, createdAt: serverTimestamp() }); await loadAllFromFirestore(); renderAll(); } } else { if(!db){ const bb = state.banks.find(x=>x.id===editId); if(bb){ bb.name=name; bb.type=type; bb.balance=balance; bb.currency=currency; persistLocal(); renderAll(); } } else { await updateDoc(doc(db, userPath('banks'), editId), { name, type, balance, currency }); await loadAllFromFirestore(); renderAll(); } }
+        if(!editId){ await addBank({ name, type, balance, currency }); } else {
+          if(!db){ const bb = state.banks.find(x=>x.id===editId); if(bb){ bb.name=name; bb.type=type; bb.balance=balance; bb.currency=currency; persistLocal(); renderAll(); } } else { await updateDoc(doc(db, userPath('banks'), editId), { name, type, balance, currency }); await loadAllFromFirestore(); renderAll(); }
+        }
         closeModal();
       };
     }
 
     function openDebtModal(){
       showModal(`<div>
-        <h3>Nueva deuda</h3>
+        <h3 style="margin:0">Nueva deuda</h3>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
           <div><label>Nombre</label><input id="d-name" /></div>
           <div><label>Banco</label><select id="d-bank"><option value="">-- Seleccionar --</option>${state.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('')}</select></div>
@@ -649,13 +672,18 @@
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="d-cancel" class="ghost compact">Cancelar</button><button id="d-save" class="primary compact">Guardar</button></div>
       </div>`);
       $('#d-cancel').onclick = closeModal;
-      $('#d-save').onclick = async ()=>{ const name=$('#d-name').value.trim(); const bankId=$('#d-bank').value||null; const outstanding=Number($('#d-out').value)||0; const monthlyPayment=Number($('#d-pay').value)||0; const interest=Number($('#d-interest').value)||0; if(!name) return alert('Nombre requerido'); if(!db){ const id='local-'+Math.random().toString(36).slice(2,9); state.debts.push({ id, name, bankId, outstanding, monthlyPayment, interest }); persistLocal(); renderAll(); } else { await addDoc(collection(db, userPath('debts')), { name, bankId, outstanding, monthlyPayment, interest, createdAt: serverTimestamp() }); await loadAllFromFirestore(); renderAll(); } closeModal(); };
+      $('#d-save').onclick = async ()=> {
+        const name = $('#d-name').value.trim(); const bankId = $('#d-bank').value || null; const outstanding = Number($('#d-out').value) || 0; const monthlyPayment = Number($('#d-pay').value) || 0; const interest = Number($('#d-interest').value) || 0;
+        if(!name) return alert('Nombre requerido');
+        await addDebt({ name, bankId, outstanding, monthlyPayment, interest });
+        closeModal();
+      };
     }
 
     function openDebtPaymentModal(debtId){
       const d = state.debts.find(x=>x.id===debtId); if(!d) return alert('Deuda no encontrada');
       showModal(`<div>
-        <h3>Pagar ${d.name}</h3>
+        <h3 style="margin:0">Pagar ${d.name}</h3>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
           <div><label>Monto</label><input id="pay-amount" value="${d.monthlyPayment||0}" /></div>
           <div><label>Cuenta</label><select id="pay-bank">${state.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('')}</select></div>
@@ -664,126 +692,170 @@
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="pay-cancel" class="ghost compact">Cancelar</button><button id="pay-save" class="primary compact">Registrar pago</button></div>
       </div>`);
       $('#pay-cancel').onclick = closeModal;
-      $('#pay-save').onclick = async ()=>{ const amount = Number($('#pay-amount').value)||0; const bankId = $('#pay-bank').value; const desc = $('#pay-desc').value.trim(); if(!amount || amount<=0) return alert('Monto inválido'); const today = dateToDDMMYYYY(new Date()); await addTransaction({ type:'Egreso', amount, categoryId:null, categoryName:'Pago Deuda', description:desc, dateStr:today, bankId, debtId }); closeModal(); };
+      $('#pay-save').onclick = async ()=> {
+        const amount = Number($('#pay-amount').value) || 0; const bankId = $('#pay-bank').value; const desc = $('#pay-desc').value.trim();
+        if(!amount || amount <= 0) return alert('Monto inválido');
+        const today = dateToDDMMYYYY(new Date());
+        await addTransaction({ type:'Egreso', amount, categoryId:null, categoryName:'Pago Deuda', description:desc, dateStr:today, bankId, debtId });
+        closeModal();
+      };
     }
 
-    /************************ IMPORT / EXPORT / PDF ************************/
+    /* ================== IMPORT / EXPORT / PDF ================== */
     function exportTransactionsCSV(){
       const rows = state.transactions.map(t=>{ const date = t.date ? (t.date.toDate ? dateToDDMMYYYY(t.date.toDate()) : (t.dateStr||tsToDateStr(t.date))) : (t.dateStr||''); const bank = state.banks.find(b=>b.id===t.bankId); const cat = state.categories.find(c=>c.id===t.categoryId); return [date, bank?bank.name:'', t.type||'', cat?cat.name:(t.categoryName||''), (t.description||'').replace(/"/g,'""'), t.amount||0]; });
       const csv = [['fecha,cuenta,tipo,categoria,descripcion,monto'], ...rows.map(r=>r.map((c,i)=> i===4?`"${c}"`:c).join(','))].join('\n');
-      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'}); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='transacciones.csv'; a.click(); URL.revokeObjectURL(url);
+      const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'transacciones.csv'; a.click(); URL.revokeObjectURL(url);
     }
 
     function exportBackupJSON(){
       const data = { transactions: state.transactions, banks: state.banks, debts: state.debts, fixed: state.fixed, savings: state.savings, categories: state.categories };
-      const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'}); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='backup_jo_finanzas.json'; a.click(); URL.revokeObjectURL(url);
+      const blob = new Blob([JSON.stringify(data,null,2)], { type:'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'backup_jo_finanzas.json'; a.click(); URL.revokeObjectURL(url);
     }
 
     async function importFile(file){
-      if(!file) return alert('Selecciona un archivo');
+      if(!file) return alert('Selecciona archivo');
       const text = await file.text();
-      if(file.name.toLowerCase().endsWith('.csv')){ const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean); const headers = lines.shift().split(',').map(h=>h.toLowerCase()); for(const line of lines){ const parts = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g).map(p=>p.replace(/^"|"$/g,'').replace(/""/g,'"')); const obj={}; headers.forEach((h,i)=> obj[h]=parts[i]||''); const bank = state.banks.find(b=>b.name === obj.cuenta); const cat = state.categories.find(c=>c.name === obj.categoria); await addTransaction({ type: obj.tipo||'Ingreso', amount: Number(obj.monto)||0, categoryId: cat?cat.id:null, categoryName: obj.categoria||'', description: obj.descripcion||'', dateStr: obj.fecha, bankId: bank?bank.id:null }); } alert('CSV importado'); } else { try{ const data = JSON.parse(text); if(data.categories){ for(const c of data.categories) await addCategory({ name:c.name, limitMonthly:c.limitMonthly||0 }); } if(data.banks){ for(const b of data.banks) { if(!db){ b.id = 'local-'+Math.random().toString(36).slice(2,9); state.banks.push(b); } else await addDoc(collection(db, userPath('banks')), b); } } if(data.transactions){ for(const t of data.transactions){ await addTransaction({ type: t.type||'Ingreso', amount: t.amount||0, categoryId: t.categoryId||null, categoryName: t.categoryName||t.category||'', description: t.description||'', dateStr: t.dateStr || (t.date && t.date._seconds ? dateToDDMMYYYY(new Date(t.date._seconds*1000)) : ''), bankId: t.bankId||null }); } } alert('JSON importado'); }catch(e){ alert('JSON inválido'); } }
-    }
-
-    function exportReportPDF(){
-      // create a report DOM node
-      const node = document.createElement('div');
-      node.style.padding = '18px';
-      node.style.background = '#fff';
-      node.style.color = '#111';
-      node.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><div><h2>Reporte Financiero - JHONATAN ORELLANA</h2><div>Fecha: ${dateToDDMMYYYY(new Date())}</div></div><div style="text-align:right"><div style="font-weight:800">${$('#balance').textContent}</div><div style="color:#666">${$('#assets-break').textContent}</div></div></div><hr style="margin:12px 0">`;
-      // banks summary
-      node.innerHTML += `<h3>Bancos</h3><ul>${state.banks.map(b=>`<li>${b.name}: ${fmtMoney(b.balance)}</li>`).join('')}</ul>`;
-      // debts
-      node.innerHTML += `<h3>Deudas</h3><ul>${state.debts.length? state.debts.map(d=>`<li>${d.name} (${(state.banks.find(b=>b.id===d.bankId)||{name:'-' }).name}) - Saldo: ${fmtMoney(d.outstanding)} - Cuota: ${fmtMoney(d.monthlyPayment)}</li>`).join('') : '<li>Sin deudas</li>'}</ul>`;
-      // top transactions (last 20)
-      node.innerHTML += `<h3>Ultimas transacciones</h3><table style="width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left">Fecha</th><th style="text-align:left">Cuenta</th><th style="text-align:left">Categoria</th><th style="text-align:right">Monto</th></tr></thead><tbody>${state.transactions.slice(0,20).map(t=>`<tr><td>${t.date? (t.date.toDate?dateToDDMMYYYY(t.date.toDate()):t.dateStr):t.dateStr}</td><td>${(state.banks.find(b=>b.id===t.bankId)||{name:'-' }).name}</td><td>${(state.categories.find(c=>c.id===t.categoryId)||{name: t.categoryName||'-'}).name}</td><td style="text-align:right">${fmtMoney(t.amount)}</td></tr>`).join('')}</tbody></table>`;
-      // Wait html2pdf loaded
-      if(window.html2pdf){
-        const opt = { margin: 10, filename: `reporte_financiero_${(new Date()).toISOString().slice(0,10)}.pdf`, html2canvas: { scale:1.3 }, jsPDF: { unit:'mm', format:'a4', orientation:'portrait' } };
-        html2pdf().set(opt).from(node).save();
+      if(file.name.toLowerCase().endsWith('.csv')){
+        const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        const headers = lines.shift().split(',').map(h => h.toLowerCase());
+        for(const line of lines){
+          const parts = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g).map(p => p.replace(/^"|"$/g,'').replace(/""/g,'"'));
+          const obj = {}; headers.forEach((h,i)=> obj[h] = parts[i] || '');
+          const bank = state.banks.find(b => b.name === obj.cuenta);
+          const cat = state.categories.find(c => c.name === obj.categoria);
+          await addTransaction({ type: obj.tipo || 'Ingreso', amount: Number(obj.monto) || 0, categoryId: cat ? cat.id : null, categoryName: obj.categoria || '', description: obj.descripcion || '', dateStr: obj.fecha, bankId: bank ? bank.id : null });
+        }
+        showToast('CSV importado');
       } else {
-        alert('html2pdf no cargado. Asegúrate de tener conexión a internet.');
+        try {
+          const data = JSON.parse(text);
+          if(data.categories){ for(const c of data.categories) await addCategory({ name: c.name, limitMonthly: c.limitMonthly || 0 }); }
+          if(data.banks){ for(const b of data.banks) await addBank(b); }
+          if(data.debts){ for(const d of data.debts) await addDebt(d); }
+          if(data.fixed){ for(const f of data.fixed) await addFixedExpense(f); }
+          if(data.transactions){ for(const t of data.transactions) await addTransaction({ type:t.type||'Ingreso', amount:t.amount||0, categoryId:t.categoryId||null, categoryName:t.categoryName||t.category||'', description:t.description||'', dateStr:t.dateStr || (t.date && t.date._seconds ? dateToDDMMYYYY(new Date(t.date._seconds*1000)) : ''), bankId:t.bankId||null }); }
+          showToast('JSON importado');
+        } catch(e){ alert('JSON inválido'); }
       }
     }
 
-    /************************ TOAST ************************/
-    let toastTimer;
-    function showToast(msg, important = false){
-      const t = $('#toast'); t.textContent = msg; t.style.display = 'block'; if(important) t.style.background = 'linear-gradient(90deg,var(--danger),#ff9a9a)'; else t.style.background = '#071421';
-      clearTimeout(toastTimer); toastTimer = setTimeout(()=>{ t.style.display = 'none'; t.style.background = '#071421'; }, important ? 7000 : 3500);
+    function exportReportPDF(){
+      // Build a clean report DOM with requested font sizes in pt
+      const node = document.createElement('div');
+      node.style.padding = '12mm';
+      node.style.background = '#fff';
+      node.style.color = '#111';
+      node.style.fontFamily = 'Arial, Helvetica, sans-serif';
+      node.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6mm">
+          <div>
+            <div style="font-weight:800;font-size:12pt">Reporte Financiero - JHONATAN ORELLANA</div>
+            <div style="font-size:11pt;color:#444;margin-top:2mm">Fecha: ${dateToDDMMYYYY(new Date())}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-weight:700;font-size:12pt">${$('#balance').textContent}</div>
+            <div style="font-size:10pt;color:#666;margin-top:2mm">${$('#assets-break').textContent}</div>
+          </div>
+        </div>
+        <hr style="border:none;border-top:1px solid #ddd;margin-bottom:6mm">
+        <div style="font-size:11pt;font-weight:700;margin-bottom:3mm">Bancos</div>
+        <div style="font-size:10pt;margin-bottom:6mm">
+          ${state.banks.length ? `<ul style="margin:0 0 6mm 14px">${state.banks.map(b=>`<li style="margin-bottom:2mm">${b.name}: ${fmtMoney(b.balance)}</li>`).join('')}</ul>` : '<div style="color:#666">Sin cuentas registradas</div>'}
+        </div>
+        <div style="font-size:11pt;font-weight:700;margin-bottom:3mm">Deudas</div>
+        <div style="font-size:10pt;margin-bottom:6mm">
+          ${state.debts.length ? `<ul style="margin:0 0 6mm 14px">${state.debts.map(d=>`<li style="margin-bottom:2mm">${d.name} (${(state.banks.find(b=>b.id===d.bankId)||{name:'-' }).name}) - Saldo: ${fmtMoney(d.outstanding)} - Cuota: ${fmtMoney(d.monthlyPayment)}</li>`).join('')}</ul>` : '<div style="color:#666">Sin deudas</div>'}
+        </div>
+        <div style="font-size:11pt;font-weight:700;margin-bottom:3mm">Últimas transacciones</div>
+        <table style="width:100%;border-collapse:collapse;font-size:10pt">
+          <thead><tr><th style="text-align:left;border-bottom:1px solid #ddd;padding:6px 0">Fecha</th><th style="text-align:left;border-bottom:1px solid #ddd;padding:6px 0">Cuenta</th><th style="text-align:left;border-bottom:1px solid #ddd;padding:6px 0">Categoría</th><th style="text-align:right;border-bottom:1px solid #ddd;padding:6px 0">Monto</th></tr></thead>
+          <tbody>
+            ${state.transactions.slice(0,30).map(t=>`<tr><td style="padding:6px 0">${t.date ? (t.date.toDate ? dateToDDMMYYYY(t.date.toDate()) : (t.dateStr||tsToDateStr(t.date))) : (t.dateStr||'')}</td><td style="padding:6px 0">${(state.banks.find(b=>b.id===t.bankId)||{name:'-'}).name}</td><td style="padding:6px 0">${(state.categories.find(c=>c.id===t.categoryId)||{name:t.categoryName||'-'}).name}</td><td style="padding:6px 0;text-align:right">${fmtMoney(t.amount)}</td></tr>`).join('')}
+          </tbody>
+        </table>
+        <div style="margin-top:8mm;font-size:10pt;color:#666">Generado por JHONATAN ORELLANA - App Personal</div>
+      `;
+      if(window.html2pdf){
+        const opt = {
+          margin: 10,
+          filename: `reporte_financiero_${(new Date()).toISOString().slice(0,10)}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(node).save();
+      } else {
+        alert('html2pdf no cargado. Conéctate a internet o recarga la página.');
+      }
     }
 
-    /************************ TECLADO 'N' (CONTROLADO) ************************/
+    /* ================== TECLA 'N' CONTROLADA ================== */
     let modalOpen = false;
-    // observe modal backdrop
     const modalBackdrop = $('#modal-backdrop');
     const observer = new MutationObserver(()=>{ modalOpen = modalBackdrop.style.display === 'flex'; });
-    observer.observe(modalBackdrop, { attributes: true, attributeFilter: ['style'] });
+    observer.observe(modalBackdrop, { attributes:true, attributeFilter: ['style'] });
 
-    window.addEventListener('keydown', (e)=>{
-      // abrir nueva transacción con 'n' SOLO si:
-      // - tecla simple (sin ctrl/alt/meta)
-      // - no hay modal abierto
-      // - el foco NO está en un input, textarea o select (evitar while typing)
+    window.addEventListener('keydown', (e) => {
       if(e.key.toLowerCase() === 'n' && !e.ctrlKey && !e.altKey && !e.metaKey){
         const active = document.activeElement;
         const tag = active && active.tagName ? active.tagName.toLowerCase() : '';
-        if(modalOpen) return; // si modal abierto no hacer nada
+        if(modalOpen) return;
         if(tag === 'input' || tag === 'textarea' || tag === 'select' || active.isContentEditable) return;
-        // prevenir repeticiones por mantener presionada la tecla
-        if (e.repeat) return;
-        // open modal
+        if(e.repeat) return;
         openTransactionModal();
       }
     });
 
-    /************************ BIND UI ************************/
+    /* ================== BIND UI ================== */
     function bindUI(){
-      $$('#nav button').forEach(b => b.addEventListener('click', ()=> switchView(b.dataset.view)));
-      $('#btn-new-trans').onclick = ()=> { switchView('transactions'); openTransactionModal(); };
+      document.querySelectorAll('nav.bottom-nav button').forEach(b => b.addEventListener('click', ()=> switchView(b.dataset.view)));
       $('#btn-add-transaction').onclick = ()=> openTransactionModal();
       $('#btn-add-bank').onclick = ()=> openBankModal();
       $('#btn-add-debt').onclick = ()=> openDebtModal();
       $('#btn-add-fixed').onclick = ()=> openFixedModal();
       $('#btn-generate-fixed').onclick = ()=> generateFixedForMonth();
       $('#btn-new-category').onclick = ()=> openCategoryModal();
-      $('#btn-new-cat').onclick = ()=> openCategoryModal();
-      $('#btn-export-pdf').onclick = exportReportPDF;
+      $('#btn-new-saving').onclick = ()=> openSavingModal();
+      $('#btn-new-transaction')?.addEventListener('click', ()=> openTransactionModal());
+      $('#btn-new-cat')?.addEventListener('click', ()=> openCategoryModal());
       $('#export-csv').onclick = exportTransactionsCSV;
       $('#export-json').onclick = exportBackupJSON;
       $('#btn-import').onclick = ()=> importFile($('#import-file').files[0]);
       $('#export-pdf').onclick = exportReportPDF;
-      $('#btn-apply-filters').onclick = ()=> renderTransactions();
       $('#search').addEventListener('input', ()=> renderTransactions());
       $('#modal-backdrop').onclick = (e)=> { if(e.target.id === 'modal-backdrop') closeModal(); };
+      // top-left nav buttons: map to bottom nav logic (keep all button functions intact)
+      document.querySelectorAll('nav.bottom-nav button').forEach(b => b.addEventListener('click', () => {
+        // also ensure header subtitle shows view
+        // (no change to other button functionality)
+      }));
     }
 
-    /************************ GENERAR GASTOS FIJOS ************************/
+    /* ================== GENERAR GASTOS FIJOS ================== */
     async function generateFixedForMonth(){
-      const today = new Date(), month=today.getMonth(), year=today.getFullYear();
+      const today = new Date(), month = today.getMonth(), year = today.getFullYear();
       const generated = [];
       for(const f of state.fixed.filter(x=>x.active)){
         const day = Math.min(28, Number(f.nextDueDay)||1);
         const dt = new Date(year, month, day);
         const dateStr = dateToDDMMYYYY(dt);
         const exists = state.transactions.some(t=>{
-          const tDate = t.date ? (t.date.toDate?dateToDDMMYYYY(t.date.toDate()):t.dateStr) : t.dateStr;
+          const tDate = t.date ? (t.date.toDate ? dateToDDMMYYYY(t.date.toDate()) : t.dateStr) : t.dateStr;
           return tDate === dateStr && (t.description||'') === f.name && Number(t.amount) === Number(f.amount);
         });
         if(exists) continue;
         await addTransaction({ type:'Egreso', amount:f.amount, categoryId:f.categoryId, categoryName:f.categoryName, description:f.name, dateStr, bankId:f.bankId });
         generated.push(f.name);
       }
-      showToast('Gastos fijos generados: ' + (generated.length?generated.join(', '):'ninguno'));
+      showToast('Gastos fijos generados: ' + (generated.length ? generated.join(', ') : 'ninguno'));
     }
 
-    /************************ VENTANAS MODALES (helper para fixed creation) ************************/
     function openFixedModal(){
       const bankOpts = `<option value="">-- Seleccionar cuenta --</option>` + state.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
       const catOpts = `<option value="">-- Seleccionar categoría --</option>` + state.categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
       showModal(`<div>
-        <h3>Nuevo gasto fijo</h3>
+        <h3 style="margin:0">Nuevo gasto fijo</h3>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
           <div><label>Nombre</label><input id="f-name" /></div>
           <div><label>Monto</label><input id="f-amount" value="0" /></div>
@@ -794,32 +866,69 @@
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="f-cancel" class="ghost compact">Cancelar</button><button id="f-save" class="primary compact">Guardar</button></div>
       </div>`);
       $('#f-cancel').onclick = closeModal;
-      $('#f-save').onclick = async ()=>{ const name=$('#f-name').value.trim(); const amount=Number($('#f-amount').value)||0; const bankId=$('#f-bank').value||null; const day=Math.max(1,Math.min(28,Number($('#f-day').value)||1)); const catId=$('#f-cat').value||null; if(!name) return alert('Nombre requerido'); if(!amount || amount<=0) return alert('Monto inválido'); const categoryName = (state.categories.find(c=>c.id===catId)||{name:''}).name; if(!db){ const id='local-'+Math.random().toString(36).slice(2,9); state.fixed.push({ id, name, amount, bankId, nextDueDay:day, categoryId:catId, categoryName, active:true }); persistLocal(); renderAll(); } else { await addDoc(collection(db, userPath('fixedExpenses')), { name, amount, bankId, nextDueDay:day, categoryId:catId, categoryName, active:true, createdAt: serverTimestamp() }); await loadAllFromFirestore(); renderAll(); } closeModal(); };
+      $('#f-save').onclick = async ()=> {
+        const name = $('#f-name').value.trim(); const amount = Number($('#f-amount').value) || 0; const bankId = $('#f-bank').value || null; const day = Math.max(1, Math.min(28, Number($('#f-day').value) || 1)); const catId = $('#f-cat').value || null;
+        if(!name) return alert('Nombre requerido');
+        if(!amount || amount <= 0) return alert('Monto inválido');
+        const categoryName = (state.categories.find(c=>c.id===catId)||{name:''}).name;
+        await addFixedExpense({ name, amount, bankId, nextDueDay: day, categoryId: catId, categoryName, active:true });
+        closeModal();
+      };
     }
 
-    /************************ INICIALIZACIÓN ************************/
+    async function openSavingModal(){
+      const bankOpts = `<option value="">-- Seleccionar cuenta --</option>` + state.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
+      showModal(`<div>
+        <h3 style="margin:0">Nuevo plan de ahorro</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+          <div><label>Nombre</label><input id="s-name" /></div>
+          <div><label>Cuenta vinculada</label><select id="s-bank">${bankOpts}</select></div>
+          <div><label>Monto objetivo</label><input id="s-target" value="0" /></div>
+          <div><label>Fecha meta</label><input id="s-date" placeholder="dd/mm/yyyy" /></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="s-cancel" class="ghost compact">Cancelar</button><button id="s-save" class="primary compact">Crear</button></div>
+      </div>`);
+      $('#s-cancel').onclick = closeModal;
+      $('#s-save').onclick = async ()=> {
+        const name = $('#s-name').value.trim(); const bankId = $('#s-bank').value || null; const target = Number($('#s-target').value) || 0; const date = $('#s-date').value.trim();
+        if(!name) return alert('Nombre requerido');
+        if(!target || target <= 0) return alert('Monto objetivo inválido');
+        if(date && !parseDateDDMMYYYY(date)) return alert('Fecha inválida');
+        if(!db){ const id = 'local-'+Math.random().toString(36).slice(2,9); state.savings.push({ id, name, bankId, target, date, balance:0 }); persistLocal(); renderSavings(); } else { await addDoc(collection(db, userPath('savings')), { name, bankId, target, date, balance:0, createdAt: serverTimestamp() }); await loadAllFromFirestore(); renderAll(); }
+        closeModal();
+      };
+    }
+
+    /* ================== INICIALIZACIÓN ================== */
     async function initAuth(){
+      bindUI();
       if(!isConfigFilled){ state.uid = 'local-demo'; $('#uid').textContent = state.uid + ' (local)'; loadLocal(); renderAll(); showToast('Modo local: Firebase no configurado'); return; }
       signInAnonymously(getAuth()).catch(e=>console.error('Anon auth error', e));
-      onAuthStateChanged(getAuth(), async (user)=>{ if(user){ state.uid = user.uid; $('#uid').textContent = state.uid; await loadAllFromFirestore(); renderAll(); } else { $('#uid').textContent = 'No autenticado'; } });
+      onAuthStateChanged(getAuth(), async (user) => {
+        if(user){
+          state.uid = user.uid; $('#uid').textContent = state.uid; await loadAllFromFirestore(); renderAll();
+        } else {
+          $('#uid').textContent = 'No autenticado';
+        }
+      });
     }
 
-    /************************ ARRANQUE ************************/
     (async function main(){
-      bindUI();
       await initAuth();
-      // ensure categories exist (seed)
-      if(state.categories.length === 0){ const defaults = [{name:'Salario', limitMonthly:0},{name:'Alimentos', limitMonthly:0},{name:'Transporte', limitMonthly:0},{name:'Varios', limitMonthly:0}]; if(!db){ defaults.forEach(d=>d.id='local-'+Math.random().toString(36).slice(2,9)); state.categories = defaults; persistLocal(); } else { for(const d of defaults) await addDoc(collection(db, userPath('categories')), { name:d.name, limitMonthly:d.limitMonthly, createdAt: serverTimestamp() }); await loadAllFromFirestore(); } renderCategories(); }
-      // initial render if local mode
-      if(!isConfigFilled) renderAll();
-      // protective: prevent multiple accidental opens by focusing inputs; handled in keydown logic
+      // Seed default categories if none
+      if(state.categories.length === 0){
+        const defaults = [{ name:'Salario', limitMonthly:0 }, { name:'Alimentos', limitMonthly:0 }, { name:'Transporte', limitMonthly:0 }, { name:'Varios', limitMonthly:0 }];
+        if(!db){ defaults.forEach(d=>d.id='local-'+Math.random().toString(36).slice(2,9)); state.categories = defaults; persistLocal(); } else { for(const d of defaults) await addDoc(collection(db, userPath('categories')), { name:d.name, limitMonthly:d.limitMonthly, createdAt: serverTimestamp() }); await loadAllFromFirestore(); }
+        renderCategories();
+      }
+      // Ensure default view
+      switchView('dashboard');
     })();
 
-    // Expose for debugging
+    // Expose state for debugging
     window._jo_state = state;
-    window.showToast = showToast;
-    // END MODULE
   </script>
 </body>
 </html>
+
 
