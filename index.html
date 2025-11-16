@@ -2,23 +2,21 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>JHONATAN ORELLANA - Finanzas Personales (index.html)</title>
-
   <!--
-    APP SPA - JHONATAN ORELLANA (UN SOLO ARCHIVO)
-    Correcciones solicitadas en esta versión:
-      - Al guardar una entidad (transacción, cuenta, deuda, categoría, fijo) la ventana modal
-        se cierra correctamente y la UI se actualiza inmediatamente.
-      - Se fuerza la recarga desde Firestore (loadAllFromFirestore) después de operaciones
-        de escritura para evitar retrasos en la visualización.
-      - Se agregaron try/catch y mensajes de error para mostrar fallas y permitir cerrar modal.
-      - Mantiene la vista móvil vertical y todas las funcionalidades previas.
-    Nota: Este archivo contiene tu firebaseConfig (tal como lo pediste).
+    APP SPA - ÚNICO ARCHIVO index.html
+    Esta versión integra:
+      - Sin cuentas visibles: Auth ANÓNIMO + "Join Code" (emparejamiento) para vincular dispositivos (PC <-> móvil).
+      - Datos compartidos por ORGANIZACIÓN: todas las operaciones usan organizations/{orgId}/...
+      - Funcionalidades: Transacciones, Bancos, Deudas, Gastos Fijos, Categorías, Ahorros, Export/Import, PDF.
+      - Backup a Realtime Database (opcional).
+      - Reglas sugeridas de Firestore / RTDB en comentarios.
+      - Interfaz móvil vertical, modales que cierran al guardar y actualizan UI inmediatamente.
     Instrucciones rápidas:
-      1) Asegúrate de haber habilitado Firestore y Authentication (anónimo o tu preferencia).
-      2) Abre este archivo con Live Server o desde un servidor local para evitar problemas de CORS.
-      3) Revisa la consola para mensajes de diagnóstico (F12).
+      1) Habilita Firebase: Authentication (Anonymous), Cloud Firestore y Realtime Database (opcional).
+      2) Pega tu firebaseConfig (ya incluido según lo que enviaste).
+      3) Abre el archivo desde un servidor local (Live Server) y prueba: la primera vez crea una org y mostrará un JOIN CODE. Usa ese código en el otro dispositivo para vincular.
   -->
 
   <style>
@@ -29,12 +27,14 @@
     }
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#021018);color:#e6f6f6}
-    .phone-frame{width:100%;max-width:420px;margin:12px auto;border-radius:18px;overflow:hidden;background:linear-gradient(180deg,var(--panel),#04121a);box-shadow:0 20px 60px rgba(0,0,0,0.6);min-height:80vh;display:flex;flex-direction:column}
-    header.app-top{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:linear-gradient(90deg,rgba(255,255,255,0.02),transparent);border-bottom:1px solid rgba(255,255,255,0.02)}
+    .phone-frame{width:100%;max-width:420px;margin:12px auto;border-radius:18px;overflow:hidden;background:linear-gradient(180deg,var(--panel),#04121a);box-shadow:0 20px 60px rgba(0,0,0,0.6);min-height:88vh;display:flex;flex-direction:column}
+    header.app-top{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:linear-gradient(90deg,rgba(255,255,255,0.02),transparent);border-bottom:1px solid rgba(255,255,255,0.02)}
     .brand{display:flex;gap:10px;align-items:center}
     .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:900;color:#001219;font-size:16px}
     .title{font-weight:800;font-size:15px}
     .subtitle{font-size:11px;color:var(--muted)}
+    .header-actions{display:flex;gap:8px;align-items:center}
+    .join-badge{background:rgba(255,255,255,0.03);padding:6px 8px;border-radius:10px;font-size:12px;color:var(--muted)}
     nav.bottom-nav{display:flex;gap:6px;padding:10px;justify-content:space-between;background:linear-gradient(180deg,transparent,rgba(255,255,255,0.01));border-top:1px solid rgba(255,255,255,0.02)}
     nav.bottom-nav button{flex:1;background:transparent;border:0;color:var(--muted);padding:8px;border-radius:10px;font-weight:700}
     nav.bottom-nav button.active{color:var(--accent);background:rgba(255,255,255,0.02)}
@@ -53,6 +53,8 @@
     .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#071421;color:#d6f6ef;padding:12px;border-radius:10px;box-shadow:0 8px 26px rgba(0,0,0,0.6);display:none;z-index:120}
     .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:140}
     .modal{background:linear-gradient(180deg,#071421,#051017);padding:14px;border-radius:12px;max-width:420px;width:94%}
+    .small-muted{font-size:11px;color:var(--muted)}
+    @media (min-width:560px){ .phone-frame{max-width:420px} }
   </style>
 </head>
 <body>
@@ -65,7 +67,11 @@
           <div class="subtitle">Control profesional de finanzas</div>
         </div>
       </div>
-      <div class="small muted" id="uid">Sin iniciar</div>
+      <div class="header-actions">
+        <div id="org-join-display" class="join-badge small-muted">No vinculado</div>
+        <button id="btn-manage-join" class="ghost compact">Vincular</button>
+        <div class="small muted" id="uid">Sin iniciar</div>
+      </div>
     </header>
 
     <main class="app-body" id="app-body">
@@ -215,32 +221,53 @@
   <div class="modal-backdrop" id="modal-backdrop"><div class="modal" id="modal"></div></div>
   <div class="toast" id="toast"></div>
 
-  <!-- Firestore rules example (comentadas)
-    rules_version = '2';
-    service cloud.firestore {
-      match /databases/{database}/documents {
-        match /users/{userId}/{document=**} {
-          allow read, write: if request.auth != null && request.auth.uid == userId;
+  <!-- Reglas recomendadas (Firestore + RTDB) - Pegar en consola Firebase -->
+  <!--
+  Firestore rules:
+  rules_version = '2';
+  service cloud.firestore {
+    match /databases/{database}/documents {
+      // Solo miembros de la organización pueden leer/escribir
+      match /organizations/{orgId}/{document=**} {
+        allow read, write: if request.auth != null
+          && exists(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid));
+      }
+      // perfil de usuario (opcional)
+      match /users/{uid}/profile/{meta} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+  }
+
+  Realtime DB rules (backups):
+  {
+    "rules": {
+      "backups": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.uid === $uid"
         }
       }
     }
+  }
   -->
 
-  <!-- Librerías -->
+  <!-- Scripts (Firebase v9 modular + utilidades) -->
   <script type="module">
+    /* ================== IMPORTS FIREBASE (v9 modular) ================== */
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
     import {
-      getFirestore, collection, addDoc, getDocs, query, orderBy, deleteDoc, doc,
-      updateDoc, serverTimestamp, Timestamp, getDoc, onSnapshot
+      getFirestore, collection, addDoc, setDoc, getDocs, getDoc, query, where, orderBy, deleteDoc, doc,
+      updateDoc, serverTimestamp, Timestamp, onSnapshot
     } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+    import { getDatabase, ref as rtdbRef, set as rtdbSet, remove as rtdbRemove } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-    // Carga asíncrona de utilitarios (Chart.js, html2pdf para export PDF)
-    const s1 = document.createElement('script'); s1.src = 'https://cdn.jsdelivr.net/npm/chart.js'; document.head.appendChild(s1);
-    const s2 = document.createElement('script'); s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js'; document.head.appendChild(s2);
+    // Extras clientes
+    const sChart = document.createElement('script'); sChart.src = 'https://cdn.jsdelivr.net/npm/chart.js'; document.head.appendChild(sChart);
+    const sPDF = document.createElement('script'); sPDF.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js'; document.head.appendChild(sPDF);
 
-    /* ================== FIREBASE CONFIG - PONER AQUÍ ================== */
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    /* ================== FIREBASE CONFIG (PROPORCIONADO) ================== */
     const firebaseConfig = {
       apiKey: "AIzaSyBVppNAicRPFXEUdErmHd24se_9bjXiqcM",
       authDomain: "jhona-1b398.firebaseapp.com",
@@ -248,16 +275,18 @@
       projectId: "jhona-1b398",
       storageBucket: "jhona-1b398.firebasestorage.app",
       messagingSenderId: "981136306223",
-      appId: "1:981136306223:web:52a7b67c22c274efcc56da",
-      measurementId: "G-NVGKL0XGER"
+      appId: "1:981136306223:web:d8948acdb119f0facc56da",
+      measurementId: "G-44TXK10R9R"
     };
+
     const isConfigFilled = Object.keys(firebaseConfig).length > 0;
-    let app, auth, db;
-    if (isConfigFilled) {
+    let app, auth, db, rtdb;
+    if(isConfigFilled){
       app = initializeApp(firebaseConfig);
       auth = getAuth(app);
       db = getFirestore(app);
-      console.log('Firebase inicializado.');
+      rtdb = getDatabase(app);
+      console.log('Firebase inicializado (Firestore + RTDB).');
     } else {
       console.warn('Firebase no configurado. Funcionando en modo local (localStorage).');
     }
@@ -266,81 +295,103 @@
     const $ = (s, r=document) => r.querySelector(s);
     const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
     function fmtMoney(v){ v = Number(v)||0; return 'S/ ' + v.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 }); }
-    function parseDateDDMMYYYY(s){ if(!s) return null; const p = s.split('/'); if(p.length !== 3) return null; const d = parseInt(p[0],10), m = parseInt(p[1],10)-1, y = parseInt(p[2],10); const dt = new Date(y,m,d); return isNaN(dt) ? null : dt; }
+    function parseDateDDMMYYYY(s){ if(!s) return null; const p=s.split('/'); if(p.length!==3) return null; const d=parseInt(p[0],10), m=parseInt(p[1],10)-1, y=parseInt(p[2],10); const dt=new Date(y,m,d); return isNaN(dt)?null:dt; }
     function dateToDDMMYYYY(d){ if(!d) return ''; return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear(); }
     function tsToDateStr(ts){ if(!ts) return ''; if(ts.toDate) return dateToDDMMYYYY(ts.toDate()); if(ts._seconds) return dateToDDMMYYYY(new Date(ts._seconds*1000)); return String(ts); }
+    function showToast(msg, important=false){ const t = $('#toast'); t.textContent = msg; t.style.display = 'block'; t.style.background = important ? 'linear-gradient(90deg,var(--danger),#ff9a9a)' : '#071421'; clearTimeout(window.__to); window.__to = setTimeout(()=> t.style.display='none', important?7000:3500); }
 
-    /* ================== ESTADO ================== */
+    /* ================== ESTADO GLOBAL ================== */
     const state = {
       uid: null,
-      transactions: [],
-      banks: [],
-      debts: [],
-      fixed: [],
-      savings: [],
-      categories: [] // {id, name, limitMonthly}
+      currentOrgId: null,
+      orgJoinCode: null,
+      memberRole: null, // owner / member
+      transactions: [], banks: [], debts: [], fixed: [], savings: [], categories: []
     };
 
-    /* ================== SUSCRIPCIONES EN TIEMPO REAL ================== */
+    /* ================== UTIL: GENERAR JOIN CODE ================== */
+    function generateJoinCode(len = 6){
+      const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+      let s = '';
+      for(let i=0;i<len;i++) s += chars[Math.floor(Math.random()*chars.length)];
+      return s;
+    }
+
+    /* ================== PATH POR ORG (reemplaza userPath) ================== */
+    function orgPath(coll){
+      if(!state.currentOrgId) throw new Error('OrgId no definido. Vincula el dispositivo con un JOIN CODE.');
+      return `organizations/${state.currentOrgId}/${coll}`;
+    }
+
+    /* ================== BACKUP RTDB helpers ================== */
+    async function backupToRTDB(collectionName, id, data){
+      if(!rtdb || !state.uid) return;
+      try{
+        const copy = Object.assign({}, data);
+        if(copy.date && copy.date.toDate) copy.date = copy.date.toDate().toISOString();
+        if(copy.createdAt && copy.createdAt.toDate) copy.createdAt = copy.createdAt.toDate().toISOString();
+        copy._backupAt = new Date().toISOString();
+        await rtdbSet(rtdbRef(rtdb, `backups/${state.currentOrgId}/${collectionName}/${id}`), copy);
+      } catch(e){ console.warn('RTDB backup failed', e); }
+    }
+    async function removeRTDBBackup(collectionName, id){ if(!rtdb || !state.currentOrgId) return; try{ await rtdbRemove(rtdbRef(rtdb, `backups/${state.currentOrgId}/${collectionName}/${id}`)); } catch(e){ console.warn('RTDB remove failed', e); } }
+
+    /* ================== SUSCRIPCIONES (USANDO orgPath) ================== */
     let unsubscribers = [];
     function clearUnsubscribers(){ unsubscribers.forEach(u=>{ try{ u(); }catch(e){} }); unsubscribers = []; }
     function subscribeToCollections(){
-      if(!db || !state.uid) return;
+      if(!db || !state.currentOrgId) return;
       clearUnsubscribers();
-      try {
-        const txQ = query(collection(db, userPath('transactions')), orderBy('date','desc'));
-        unsubscribers.push(onSnapshot(txQ, snap => { state.transactions = snap.docs.map(d=>({ id:d.id, ...d.data() })); renderAll(); }, e=>console.error(e)));
-        const bQ = query(collection(db, userPath('banks')), orderBy('name'));
-        unsubscribers.push(onSnapshot(bQ, snap => { state.banks = snap.docs.map(d=>({ id:d.id, ...d.data() })); renderAll(); }, e=>console.error(e)));
-        const dQ = query(collection(db, userPath('debts')), orderBy('createdAt','desc'));
-        unsubscribers.push(onSnapshot(dQ, snap => { state.debts = snap.docs.map(d=>({ id:d.id, ...d.data() })); renderAll(); }, e=>console.error(e)));
-        const fQ = query(collection(db, userPath('fixedExpenses')), orderBy('name'));
-        unsubscribers.push(onSnapshot(fQ, snap => { state.fixed = snap.docs.map(d=>({ id:d.id, ...d.data() })); renderAll(); }, e=>console.error(e)));
-        const sQ = query(collection(db, userPath('savings')), orderBy('createdAt','desc'));
-        unsubscribers.push(onSnapshot(sQ, snap => { state.savings = snap.docs.map(d=>({ id:d.id, ...d.data() })); renderAll(); }, e=>console.error(e)));
-        const cQ = query(collection(db, userPath('categories')), orderBy('name'));
-        unsubscribers.push(onSnapshot(cQ, snap => { state.categories = snap.docs.map(d=>({ id:d.id, ...d.data() })); renderAll(); }, e=>console.error(e)));
-      } catch(e) { console.error('subscribe error', e); }
+      try{
+        unsubscribers.push(onSnapshot(query(collection(db, orgPath('transactions')), orderBy('date','desc')), snap => { state.transactions = snap.docs.map(d=>({ id:d.id, ...d.data() })); renderAll(); }, e=>console.error(e)));
+        unsubscribers.push(onSnapshot(query(collection(db, orgPath('banks')), orderBy('name')), snap => { state.banks = snap.docs.map(d=>({ id:d.id, ...d.data() })); renderAll(); }, e=>console.error(e)));
+        unsubscribers.push(onSnapshot(query(collection(db, orgPath('debts')), orderBy('createdAt','desc')), snap => { state.debts = snap.docs.map(d=>({ id:d.id, ...d.data() })); renderAll(); }, e=>console.error(e)));
+        unsubscribers.push(onSnapshot(query(collection(db, orgPath('fixedExpenses')), orderBy('name')), snap => { state.fixed = snap.docs.map(d=>({ id:d.id, ...d.data() })); renderAll(); }, e=>console.error(e)));
+        unsubscribers.push(onSnapshot(query(collection(db, orgPath('savings')), orderBy('createdAt','desc')), snap => { state.savings = snap.docs.map(d=>({ id:d.id, ...d.data() })); renderAll(); }, e=>console.error(e)));
+        unsubscribers.push(onSnapshot(query(collection(db, orgPath('categories')), orderBy('name')), snap => { state.categories = snap.docs.map(d=>({ id:d.id, ...d.data() })); renderAll(); }, e=>console.error(e)));
+      } catch(e){ console.error('subscribeToCollections error', e); }
     }
 
-    /* ================== HELPERS FIRESTORE & LOCAL ================== */
-    function userPath(coll){ if(!state.uid) throw new Error('UID no disponible'); return `users/${state.uid}/${coll}`; }
+    /* ================== CARGA INICIAL desde Firestore (si no usas onSnapshot) ================== */
     async function loadAllFromFirestore(){
-      if(!db) return;
-      try {
-        const txSnap = await getDocs(query(collection(db, userPath('transactions')), orderBy('date','desc')));
+      if(!db || !state.currentOrgId) return;
+      try{
+        const txSnap = await getDocs(query(collection(db, orgPath('transactions')), orderBy('date','desc')));
         state.transactions = txSnap.docs.map(d=>({ id:d.id, ...d.data() }));
-        const bSnap = await getDocs(query(collection(db, userPath('banks')), orderBy('name')));
+        const bSnap = await getDocs(query(collection(db, orgPath('banks')), orderBy('name')));
         state.banks = bSnap.docs.map(d=>({ id:d.id, ...d.data() }));
-        const dSnap = await getDocs(query(collection(db, userPath('debts')), orderBy('createdAt','desc')));
+        const dSnap = await getDocs(query(collection(db, orgPath('debts')), orderBy('createdAt','desc')));
         state.debts = dSnap.docs.map(d=>({ id:d.id, ...d.data() }));
-        const fSnap = await getDocs(query(collection(db, userPath('fixedExpenses')), orderBy('name')));
+        const fSnap = await getDocs(query(collection(db, orgPath('fixedExpenses')), orderBy('name')));
         state.fixed = fSnap.docs.map(d=>({ id:d.id, ...d.data() }));
-        const sSnap = await getDocs(query(collection(db, userPath('savings')), orderBy('createdAt','desc')));
+        const sSnap = await getDocs(query(collection(db, orgPath('savings')), orderBy('createdAt','desc')));
         state.savings = sSnap.docs.map(d=>({ id:d.id, ...d.data() }));
-        const cSnap = await getDocs(query(collection(db, userPath('categories')), orderBy('name')));
+        const cSnap = await getDocs(query(collection(db, orgPath('categories')), orderBy('name')));
         state.categories = cSnap.docs.map(d=>({ id:d.id, ...d.data() }));
         renderAll();
-      } catch(e) { console.error('loadAllFromFirestore error', e); }
+      } catch(e){ console.error('loadAllFromFirestore error', e); }
     }
 
-    function persistLocal(){ const data={transactions:state.transactions,banks:state.banks,depts:state.debts,fixed:state.fixed,savings:state.savings,categories:state.categories}; localStorage.setItem('jo_finanzas_v5', JSON.stringify(data)); }
-    function loadLocal(){ const raw = localStorage.getItem('jo_finanzas_v5'); if(!raw) return; try{ const d = JSON.parse(raw); state.transactions = d.transactions||[]; state.banks = d.banks||[]; state.debts = d.depts||[]; state.fixed = d.fixed||[]; state.savings = d.savings||[]; state.categories = d.categories||[]; }catch(e){console.error(e);} }
-
-    /* ================== CRUD & LÓGICA (FORZANDO REFRESH AL GUARDAR) ================== */
+    /* ================== CRUD adaptado a ORG ================== */
     async function addCategory(cat){
       if(!db){ cat.id='local-'+Math.random().toString(36).slice(2,9); state.categories.push(cat); persistLocal(); renderCategories(); showToast('Categoría creada (local)'); return cat; }
-      const ref = await addDoc(collection(db, userPath('categories')), {...cat, createdAt: serverTimestamp()});
-      await loadAllFromFirestore(); showToast('Categoría creada'); return { id: ref.id, ...cat };
+      const ref = await addDoc(collection(db, orgPath('categories')), {...cat, createdAt: serverTimestamp()});
+      await backupToRTDB('categories', ref.id, { name:cat.name, limitMonthly:cat.limitMonthly, createdAt: new Date().toISOString() });
+      await loadAllFromFirestore(); showToast('Categoría creada');
+      return { id: ref.id, ...cat };
     }
+
     async function updateCategory(id, data){
       if(!db){ const c=state.categories.find(x=>x.id===id); if(c) Object.assign(c,data); persistLocal(); renderCategories(); return; }
-      await updateDoc(doc(db, userPath('categories'), id), data);
+      await updateDoc(doc(db, orgPath('categories'), id), data);
+      await backupToRTDB('categories', id, Object.assign({}, data, { _syncedAt: new Date().toISOString() }));
       await loadAllFromFirestore(); showToast('Categoría actualizada');
     }
+
     async function deleteCategory(id){
       if(!db){ state.categories = state.categories.filter(x=>x.id!==id); persistLocal(); renderCategories(); return; }
-      await deleteDoc(doc(db, userPath('categories'), id));
+      await deleteDoc(doc(db, orgPath('categories'), id));
+      await removeRTDBBackup('categories', id);
       await loadAllFromFirestore(); showToast('Categoría eliminada');
     }
 
@@ -354,51 +405,60 @@
         if(payload.debtId && payload.type==='Egreso'){ const d = state.debts.find(x=>x.id===payload.debtId); if(d) d.outstanding = Math.max(0, (Number(d.outstanding)||0) - payload.amount); }
         persistLocal(); renderAll(); checkCategoryLimitAfterAdd(payload); showToast('Transacción creada (local)'); return payload;
       }
-      const ref = await addDoc(collection(db, userPath('transactions')), payload);
-      // actualizar saldo de banco y deuda en Firestore y forzar recarga
-      if(payload.bankId){ const delta = payload.type==='Egreso' ? -payload.amount : payload.amount; await updateBankBalance(payload.bankId, delta); }
-      if(payload.debtId && payload.type==='Egreso'){ const debtRef = doc(db, userPath('debts'), payload.debtId); const snap = await getDoc(debtRef); if(snap.exists()){ const cur = snap.data().outstanding || 0; await updateDoc(debtRef, { outstanding: Math.max(0, Number(cur) - payload.amount) }); } }
-      await loadAllFromFirestore(); checkCategoryLimitAfterAdd(payload); showToast('Transacción creada'); return { id: ref.id, ...payload };
+      const ref = await addDoc(collection(db, orgPath('transactions')), payload);
+      await backupToRTDB('transactions', ref.id, {...tx, amount: Number(tx.amount)||0, date: parseDateDDMMYYYY(tx.dateStr).toISOString(), createdAt: new Date().toISOString()});
+      if(tx.bankId){ const delta = tx.type === 'Egreso' ? -tx.amount : tx.amount; await updateBankBalance(tx.bankId, delta); }
+      if(tx.debtId && tx.type === 'Egreso'){ const debtRef = doc(db, orgPath('debts'), tx.debtId); const snap = await getDoc(debtRef); if(snap.exists()){ const cur = snap.data().outstanding || 0; await updateDoc(debtRef, { outstanding: Math.max(0, Number(cur) - tx.amount) }); } }
+      await loadAllFromFirestore(); checkCategoryLimitAfterAdd(payload); showToast('Transacción creada');
+      return { id: ref.id, ...payload };
     }
 
     async function addBank(bank){
       if(!db){ bank.id='local-'+Math.random().toString(36).slice(2,9); state.banks.push(bank); persistLocal(); renderBanks(); showToast('Cuenta creada (local)'); return bank; }
-      const ref = await addDoc(collection(db, userPath('banks')), {...bank, createdAt: serverTimestamp()});
-      await loadAllFromFirestore(); showToast('Cuenta creada'); return { id: ref.id, ...bank };
+      const ref = await addDoc(collection(db, orgPath('banks')), {...bank, createdAt: serverTimestamp()});
+      await backupToRTDB('banks', ref.id, {...bank, createdAt: new Date().toISOString()});
+      await loadAllFromFirestore(); renderAll(); showToast('Cuenta creada'); return { id: ref.id, ...bank };
     }
 
     async function updateBank(bankId, data){
       if(!db){ const b = state.banks.find(x=>x.id===bankId); if(b) Object.assign(b,data); persistLocal(); renderBanks(); return; }
-      await updateDoc(doc(db, userPath('banks'), bankId), data);
+      await updateDoc(doc(db, orgPath('banks'), bankId), data);
+      await backupToRTDB('banks', bankId, Object.assign({}, data, { _syncedAt: new Date().toISOString() }));
       await loadAllFromFirestore(); showToast('Cuenta actualizada');
     }
 
     async function deleteBank(bankId){
       if(!db){ state.banks = state.banks.filter(x=>x.id!==bankId); persistLocal(); renderBanks(); return; }
-      await deleteDoc(doc(db, userPath('banks'), bankId));
-      await loadAllFromFirestore(); showToast('Cuenta eliminada');
+      await deleteDoc(doc(db, orgPath('banks'), bankId));
+      await removeRTDBBackup('banks', bankId);
+      await loadAllFromFirestore(); renderAll(); showToast('Cuenta eliminada');
     }
 
     async function addDebt(debt){
       if(!db){ debt.id='local-'+Math.random().toString(36).slice(2,9); state.debts.push(debt); persistLocal(); renderAll(); showToast('Deuda creada (local)'); return debt; }
-      const ref = await addDoc(collection(db, userPath('debts')), {...debt, createdAt: serverTimestamp()});
-      await loadAllFromFirestore(); showToast('Deuda creada'); return { id: ref.id, ...debt };
+      const ref = await addDoc(collection(db, orgPath('debts')), {...debt, createdAt: serverTimestamp()});
+      await backupToRTDB('debts', ref.id, {...debt, createdAt: new Date().toISOString()});
+      await loadAllFromFirestore(); renderAll(); showToast('Deuda creada'); return { id: ref.id, ...debt };
     }
 
     async function addFixedExpense(f){
       if(!db){ f.id='local-'+Math.random().toString(36).slice(2,9); state.fixed.push(f); persistLocal(); renderFixed(); showToast('Gasto fijo creado (local)'); return f; }
-      const ref = await addDoc(collection(db, userPath('fixedExpenses')), {...f, createdAt: serverTimestamp()});
-      await loadAllFromFirestore(); showToast('Gasto fijo creado'); return { id: ref.id, ...f };
+      const ref = await addDoc(collection(db, orgPath('fixedExpenses')), {...f, createdAt: serverTimestamp()});
+      await backupToRTDB('fixedExpenses', ref.id, {...f, createdAt: new Date().toISOString()});
+      await loadAllFromFirestore(); renderAll(); showToast('Gasto fijo creado'); return { id: ref.id, ...f };
     }
 
     async function updateBankBalance(bankId, delta){
       if(!db){ updateBankBalanceLocal(bankId, delta); return; }
-      const ref = doc(db, userPath('banks'), bankId);
-      const snap = await getDoc(ref);
-      if(!snap.exists()) return;
-      const cur = snap.data().balance || 0;
-      await updateDoc(ref, { balance: Number(cur) + Number(delta) });
-      await loadAllFromFirestore();
+      try{
+        const bankDoc = doc(db, orgPath('banks'), bankId);
+        const snap = await getDoc(bankDoc);
+        if(!snap.exists()) return;
+        const cur = snap.data().balance || 0;
+        await updateDoc(bankDoc, { balance: Number(cur) + Number(delta) });
+        await backupToRTDB('banks', bankId, { balance: Number(cur) + Number(delta), _syncedAt: new Date().toISOString() });
+        await loadAllFromFirestore();
+      } catch(e){ console.error('updateBankBalance error', e); }
     }
     function updateBankBalanceLocal(bankId, delta){ const b = state.banks.find(x=>x.id===bankId); if(b){ b.balance = (Number(b.balance)||0) + Number(delta); persistLocal(); renderBanks(); renderDashboard(); } }
 
@@ -427,7 +487,7 @@
       $('#uid').textContent = state.uid ? state.uid : 'Sin iniciar';
     }
 
-    function renderAll(){ renderDashboard(); renderTransactions(); renderBanks(); renderFixed(); renderCategories(); renderSavings(); populateFilters(); }
+    function renderAll(){ renderDashboard(); renderTransactions(); renderBanks(); renderFixed(); renderCategories(); renderSavings(); populateFilters(); updateOrgDisplay(); }
 
     function renderDashboard(){
       let inc=0, exp=0;
@@ -446,9 +506,7 @@
       state.banks.forEach(b=> assets += Number(b.balance)||0);
       state.debts.forEach(d=> liabilities += Number(d.outstanding)||0);
       $('#net-assets').textContent = fmtMoney(assets - liabilities);
-      // optional element
-      if($('#assets-break')) $('#assets-break').textContent = `Act: ${fmtMoney(assets)} · Pas: ${fmtMoney(liabilities)}`;
-      const alerts = state.categories.map(cat=>{
+      $('#alerts').innerHTML = (state.categories.map(cat=>{
         if(!cat.limitMonthly || Number(cat.limitMonthly)<=0) return null;
         const total = state.transactions.reduce((acc,t)=>{
           const d = t.date ? (t.date.toDate ? t.date.toDate() : parseDateDDMMYYYY(t.dateStr||tsToDateStr(t.date))) : parseDateDDMMYYYY(t.dateStr||'');
@@ -459,8 +517,7 @@
         if(total >= Number(cat.limitMonthly)) return `<div style="margin-bottom:6px;color:var(--danger)"><strong>${cat.name}</strong> ${fmtMoney(total)} / ${fmtMoney(cat.limitMonthly)} (Superado)</div>`;
         if(total >= Number(cat.limitMonthly)*0.8) return `<div style="margin-bottom:6px"><strong>${cat.name}</strong> ${fmtMoney(total)} / ${fmtMoney(cat.limitMonthly)} (Cerca)</div>`;
         return null;
-      }).filter(Boolean);
-      $('#alerts').innerHTML = alerts.length ? alerts.join('') : '<div class="muted">Sin alertas</div>';
+      }).filter(Boolean).join('')) || '<div class="muted">Sin alertas</div>';
     }
 
     function renderTransactions(){
@@ -477,9 +534,9 @@
         tbody.appendChild(tr);
       });
       $$('#tx-table button').forEach(btn=>{
-        btn.onclick = async ()=> {
+        btn.onclick = async ()=>{
           const id = btn.dataset.id, act = btn.dataset.act;
-          if(act==='del') showConfirm('Eliminar transacción','Confirmar eliminación', async ()=>{ try{ if(!db){ state.transactions = state.transactions.filter(x=>x.id!==id); persistLocal(); renderAll(); } else { await deleteDoc(doc(db, userPath('transactions'), id)); await loadAllFromFirestore(); } } catch(e){ console.error(e); alert('Error: '+e.message); } });
+          if(act==='del') showConfirm('Eliminar transacción','Confirmar eliminación', async ()=>{ try{ if(!db){ state.transactions = state.transactions.filter(x=>x.id!==id); persistLocal(); renderAll(); } else { await deleteDoc(doc(db, orgPath('transactions'), id)); await removeRTDBBackup('transactions', id); await loadAllFromFirestore(); } } catch(e){ console.error(e); alert('Error: '+e.message); } });
           if(act==='edit'){ const tx = state.transactions.find(x=>x.id===id); if(tx) openTransactionModal(tx); }
         };
       });
@@ -513,7 +570,7 @@
         const act = btn.dataset.act, id = btn.dataset.id;
         btn.onclick = ()=>{
           if(act==='edit') openBankModal(id);
-          if(act==='del') showConfirm('Eliminar', 'Confirmar eliminación', async ()=>{ try{ if(!db){ state.banks = state.banks.filter(x=>x.id!==id); persistLocal(); renderAll(); } else { await deleteDoc(doc(db, userPath('banks'), id)); await loadAllFromFirestore(); } } catch(e){ console.error(e); alert('Error: '+e.message); } });
+          if(act==='del') showConfirm('Eliminar', 'Confirmar eliminación', async ()=>{ try{ if(!db){ state.banks = state.banks.filter(x=>x.id!==id); persistLocal(); renderAll(); } else { await deleteDoc(doc(db, orgPath('banks'), id)); await removeRTDBBackup('banks', id); await loadAllFromFirestore(); } } catch(e){ console.error(e); alert('Error: '+e.message); } });
           if(act==='pay') openDebtPaymentModal(id);
         };
       });
@@ -527,7 +584,7 @@
         const act = btn.dataset.act, id = btn.dataset.id;
         btn.onclick = async ()=> {
           if(act==='gen'){ const f = state.fixed.find(x=>x.id===id); if(f){ const todayStr = dateToDDMMYYYY(new Date()); try{ await addTransaction({ type:'Egreso', amount:f.amount, categoryId:f.categoryId, categoryName:f.categoryName, description:f.name, dateStr:todayStr, bankId:f.bankId }); showToast('Generado: '+f.name); } catch(e){ alert('Error al generar: '+e.message); } } }
-          if(act==='del') showConfirm('Eliminar gasto fijo','Confirmar', async ()=>{ try{ if(!db){ state.fixed = state.fixed.filter(x=>x.id!==id); persistLocal(); renderAll(); } else { await deleteDoc(doc(db, userPath('fixedExpenses'), id)); await loadAllFromFirestore(); } } catch(e){ console.error(e); alert('Error: '+e.message); } });
+          if(act==='del') showConfirm('Eliminar gasto fijo','Confirmar', async ()=>{ try{ if(!db){ state.fixed = state.fixed.filter(x=>x.id!==id); persistLocal(); renderAll(); } else { await deleteDoc(doc(db, orgPath('fixedExpenses'), id)); await removeRTDBBackup('fixedExpenses', id); await loadAllFromFirestore(); } } catch(e){ console.error(e); alert('Error: '+e.message); } });
         };
       });
     }
@@ -542,13 +599,23 @@
 
     function populateFilters(){ const sel = $('#filter-bank'); if(!sel) return; sel.innerHTML = '<option value="">-- Todas --</option>' + state.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join(''); }
 
+    function updateOrgDisplay(){
+      const el = $('#org-join-display');
+      if(state.currentOrgId){
+        el.textContent = `Org: ${state.currentOrgId.slice(0,6)}${state.orgJoinCode?(' · ' + state.orgJoinCode):''}`;
+        el.classList.remove('small-muted');
+      } else {
+        el.textContent = 'No vinculado';
+        el.classList.add('small-muted');
+      }
+    }
+
     /* ================== MODALES & HELPERS ================== */
     function showModal(html){ $('#modal').innerHTML = html; $('#modal-backdrop').style.display = 'flex'; }
     function closeModal(){ $('#modal').innerHTML = ''; $('#modal-backdrop').style.display = 'none'; }
     function showConfirm(title, text, onConfirm){ showModal(`<div><strong>${title}</strong><div class="muted" style="margin-top:8px">${text}</div><div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px"><button id="m-cancel" class="ghost compact">Cancelar</button><button id="m-confirm" class="danger compact">Confirmar</button></div></div>`); $('#m-cancel').onclick = closeModal; $('#m-confirm').onclick = async ()=>{ try{ await onConfirm(); } catch(e){ console.error(e); alert('Error: '+e.message); } closeModal(); }; }
-    function showToast(msg, important=false){ const t = $('#toast'); t.textContent = msg; t.style.display = 'block'; t.style.background = important ? 'linear-gradient(90deg,var(--danger),#ff9a9a)' : '#071421'; clearTimeout(window.__toastTimer); window.__toastTimer = setTimeout(()=>{ t.style.display = 'none'; }, important ? 7000 : 3500); }
 
-    /* ================== MODALES FORM ================== */
+    /* ================== MODALES DE FORM (categorias, transacciones, bancos, deudas, fijos, ahorros) ================== */
     function openCategoryModal(editId){
       const c = state.categories.find(x=>x.id===editId) || { name:'', limitMonthly:0 };
       showModal(`<div><h3 style="margin:0">${editId ? 'Editar categoría' : 'Nueva categoría'}</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><div><label>Nombre</label><input id="c-name" value="${c.name}" /></div><div><label>Límite mensual (0 = sin límite)</label><input id="c-limit" value="${c.limitMonthly || 0}" /></div></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="c-cancel" class="ghost compact">Cancelar</button><button id="c-save" class="primary compact">Guardar</button></div></div>`);
@@ -562,7 +629,6 @@
       const debtOpts = `<option value="">-- Ninguna --</option>` + state.debts.map(d=>`<option value="${d.id}">${d.name} · ${fmtMoney(d.outstanding)}</option>`).join('');
       const defaults = existing || { type:'Ingreso', amount:0, categoryId:'', description:'', dateStr:dateToDDMMYYYY(new Date()), bankId:'' };
       showModal(`<div><h3 style="margin:0">${existing ? 'Editar transacción' : 'Nueva transacción'}</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><div><label>Tipo</label><select id="m-type"><option ${defaults.type==='Ingreso'?'selected':''}>Ingreso</option><option ${defaults.type==='Egreso'?'selected':''}>Egreso</option></select></div><div><label>Monto</label><input id="m-amount" value="${defaults.amount||0}" /></div><div><label>Cuenta</label><select id="m-bank">${bankOpts}</select></div><div><label>Categoría</label><select id="m-cat">${catOpts}</select></div><div style="grid-column:1/-1"><label>Descripción</label><input id="m-desc" value="${(defaults.description||'').replace(/"/g,'&quot;')}" /></div><div><label>Fecha (dd/mm/yyyy)</label><input id="m-date" value="${defaults.dateStr||''}" /></div><div><label>Pago a deuda (opcional)</label><select id="m-debt">${debtOpts}</select></div></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="m-cancel" class="ghost compact">Cancelar</button><button id="m-save" class="primary compact">Guardar</button></div></div>`);
-      // Preseleccionar si existe (pequeño delay para asegurar el select esté en DOM)
       if(existing){ setTimeout(()=>{ if(existing.bankId) $('#m-bank').value = existing.bankId; if(existing.categoryId) $('#m-cat').value = existing.categoryId; if(existing.debtId) $('#m-debt').value = existing.debtId; if($('#m-amount')) $('#m-amount').value = Number(existing.amount)||0; },50); }
       $('#m-cancel').onclick = closeModal;
       $('#m-save').onclick = async ()=> {
@@ -591,7 +657,7 @@
         try{
           const name = $('#b-name').value.trim(); const type = $('#b-type').value.trim(); const balance = Number($('#b-balance').value)||0; const currency = $('#b-currency').value.trim()||'PEN';
           if(!name) return alert('Nombre requerido');
-          if(!editId){ await addBank({ name, type, balance, currency }); } else { if(!db){ const bb = state.banks.find(x=>x.id===editId); if(bb){ bb.name=name; bb.type=type; bb.balance=balance; bb.currency=currency; persistLocal(); renderAll(); } } else { await updateBank(editId, { name, type, balance, currency }); } }
+          if(!editId){ await addBank({ name, type, balance, currency }); } else { await updateBank(editId, { name, type, balance, currency }); }
           closeModal();
         } catch(e){ console.error(e); alert('Error al guardar cuenta: '+e.message); }
       };
@@ -625,7 +691,7 @@
       };
     }
 
-    /* ================== IMPORT / EXPORT / PDF ================== */
+    /* ================== EXPORT / IMPORT / PDF ================== */
     function exportTransactionsCSV(){
       const rows = state.transactions.map(t=>{ const date = t.date ? (t.date.toDate ? dateToDDMMYYYY(t.date.toDate()) : (t.dateStr||tsToDateStr(t.date))) : (t.dateStr||''); const bank = state.banks.find(b=>b.id===t.bankId); const cat = state.categories.find(c=>c.id===t.categoryId); return [date, bank?bank.name:'', t.type||'', cat?cat.name:(t.categoryName||''), (t.description||'').replace(/"/g,'""'), t.amount||0]; });
       const csv = [['fecha,cuenta,tipo,categoria,descripcion,monto'], ...rows.map(r=>r.map((c,i)=> i===4?`"${c}"`:c).join(','))].join('\n');
@@ -678,7 +744,7 @@
           </div>
           <div style="text-align:right">
             <div style="font-weight:700;font-size:12pt">${$('#balance').textContent}</div>
-            <div style="font-size:10pt;color:#666;margin-top:2mm">${$('#assets-break')?.textContent || ''}</div>
+            <div style="font-size:10pt;color:#666;margin-top:2mm"></div>
           </div>
         </div>
         <hr style="border:none;border-top:1px solid #ddd;margin-bottom:6mm">
@@ -695,18 +761,15 @@
         </table>
         <div style="margin-top:8mm;font-size:10pt;color:#666">Generado por JHONATAN ORELLANA - App Personal</div>
       `;
-      if(window.html2pdf){
-        const opt = { margin: 10, filename: `reporte_financiero_${(new Date()).toISOString().slice(0,10)}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
-        html2pdf().set(opt).from(node).save();
-      } else alert('html2pdf no cargado. Recarga con conexión a internet.');
+      if(window.html2pdf){ html2pdf().set({ margin:10, filename:`reporte_${(new Date()).toISOString().slice(0,10)}.pdf`, image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(node).save(); }
+      else alert('html2pdf no cargado. Recarga con conexión.');
     }
 
-    /* ================== TECLA 'N' CONTROLADA ================== */
+    /* ================== TECLA 'N' para nueva transacción ================== */
     let modalOpen = false;
     const modalBackdrop = $('#modal-backdrop');
     const observer = new MutationObserver(()=>{ modalOpen = modalBackdrop.style.display === 'flex'; });
     observer.observe(modalBackdrop, { attributes:true, attributeFilter:['style'] });
-
     window.addEventListener('keydown', (e)=>{
       if(e.key.toLowerCase() === 'n' && !e.ctrlKey && !e.altKey && !e.metaKey){
         const active = document.activeElement;
@@ -734,9 +797,10 @@
       $('#export-pdf').onclick = exportReportPDF;
       $('#search').addEventListener('input', ()=> renderTransactions());
       $('#modal-backdrop').onclick = (e)=> { if(e.target.id === 'modal-backdrop') closeModal(); };
+      $('#btn-manage-join').onclick = ()=> openJoinModal();
     }
 
-    /* ================== GENERAR GASTOS FIJOS ================== */
+    /* ================== GASTOS FIJOS (generar mes) ================== */
     async function generateFixedForMonth(){
       const today = new Date(), month = today.getMonth(), year = today.getFullYear();
       const generated = [];
@@ -778,27 +842,170 @@
         try{
           const name = $('#s-name').value.trim(); const bankId = $('#s-bank').value || null; const target = Number($('#s-target').value) || 0; const date = $('#s-date').value.trim();
           if(!name) return alert('Nombre requerido'); if(!target || target <= 0) return alert('Monto objetivo inválido'); if(date && !parseDateDDMMYYYY(date)) return alert('Fecha inválida');
-          if(!db){ const id='local-'+Math.random().toString(36).slice(2,9); state.savings.push({ id, name, bankId, target, date, balance:0 }); persistLocal(); renderSavings(); } else { await addDoc(collection(db, userPath('savings')), { name, bankId, target, date, balance:0, createdAt: serverTimestamp() }); await loadAllFromFirestore(); }
+          if(!db){ const id='local-'+Math.random().toString(36).slice(2,9); state.savings.push({ id, name, bankId, target, date, balance:0 }); persistLocal(); renderSavings(); } else { await addDoc(collection(db, orgPath('savings')), { name, bankId, target, date, balance:0, createdAt: serverTimestamp() }); await loadAllFromFirestore(); }
           closeModal();
         } catch(e){ console.error(e); alert('Error al crear plan: '+e.message); }
       };
     }
 
-    /* ================== AUTH & START ================== */
+    /* ================== AUTENTICACIÓN ANÓNIMA + ORG JOIN (core) ================== */
+    // Crear org con joinCode y registrar miembro
+    async function createOrgWithCode({ name = 'Org personal', createdByUid }){
+      const joinCode = generateJoinCode(6);
+      const orgRef = await addDoc(collection(db, 'organizations'), { name, joinCode, createdAt: serverTimestamp(), createdBy: createdByUid || null });
+      const orgId = orgRef.id;
+      if(createdByUid){
+        await setDoc(doc(db, `organizations/${orgId}/members`, createdByUid), { uid: createdByUid, role: 'owner', joinedAt: serverTimestamp() });
+      }
+      return { orgId, joinCode };
+    }
+    async function findOrgByJoinCode(code){
+      const q = query(collection(db, 'organizations'), where('joinCode', '==', code));
+      const snap = await getDocs(q);
+      if(snap.empty) return null;
+      return { id: snap.docs[0].id, data: snap.docs[0].data() };
+    }
+    async function joinOrgWithCode(code, uid){
+      const found = await findOrgByJoinCode(code);
+      if(!found) throw new Error('Código inválido');
+      const orgId = found.id;
+      await setDoc(doc(db, `organizations/${orgId}/members`, uid), { uid, role: 'member', joinedAt: serverTimestamp() });
+      return orgId;
+    }
+    async function updateOrgJoinCode(orgId){
+      const newCode = generateJoinCode(6);
+      await updateDoc(doc(db, 'organizations', orgId), { joinCode: newCode, updatedAt: serverTimestamp() });
+      state.orgJoinCode = newCode;
+      updateOrgDisplay();
+      return newCode;
+    }
+    async function getMemberRole(orgId, uid){
+      try{
+        const snap = await getDoc(doc(db, `organizations/${orgId}/members`, uid));
+        if(!snap.exists()) return null;
+        return snap.data().role || null;
+      } catch(e){ return null; }
+    }
+
+    // Al autenticar: intentar hacer auto-join por URL (join=CODE), si no -> usar profile.orgId o crear org personal
+    function getJoinCodeFromUrl(){ try{ const params = new URLSearchParams(window.location.search); return params.get('join') || null; }catch(e){ return null; } }
+
+    async function ensureOrgForDevice(user){
+      if(!db) { // modo local
+        state.currentOrgId = 'local-demo'; state.orgJoinCode = null; return state.currentOrgId;
+      }
+      const profileRef = doc(db, 'users', user.uid, 'profile', 'meta');
+      const profSnap = await getDoc(profileRef);
+      if(profSnap.exists()){
+        const data = profSnap.data();
+        if(data && data.orgId){
+          state.currentOrgId = data.orgId;
+          state.orgJoinCode = data.joinCode || null;
+          state.memberRole = await getMemberRole(state.currentOrgId, user.uid);
+          return state.currentOrgId;
+        }
+      }
+      // No tiene org -> crear org propia
+      const { orgId, joinCode } = await createOrgWithCode({ name: `Org - ${user.uid.slice(0,6)}`, createdByUid: user.uid });
+      await setDoc(profileRef, { orgId, createdAt: serverTimestamp(), joinCode }, { merge: true });
+      state.currentOrgId = orgId;
+      state.orgJoinCode = joinCode;
+      state.memberRole = 'owner';
+      return orgId;
+    }
+
+    /* ================== UI: Modal para gestionar join (mostrar, ingresar código, regenerar) ================== */
+    function openJoinModal(){
+      showModal(`<div><h3 style="margin:0">Vincular dispositivo</h3>
+        <div class="muted" style="margin-top:8px">Puedes vincular este dispositivo a una organización existente con su JOIN CODE, o ver/regenerar el código de tu organización (si eres owner).</div>
+        <div style="display:grid;gap:8px;margin-top:10px">
+          <div><label>Ingresar JOIN CODE</label><input id="join-code-input" placeholder="ABC123" /></div>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button id="join-cancel" class="ghost compact">Cerrar</button>
+            <button id="join-apply" class="primary compact">Unir</button>
+          </div>
+          <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03)">
+          <div><strong>Tu código actual</strong> <div id="my-join-code" class="muted" style="margin-top:6px">${state.orgJoinCode||'No disponible'}</div></div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+            <button id="join-copy" class="ghost compact">Copiar</button>
+            <button id="join-regenerate" class="ghost compact">Regenerar</button>
+          </div>
+        </div></div>`);
+      $('#join-cancel').onclick = closeModal;
+      $('#join-apply').onclick = async ()=>{
+        const code = $('#join-code-input').value.trim().toUpperCase();
+        if(!code) return alert('Ingresa un código');
+        try{
+          await joinOrgWithCode(code, state.uid);
+          // guardar en profile
+          await setDoc(doc(db, 'users', state.uid, 'profile', 'meta'), { orgId: (await findOrgByJoinCode(code)).id, joinedVia: code, joinedAt: serverTimestamp() }, { merge: true });
+          state.currentOrgId = (await findOrgByJoinCode(code)).id;
+          state.orgJoinCode = code;
+          state.memberRole = await getMemberRole(state.currentOrgId, state.uid);
+          subscribeToCollections(); // suscribirse ahora que tenemos org
+          showToast('Dispositivo vinculado correctamente.');
+          await loadAllFromFirestore();
+          closeModal();
+        } catch(e){ console.error(e); alert('No se pudo unir: '+(e.message||e)); }
+      };
+      $('#join-copy').onclick = ()=>{
+        if(state.orgJoinCode){ navigator.clipboard?.writeText(state.orgJoinCode).then(()=> showToast('Código copiado')); } else showToast('No hay código');
+      };
+      $('#join-regenerate').onclick = async ()=>{
+        if(!state.currentOrgId) return alert('No estás en una organización');
+        // permiso: solo owner puede regenerar
+        const role = state.memberRole || await getMemberRole(state.currentOrgId, state.uid);
+        if(role !== 'owner') return alert('Solo el propietario puede regenerar el código.');
+        try{
+          const newCode = await updateOrgJoinCode(state.currentOrgId);
+          $('#my-join-code').textContent = newCode;
+          showToast('Código regenerado: ' + newCode);
+        } catch(e){ console.error(e); alert('No se pudo regenerar: '+e.message); }
+      };
+    }
+
+    /* ================== LOCAL STORAGE (fallback cuando no hay Firebase) ================== */
+    function persistLocal(){ const data={transactions:state.transactions,banks:state.banks,depts:state.debts,fixed:state.fixed,savings:state.savings,categories:state.categories}; localStorage.setItem('jo_finanzas_org', JSON.stringify(data)); }
+    function loadLocal(){ const raw = localStorage.getItem('jo_finanzas_org'); if(!raw) return; try{ const d = JSON.parse(raw); state.transactions = d.transactions||[]; state.banks = d.banks||[]; state.debts = d.depts||[]; state.fixed = d.fixed||[]; state.savings = d.savings||[]; state.categories = d.categories||[]; }catch(e){console.error(e);} }
+
+    /* ================== AUTH & STARTUP ================== */
     async function initAuth(){
       bindUI();
       if(!isConfigFilled){ state.uid = 'local-demo'; $('#uid').textContent = state.uid + ' (local)'; loadLocal(); renderAll(); showToast('Modo local: Firebase no configurado'); return; }
-      try { await signInAnonymously(auth); } catch(e){ console.warn('signInAnonymously error', e); }
-      onAuthStateChanged(auth, async (user)=> {
+      try{ await signInAnonymously(auth); } catch(e){ console.warn('signInAnonymously error', e); }
+      onAuthStateChanged(auth, async (user)=>{
         if(user){
           state.uid = user.uid; $('#uid').textContent = state.uid;
-          subscribeToCollections(); // realtime updates
-          // seed defaults (sólo si colección vacía)
-          setTimeout(async ()=>{
-            if(state.categories.length === 0){ const defaults = [{name:'Salario',limitMonthly:0},{name:'Alimentos',limitMonthly:0},{name:'Transporte',limitMonthly:0}]; for(const d of defaults) await addDoc(collection(db, userPath('categories')), { name:d.name, limitMonthly:d.limitMonthly, createdAt: serverTimestamp() }); await loadAllFromFirestore(); }
-          }, 500);
-          showToast('Conectado (Firestore)');
-        } else { $('#uid').textContent = 'No autenticado'; }
+          try{
+            // Intentar auto-join desde URL ?join=CODE
+            const joinCode = getJoinCodeFromUrl();
+            if(joinCode){
+              try{
+                const orgId = (await findOrgByJoinCode(joinCode))?.id;
+                if(orgId){
+                  await joinOrgWithCode(joinCode, user.uid);
+                  await setDoc(doc(db, 'users', user.uid, 'profile', 'meta'), { orgId, joinedVia: joinCode, joinedAt: serverTimestamp() }, { merge: true });
+                  state.currentOrgId = orgId;
+                  state.orgJoinCode = joinCode;
+                  state.memberRole = await getMemberRole(orgId, user.uid);
+                } else {
+                  // no se encontró org -> crear org personal
+                  await ensureOrgForDevice(user);
+                }
+              } catch(e){ console.warn('Auto join failed', e); await ensureOrgForDevice(user); }
+            } else {
+              await ensureOrgForDevice(user);
+            }
+            // subscribe
+            subscribeToCollections();
+            // si subscription en tiempo real falla por permisos, fallback a loadAllFromFirestore
+            await loadAllFromFirestore();
+            updateOrgDisplay();
+            showToast('Conectado (Firestore).');
+          } catch(e){ console.error('Auth/init error', e); showToast('Error inicializando org: '+e.message, true); }
+        } else {
+          $('#uid').textContent = 'No autenticado';
+        }
       });
     }
 
@@ -811,7 +1018,7 @@
       switchView('dashboard');
     })();
 
-    // Export for debugging
+    // Exponer estado para debugging
     window._jo_state = state;
   </script>
 </body>
