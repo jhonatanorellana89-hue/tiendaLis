@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>JHONATAN ORELLANA - Finanzas (Única DATA, sin Auth cliente)</title>
+<title>JHONATAN ORELLANA - Finanzas (Única DATA, sincronización mejorada)</title>
 <style>
   :root{
     --bg:#041018; --panel:#071421; --card:#0b1b26; --muted:#9fb1bd;
@@ -43,10 +43,11 @@
   .modal{background:linear-gradient(180deg,#071421,#051017);padding:14px;border-radius:12px;max-width:420px;width:94%}
   .small-muted{font-size:11px;color:var(--muted)}
   @media (min-width:560px){ .phone-frame{max-width:420px} }
-  /* estilos para PDF (tamaños tipográficos pedidos) */
   .report-title{font-size:12pt;font-weight:800}
   .report-sub{font-size:11pt;font-weight:700}
   .report-normal{font-size:10pt}
+  .sync-row{display:flex;gap:8px;align-items:center}
+  .muted-small{font-size:11px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -93,6 +94,8 @@
         <div class="card" style="margin-top:10px;padding:10px">
           <div class="muted" style="margin-bottom:8px">Alertas</div>
           <div id="alerts" class="small muted"></div>
+          <div style="margin-top:8px" class="muted-small">Última actualización local: <span id="local-updated">--</span></div>
+          <div style="margin-top:4px" class="muted-small">Última actualización nube: <span id="remote-updated">--</span></div>
         </div>
       </section>
 
@@ -163,10 +166,11 @@
         </div>
       </section>
 
-      <!-- Export -->
+      <!-- Export & Sync -->
       <section id="view-export" class="card" style="display:none">
-        <h2>Export / Import</h2>
-        <div class="muted" style="margin-top:6px">Exporta CSV, JSON o PDF (reporte)</div>
+        <h2>Export / Import / Sincronización</h2>
+        <div class="muted" style="margin-top:6px">Exporta CSV, JSON o PDF (reporte). Sincroniza para que otros dispositivos vean los cambios.</div>
+
         <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
           <button id="export-csv" class="primary compact">CSV</button>
           <button id="export-json" class="ghost compact">JSON</button>
@@ -174,10 +178,20 @@
           <button id="btn-import" class="primary compact">Importar</button>
           <button id="export-pdf" class="primary compact">EXPORTAR REPORTE PDF</button>
         </div>
-        <div style="margin-top:10px" class="muted small">Config Cloud API (desplegar Cloud Function):</div>
-        <div style="display:flex;gap:8px;margin-top:6px">
-          <input id="cloud-api" placeholder="CLOUD_API_BASE (https://...)" />
-          <input id="org-id-manual" placeholder="ORG_ID (opcional)" />
+
+        <div style="margin-top:12px" class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div class="muted-small">API BACKEND (Cloud Function / Cloud Run)</div>
+              <input id="cloud-api" placeholder="CLOUD_API_BASE (https://...)" />
+              <input id="org-id-manual" placeholder="ORG_ID (opcional)" style="margin-top:8px" />
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div class="sync-row"><button id="btn-sync-now" class="primary compact">Sync ahora</button></div>
+              <label class="muted-small"><input id="auto-sync" type="checkbox" /> Auto-sync (poll cada 6s)</label>
+              <div class="muted-small">Estado: <span id="sync-status">idle</span></div>
+            </div>
+          </div>
         </div>
       </section>
     </main>
@@ -194,50 +208,16 @@
   <div class="modal-backdrop" id="modal-backdrop"><div class="modal" id="modal"></div></div>
   <div class="toast" id="toast"></div>
 
-  <!--
-    INSTRUCCIONES RÁPIDAS (3 pasos) para usar esta versión sin Auth cliente:
-
-    1) Despliega un endpoint de servidor (Cloud Function / Cloud Run / Express) que implemente:
-       - POST /join   body { joinCode }  -> valida joinCode contra organizations collection y devuelve { orgId, token }
-       - GET  /data?orgId=ID  header Authorization: Bearer TOKEN -> devuelve { data: {...} }
-       - POST /data  body { orgId, data } header Authorization: Bearer TOKEN -> guarda la única data
-       (Ejemplo de Cloud Function en comentario abajo dentro del HTML — cópialo y despliega).
-
-    2) En la app: pega la URL base de tu Cloud Function en el campo "CLOUD_API_BASE" dentro de la vista Export.
-       - También puedes poner el ORG_ID manual si ya lo conoces.
-       - Usa "Vincular" para pegar el JOIN CODE. El servidor devolverá un token de sesión que la app guardará local.
-
-    3) Establece reglas de Firestore que **bloqueen** accesos directos del cliente. EJEMPLO (muy seguro):
-       En la consola de Firestore => Reglas:
-         rules_version = '2';
-         service cloud.firestore {
-           match /databases/{database}/documents {
-             // Bloquear TODO desde cliente: solo el backend con Admin SDK (Cloud Function) puede modificar.
-             match /{document=**} {
-               allow read, write: if false;
-             }
-           }
-         }
-       -> Con esto, el único que puede leer/escribir es el servidor (Admin SDK). Muy importante.
-
-    NOTA: Más abajo (comentario) incluyo una Cloud Function ejemplo Node.js/Express lista para pegar.
-  -->
-
-  <!-- librerías -->
   <script>
-    // html2pdf para export PDF (se carga dinámicamente)
-    (function(){ const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js'; document.head.appendChild(s); })();
-  </script>
+  /* =========================
+     APP: Sin Auth cliente (backend required)
+     Mejora principal: sincronización automática/polling y resolución simple por timestamps.
+     Objetivo: cuando un dispositivo guarda, otros lo verán en ~6s.
+     Nota: backend debe soportar GET /data?orgId=ID (retorna {ok:true,data,updatedAt?})
+           y POST /data { orgId, data } (guarda y preferible retornar {ok:true, updatedAt})
+  ========================= */
 
-  <script>
-  /**********************************************************************
-   *  SPA FINANZAS - SIN AUTH CLIENTE (usa BACKEND / CLOUD FUNCTION)
-   *  - guarda toda la info en una única estructura (state.singleData)
-   *  - Cloud ON/OFF: cuando Cloud ON y device vinculado -> sincroniza con backend
-   *  - backend (Cloud Function) debe validar joinCode y emitir token
-   **********************************************************************/
-
-  // ---------- UTIL ----------
+  // UTIL
   const $ = (s,r=document)=> r.querySelector(s);
   const $$ = (s,r=document)=> Array.from(r.querySelectorAll(s));
   function fmtMoney(v){ v = Number(v)||0; return 'S/ ' + v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
@@ -245,15 +225,14 @@
   function dateToDDMMYYYY(d){ if(!d) return ''; return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear(); }
   function showToast(msg,important=false){ const t = $('#toast'); t.textContent = msg; t.style.display = 'block'; t.style.background = important ? 'linear-gradient(90deg,var(--danger),#ff9a9a)' : '#071421'; clearTimeout(window.__to); window.__to = setTimeout(()=> t.style.display='none', important?7000:3500); }
 
-  // ---------- ESTADO GLOBAL ----------
-  const STORAGE_KEY = 'jo_single_data_v2';
-  const SESSION_KEY = 'jo_session_v2'; // guarda token, orgId
+  // STATE & STORAGE
+  const STORAGE_KEY = 'jo_single_data_v3';
+  const SESSION_KEY = 'jo_session_v3';
   const state = {
     cloudOn: false,
     apiBase: localStorage.getItem('jo_api_base') || '',
     orgId: localStorage.getItem('jo_org_id') || '',
-    joinCode: localStorage.getItem('jo_join_code') || '',
-    session: JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'), // { token, orgId, expiresAt }
+    session: JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'), // { token, orgId, expiresAt } optional
     singleData: {
       transactions: [],
       banks: [],
@@ -261,19 +240,16 @@
       fixed: [],
       savings: [],
       categories: [],
-      meta: { createdAt:null, updatedAt:null }
-    }
+      meta: { createdAt:null, updatedAt: null } // updatedAt = ISO string
+    },
+    pollId: null,
+    syncing: false
   };
 
-  // ---------- PERSISTENCIA LOCAL ----------
   function persistLocal(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state.singleData)); }
-  function loadLocal(){ const raw = localStorage.getItem(STORAGE_KEY); if(!raw) return; try{ state.singleData = JSON.parse(raw); }catch(e){ console.error('parse local',e); } }
+  function loadLocal(){ const raw = localStorage.getItem(STORAGE_KEY); if(!raw) return; try{ state.singleData = JSON.parse(raw); } catch(e){ console.error('parse local', e); } }
 
-  // ---------- BACKEND (Cloud) INTERFAZ ----------
-  // El backend expone:
-  // POST  /join  { joinCode }  -> { ok:true, orgId, token, expiresAt }
-  // GET   /data?orgId=ID  (Aut: Bearer token) -> { ok:true, data }
-  // POST  /data  { orgId, data } (Aut: Bearer token) -> { ok:true }
+  // CLOUD helpers (backend must be deployed and implement the endpoints described in prior messages)
   function cloudUrl(path){ const base = state.apiBase.trim(); if(!base) throw new Error('CLOUD_API_BASE no configurado'); return base.replace(/\/+$/,'') + '/' + path.replace(/^\/+/,''); }
 
   async function cloudJoin(joinCode){
@@ -281,14 +257,12 @@
     const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ joinCode }) });
     const j = await res.json();
     if(!res.ok || !j.ok) throw new Error(j?.error || 'Join failed');
-    // guardar sesión
     state.session = { token: j.token, orgId: j.orgId, expiresAt: j.expiresAt || (Date.now()+1000*60*60) };
     localStorage.setItem(SESSION_KEY, JSON.stringify(state.session));
     state.orgId = j.orgId;
     localStorage.setItem('jo_org_id', state.orgId);
-    state.joinCode = joinCode;
-    localStorage.setItem('jo_join_code', joinCode);
-    showToast('Dispositivo vinculado (sesión guardada).');
+    state.apiBase = state.apiBase || '';
+    localStorage.setItem('jo_api_base', state.apiBase);
     updateSessionInfo();
   }
 
@@ -298,7 +272,8 @@
     const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + state.session.token } });
     const j = await res.json();
     if(!res.ok || !j.ok) throw new Error(j?.error || 'No data');
-    return j.data;
+    // j.data expected; j.updatedAt optional
+    return { data: j.data || {}, updatedAt: j.updatedAt || (j.data && j.data.meta && j.data.meta.updatedAt) || null };
   }
 
   async function cloudSaveData(data){
@@ -307,54 +282,86 @@
     const res = await fetch(url, { method:'POST', headers: { 'Content-Type':'application/json', 'Authorization': 'Bearer ' + state.session.token }, body: JSON.stringify({ orgId: state.session.orgId, data }) });
     const j = await res.json();
     if(!res.ok || !j.ok) throw new Error(j?.error || 'Save failed');
-    return true;
+    return { ok:true, updatedAt: j.updatedAt || new Date().toISOString() };
   }
 
-  function clearSession(){ state.session = null; localStorage.removeItem(SESSION_KEY); state.orgId = ''; localStorage.removeItem('jo_org_id'); state.joinCode = ''; localStorage.removeItem('jo_join_code'); updateSessionInfo(); }
-
-  // ---------- SYNC (Cloud ON/OFF) ----------
-  async function syncLoadFromCloudIfPossible(){
-    if(!state.cloudOn) return;
-    if(!state.apiBase) throw new Error('CLOUD_API_BASE no configurado');
-    if(!state.session) throw new Error('Dispositivo no vinculado (usa Vincular).');
+  // SYNC logic (compare timestamps, deterministic)
+  function isoToMs(s){ if(!s) return 0; return Date.parse(s) || 0; }
+  async function syncFetchAndMerge(){
+    if(!state.cloudOn || !state.session || state.syncing) return;
     try{
-      const remote = await cloudGetData();
-      state.singleData = Object.assign({ transactions:[], banks:[], debts:[], fixed:[], savings:[], categories:[], meta:{} }, remote || {});
-      persistLocal();
-      renderAll();
-      showToast('Datos cargados desde la nube.');
-    } catch(e){ console.warn(e); showToast('No se pudo cargar desde la nube: '+e.message, true); }
+      state.syncing = true;
+      $('#sync-status').textContent = 'checking...';
+      const { data: remoteData, updatedAt: remoteUpdatedAt } = await cloudGetData();
+      const remoteTS = isoToMs(remoteUpdatedAt) || isoToMs(remoteData?.meta?.updatedAt) || 0;
+      const localTS = isoToMs(state.singleData.meta.updatedAt) || 0;
+
+      // If remote is newer -> replace local (single source of truth)
+      if(remoteTS > localTS){
+        state.singleData = Object.assign({ transactions:[], banks:[], debts:[], fixed:[], savings:[], categories:[], meta:{} }, remoteData);
+        // update meta.updatedAt to remote's time if available
+        if(remoteUpdatedAt) state.singleData.meta.updatedAt = remoteUpdatedAt;
+        persistLocal();
+        renderAll();
+        showToast('Datos actualizados desde la nube.');
+      } else if(localTS > remoteTS){
+        // local newer -> push to cloud
+        $('#sync-status').textContent = 'pushing local...';
+        // ensure meta.updatedAt set before push
+        state.singleData.meta.updatedAt = new Date().toISOString();
+        const result = await cloudSaveData(state.singleData);
+        if(result && result.updatedAt) state.singleData.meta.updatedAt = result.updatedAt;
+        persistLocal();
+        showToast('Cambios locales enviados a la nube.');
+      } else {
+        // equal or unknown timestamps -> no-op
+      }
+      $('#sync-status').textContent = 'idle';
+    } catch(e){
+      console.warn('syncFetchAndMerge err', e);
+      $('#sync-status').textContent = 'error';
+      // Do not spam user with errors; show once
+    } finally { state.syncing = false; updateTimestampsUI(); }
   }
 
-  async function syncSaveToCloudIfPossible(){
-    if(!state.cloudOn) return;
-    if(!state.apiBase) throw new Error('CLOUD_API_BASE no configurado');
-    if(!state.session) throw new Error('Dispositivo no vinculado (usa Vincular).');
-    try{
-      await cloudSaveData(state.singleData);
-      showToast('Datos guardados en la nube.');
-    } catch(e){ console.warn(e); showToast('Guardado en nube falló: '+e.message, true); }
+  function startAutoSync(){
+    stopAutoSync();
+    state.pollId = setInterval(()=>{ if(state.cloudOn && state.session) syncFetchAndMerge(); }, 6000);
+    $('#sync-status').textContent = 'auto';
   }
+  function stopAutoSync(){ if(state.pollId) clearInterval(state.pollId); state.pollId = null; $('#sync-status').textContent = 'idle'; }
 
-  // ---------- CRUD operations that update state and sync ----------
+  // CRUD and persistence - update meta.updatedAt on changes
   async function pushAndMaybeSync(updateFn){
     updateFn(state.singleData);
+    state.singleData.meta.updatedAt = new Date().toISOString();
     persistLocal();
     renderAll();
-    if(state.cloudOn && state.session) {
-      try{ await syncSaveToCloudIfPossible(); } catch(e){ console.warn('sync save error', e); }
+    if(state.cloudOn && state.session){
+      try{
+        $('#sync-status').textContent = 'saving...';
+        const res = await cloudSaveData(state.singleData);
+        if(res && res.updatedAt) state.singleData.meta.updatedAt = res.updatedAt;
+        persistLocal();
+        $('#sync-status').textContent = 'idle';
+      } catch(e){
+        console.warn('pushAndMaybeSync save failed', e);
+        $('#sync-status').textContent = 'error';
+        showToast('Error al guardar en nube: ' + e.message, true);
+      }
     }
+    updateTimestampsUI();
   }
 
-  async function addCategory(cat){ cat.id = 'c_'+Date.now(); cat.createdAt = new Date().toISOString(); await pushAndMaybeSync(sd=>sd.categories.unshift(cat)); }
-  async function updateCategory(id,data){ await pushAndMaybeSync(sd=>{ sd.categories = sd.categories.map(c=> c.id===id ? Object.assign(c,data) : c); }); }
-  async function deleteCategory(id){ await pushAndMaybeSync(sd=>{ sd.categories = sd.categories.filter(c=>c.id!==id); }); }
+  async function addCategory(cat){ cat.id = 'c_'+Date.now(); cat.createdAt = new Date().toISOString(); await pushAndMaybeSync(sd=> sd.categories.unshift(cat)); showToast('Categoría creada'); }
+  async function updateCategory(id,data){ await pushAndMaybeSync(sd=> { sd.categories = sd.categories.map(c=> c.id===id ? Object.assign(c,data) : c); }); showToast('Categoría actualizada'); }
+  async function deleteCategory(id){ await pushAndMaybeSync(sd=> { sd.categories = sd.categories.filter(c=>c.id!==id); }); showToast('Categoría eliminada'); }
 
-  async function addBank(bank){ bank.id = 'b_'+Date.now(); bank.createdAt = new Date().toISOString(); bank.balance = Number(bank.balance)||0; await pushAndMaybeSync(sd=>sd.banks.unshift(bank)); }
-  async function updateBank(bankId,data){ await pushAndMaybeSync(sd=>{ sd.banks = sd.banks.map(b=> b.id===bankId ? Object.assign(b,data) : b); }); }
-  async function deleteBank(bankId){ await pushAndMaybeSync(sd=>{ sd.banks = sd.banks.filter(b=>b.id!==bankId); }); }
+  async function addBank(bank){ bank.id = 'b_'+Date.now(); bank.createdAt = new Date().toISOString(); bank.balance = Number(bank.balance)||0; await pushAndMaybeSync(sd=> sd.banks.unshift(bank)); showToast('Cuenta creada'); }
+  async function updateBank(bankId,data){ await pushAndMaybeSync(sd=> { sd.banks = sd.banks.map(b=> b.id===bankId ? Object.assign(b,data) : b); }); showToast('Cuenta actualizada'); }
+  async function deleteBank(bankId){ await pushAndMaybeSync(sd=> { sd.banks = sd.banks.filter(b=>b.id!==bankId); }); showToast('Cuenta eliminada'); }
 
-  async function addDebt(debt){ debt.id = 'd_'+Date.now(); debt.createdAt = new Date().toISOString(); debt.outstanding = Number(debt.outstanding)||0; await pushAndMaybeSync(sd=>sd.debts.unshift(debt)); }
+  async function addDebt(debt){ debt.id = 'd_'+Date.now(); debt.createdAt = new Date().toISOString(); debt.outstanding = Number(debt.outstanding)||0; await pushAndMaybeSync(sd=> sd.debts.unshift(debt)); showToast('Deuda creada'); }
 
   async function addTransaction(tx){
     if(!parseDateDDMMYYYY(tx.dateStr)) throw new Error('Fecha inválida');
@@ -371,6 +378,7 @@
       }
     });
     checkCategoryLimitAfterAdd(tx);
+    showToast('Transacción registrada');
   }
 
   function checkCategoryLimitAfterAdd(tx){
@@ -389,21 +397,21 @@
     else if(total >= Number(cat.limitMonthly)*0.8) showToast(`Cuidado: "${cat.name}" cerca del límite (${fmtMoney(total)} / ${fmtMoney(cat.limitMonthly)})`);
   }
 
-  // ---------- RENDER / UI ----------
+  // RENDER / UI
   function switchView(view){
     const views=['dashboard','transactions','banks','categories','export'];
-    views.forEach(v=>{ const el = document.getElementById('view-'+v); if(el) el.style.display = (v===view)?'':'none'; });
+    views.forEach(v=>{ const el=document.getElementById('view-'+v); if(el) el.style.display=(v===view)?'':'none'; });
     document.querySelectorAll('nav.bottom-nav button').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
     updateSessionInfo();
   }
 
   function renderAll(){
-    renderDashboard(); renderTransactions(); renderBanks(); renderCategories(); populateFilters(); updateSessionInfo();
+    renderDashboard(); renderTransactions(); renderBanks(); renderCategories(); populateFilters(); updateSessionInfo(); updateTimestampsUI();
   }
 
   function renderDashboard(){
     let inc=0, exp=0;
-    const now = new Date(), month=now.getMonth(), year=now.getFullYear();
+    const now=new Date(), month=now.getMonth(), year=now.getFullYear();
     state.singleData.transactions.forEach(t=>{
       const d = parseDateDDMMYYYY(t.dateStr||'');
       if(!d) return;
@@ -445,7 +453,7 @@
       tbody.appendChild(tr);
     });
     $$('#tx-table button').forEach(btn=>{
-      btn.onclick = ()=>{ const id=btn.dataset.id, act=btn.dataset.act; if(act==='del') showConfirm('Eliminar transacción','Confirmar eliminación', async ()=>{ state.singleData.transactions = state.singleData.transactions.filter(x=>x.id!==id); await pushAndMaybeSync(()=>{}); }); if(act==='edit'){ const tx = state.singleData.transactions.find(x=>x.id===id); if(tx) openTransactionModal(tx); } };
+      btn.onclick = ()=>{ const id=btn.dataset.id, act=btn.dataset.act; if(act==='del') showConfirm('Eliminar transacción','Confirmar eliminación', async ()=>{ state.singleData.transactions = state.singleData.transactions.filter(x=>x.id!==id); state.singleData.meta.updatedAt = new Date().toISOString(); await syncAfterLocalChange(); }); if(act==='edit'){ const tx = state.singleData.transactions.find(x=>x.id===id); if(tx) openTransactionModal(tx); } };
     });
   }
 
@@ -467,17 +475,22 @@
   function renderBanks(){
     const wrap = $('#banks-table'); if(!wrap) return;
     if(state.singleData.banks.length === 0) wrap.innerHTML = '<div class="muted">No hay cuentas</div>';
-    else wrap.innerHTML = `<table><thead><tr><th>Cuenta</th><th class="right">Saldo</th><th>Acc.</th></tr></thead><tbody>${state.singleData.banks.map(b=>`<tr><td>${b.name}<div class="muted" style="font-size:12px">${b.type||''}</div></td><td class="right">${fmtMoney(Number(b.balance)||0)}</td><td><button class="ghost compact" data-id="${b.id}" data-act="edit">E</button> <button class="danger compact" data-id="${b.id}" data-act="del">X</button></td></tr>`).join('')}</tbody></table>`;
+    else {
+      wrap.innerHTML = `<table><thead><tr><th>Cuenta</th><th class="right">Saldo</th><th>Acc.</th></tr></thead><tbody>${state.singleData.banks.map(b=>`<tr><td>${b.name}<div class="muted" style="font-size:12px">${b.type||''}</div></td><td class="right">${fmtMoney(Number(b.balance)||0)}</td><td><button class="ghost compact" data-id="${b.id}" data-act="edit">E</button> <button class="danger compact" data-id="${b.id}" data-act="del">X</button></td></tr>`).join('')}</tbody></table>`;
+    }
     const dwrap = $('#debts-table'); if(!dwrap) return;
     if(state.singleData.debts.length === 0) dwrap.innerHTML = '<div class="muted">No hay deudas</div>';
     else dwrap.innerHTML = `<table><thead><tr><th>Deuda</th><th>Banco</th><th class="right">Saldo</th><th class="right">Cuota</th><th>Acc.</th></tr></thead><tbody>${state.singleData.debts.map(d=>`<tr><td>${d.name}</td><td>${(state.singleData.banks.find(b=>b.id===d.bankId)||{name:'-'}).name}</td><td class="right">${fmtMoney(Number(d.outstanding)||0)}</td><td class="right">${fmtMoney(Number(d.monthlyPayment)||0)}</td><td><button class="ghost compact" data-id="${d.id}" data-act="pay">P</button> <button class="danger compact" data-id="${d.id}" data-act="del">X</button></td></tr>`).join('')}</tbody></table>`;
-    $$('#banks-table button, #debts-table button').forEach(btn=>{ const act=btn.dataset.act, id=btn.dataset.id; btn.onclick = ()=>{ if(act==='edit') openBankModal(id); if(act==='del') showConfirm('Eliminar','Confirmar eliminación', async ()=>{ state.singleData.banks = state.singleData.banks.filter(x=>x.id!==id); pushAndMaybeSync(()=>{}); }); if(act==='pay') openDebtPaymentModal(id); }; });
+    $$('#banks-table button, #debts-table button').forEach(btn=>{
+      const act = btn.dataset.act, id = btn.dataset.id;
+      btn.onclick = ()=>{ if(act==='edit') openBankModal(id); if(act==='del') showConfirm('Eliminar','Confirmar eliminación', async ()=>{ state.singleData.banks = state.singleData.banks.filter(x=>x.id!==id); state.singleData.meta.updatedAt = new Date().toISOString(); await syncAfterLocalChange(); }); if(act==='pay') openDebtPaymentModal(id); };
+    });
   }
 
   function renderCategories(){
     const tbody = $('#categories-table tbody'); if(!tbody) return; tbody.innerHTML = '';
-    state.singleData.categories.forEach(c=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${c.name}</td><td class="right">${c.limitMonthly?fmtMoney(Number(c.limitMonthly)||0):'Sin límite'}</td><td><button class="ghost compact" data-id="${c.id}" data-act="edit">E</button> <button class="danger compact" data-id="${c.id}" data-act="del">X</button></td>`; tbody.appendChild(tr); });
-    $$('#categories-table button').forEach(btn=>{ const id=btn.dataset.id, act=btn.dataset.act; btn.onclick = ()=>{ if(act==='edit') openCategoryModal(id); if(act==='del') showConfirm('Eliminar categoría','Confirmar', async ()=>{ state.singleData.categories = state.singleData.categories.filter(x=>x.id!==id); await pushAndMaybeSync(()=>{}); }); }; });
+    state.singleData.categories.forEach(c=>{ const tr = document.createElement('tr'); tr.innerHTML = `<td>${c.name}</td><td class="right">${c.limitMonthly?fmtMoney(Number(c.limitMonthly)||0):'Sin límite'}</td><td><button class="ghost compact" data-id="${c.id}" data-act="edit">E</button> <button class="danger compact" data-id="${c.id}" data-act="del">X</button></td>`; tbody.appendChild(tr); });
+    $$('#categories-table button').forEach(btn=>{ const id=btn.dataset.id, act=btn.dataset.act; btn.onclick = ()=>{ if(act==='edit') openCategoryModal(id); if(act==='del') showConfirm('Eliminar categoría','Confirmar', async ()=>{ state.singleData.categories = state.singleData.categories.filter(x=>x.id!==id); state.singleData.meta.updatedAt = new Date().toISOString(); await syncAfterLocalChange(); }); }; });
   }
 
   function populateFilters(){ const sel = $('#filter-bank'); if(!sel) return; sel.innerHTML = '<option value="">-- Todas --</option>' + state.singleData.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join(''); }
@@ -494,7 +507,12 @@
     $('#btn-cloud-toggle').textContent = state.cloudOn ? 'Cloud: ON' : 'Cloud: OFF';
   }
 
-  // ---------- MODALES ----------
+  function updateTimestampsUI(){
+    $('#local-updated').textContent = state.singleData.meta.updatedAt ? new Date(state.singleData.meta.updatedAt).toLocaleString() : '--';
+    $('#remote-updated').textContent = state.session && state.session.lastRemoteAt ? new Date(state.session.lastRemoteAt).toLocaleString() : '--';
+  }
+
+  // MODALES
   function showModal(html){ $('#modal').innerHTML = html; $('#modal-backdrop').style.display = 'flex'; }
   function closeModal(){ $('#modal').innerHTML = ''; $('#modal-backdrop').style.display = 'none'; }
   function showConfirm(title,text,onConfirm){ showModal(`<div><strong>${title}</strong><div class="muted" style="margin-top:8px">${text}</div><div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px"><button id="m-cancel" class="ghost compact">Cancelar</button><button id="m-confirm" class="danger compact">Confirmar</button></div></div>`); $('#m-cancel').onclick = closeModal; $('#m-confirm').onclick = async ()=>{ try{ await onConfirm(); } catch(e){ console.error(e); alert('Error: '+e.message); } closeModal(); }; }
@@ -508,12 +526,14 @@
       if(!state.apiBase) return alert('Primero pega tu CLOUD_API_BASE en Export > campo CLOUD_API_BASE');
       try{
         await cloudJoin(code);
-        await syncLoadFromCloudIfPossible();
+        // After join, attempt initial load and set lastRemoteAt
+        await manualSyncNow();
         closeModal();
       } catch(e){ console.error(e); alert('No se pudo vincular: ' + e.message); }
     };
   }
 
+  // FORM modals
   function openCategoryModal(editId){
     const c = state.singleData.categories.find(x=>x.id===editId) || { name:'', limitMonthly:0 };
     showModal(`<div><h3 style="margin:0">${editId ? 'Editar categoría' : 'Nueva categoría'}</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><div><label>Nombre</label><input id="c-name" value="${c.name}" /></div><div><label>Límite mensual (0 = sin límite)</label><input id="c-limit" value="${c.limitMonthly || 0}" /></div></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="c-cancel" class="ghost compact">Cancelar</button><button id="c-save" class="primary compact">Guardar</button></div></div>`);
@@ -577,50 +597,26 @@
     };
   }
 
-  // ---------- EXPORT / IMPORT / PDF ----------
+  // EXPORT / IMPORT / PDF (same formatting requested)
+  (function loadHtml2Pdf(){ const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js'; document.head.appendChild(s); })();
+
   function exportTransactionsCSV(){
     const rows = state.singleData.transactions.map(t=>{ const date = t.dateStr || ''; const bank = state.singleData.banks.find(b=>b.id===t.bankId); const cat = state.singleData.categories.find(c=>c.id===t.categoryId); return [date, bank?bank.name:'', t.type||'', cat?cat.name:(t.categoryName||''), (t.description||'').replace(/"/g,'""'), t.amount||0]; });
     const csv = [['fecha,cuenta,tipo,categoria,descripcion,monto'], ...rows.map(r=>r.map((c,i)=> i===4?`"${c}"`:c).join(','))].join('\n');
     const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'transacciones.csv'; a.click(); URL.revokeObjectURL(url);
   }
   function exportBackupJSON(){ const data = JSON.parse(JSON.stringify(state.singleData)); const blob = new Blob([JSON.stringify(data,null,2)], { type:'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'backup_single_data.json'; a.click(); URL.revokeObjectURL(url); }
+
   async function importFile(file){ if(!file) return alert('Selecciona archivo'); const text = await file.text(); if(file.name.toLowerCase().endsWith('.csv')){ const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean); const headers = lines.shift().split(',').map(h=>h.toLowerCase()); for(const line of lines){ const parts = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g).map(p=>p.replace(/^"|"$/g,'').replace(/""/g,'"')); const obj={}; headers.forEach((h,i)=> obj[h]=parts[i]||''); const bank = state.singleData.banks.find(b=>b.name===obj.cuenta); const cat = state.singleData.categories.find(c=>c.name===obj.categoria); await addTransaction({ type: obj.tipo||'Ingreso', amount: Number(obj.monto)||0, categoryId: cat?cat.id:null, categoryName: obj.categoria||'', description: obj.descripcion||'', dateStr: obj.fecha, bankId: bank?bank.id:null }); } showToast('CSV importado'); } else { try{ const data = JSON.parse(text); if(data.categories){ for(const c of data.categories) await addCategory(c); } if(data.banks){ for(const b of data.banks) await addBank(b); } if(data.debts){ for(const d of data.debts) await addDebt(d); } if(data.fixed){ for(const f of data.fixed) await addFixedExpense(f); } if(data.savings){ for(const s of data.savings) await addSaving(s); } if(data.transactions){ for(const t of data.transactions) await addTransaction({ type:t.type||'Ingreso', amount:t.amount||0, categoryId:t.categoryId||null, categoryName:t.categoryName||t.category||'', description:t.description||'', dateStr:t.dateStr || '' , bankId:t.bankId||null }); } showToast('JSON importado'); } catch(e){ alert('JSON inválido'); } } }
 
   function exportReportPDF(){
-    const node = document.createElement('div');
-    node.style.padding = '12mm';
-    node.style.background = '#fff';
-    node.style.color = '#111';
-    node.style.fontFamily = 'Arial, Helvetica, sans-serif';
-    node.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6mm">
-        <div>
-          <div class="report-title">Reporte Financiero - JHONATAN ORELLANA</div>
-          <div class="report-sub" style="color:#444;margin-top:2mm">Fecha: ${dateToDDMMYYYY(new Date())}</div>
-        </div>
-        <div style="text-align:right">
-          <div class="report-title">${$('#balance').textContent}</div>
-        </div>
-      </div>
-      <hr style="border:none;border-top:1px solid #ddd;margin-bottom:6mm">
-      <div class="report-sub" style="margin-bottom:3mm">Bancos</div>
-      <div class="report-normal" style="margin-bottom:6mm">${state.singleData.banks.length ? `<ul style="margin:0 0 6mm 14px">${state.singleData.banks.map(b=>`<li style="margin-bottom:2mm">${b.name}: ${fmtMoney(Number(b.balance)||0)}</li>`).join('')}</ul>` : '<div style="color:#666">Sin cuentas registradas</div>'}</div>
-      <div class="report-sub" style="margin-bottom:3mm">Deudas</div>
-      <div class="report-normal" style="margin-bottom:6mm">${state.singleData.debts.length ? `<ul style="margin:0 0 6mm 14px">${state.singleData.debts.map(d=>`<li style="margin-bottom:2mm">${d.name} - Saldo: ${fmtMoney(Number(d.outstanding)||0)} - Cuota: ${fmtMoney(Number(d.monthlyPayment)||0)}</li>`).join('')}</ul>` : '<div style="color:#666">Sin deudas</div>'}</div>
-      <div class="report-sub" style="margin-bottom:3mm">Últimas transacciones</div>
-      <table style="width:100%;border-collapse:collapse;font-size:10pt">
-        <thead><tr><th style="text-align:left;border-bottom:1px solid #ddd;padding:6px 0">Fecha</th><th style="text-align:left;border-bottom:1px solid #ddd;padding:6px 0">Cuenta</th><th style="text-align:left;border-bottom:1px solid #ddd;padding:6px 0">Categoría</th><th style="text-align:right;border-bottom:1px solid #ddd;padding:6px 0">Monto</th></tr></thead>
-        <tbody>
-          ${state.singleData.transactions.slice(0,40).map(t=>`<tr><td style="padding:6px 0">${t.dateStr || ''}</td><td style="padding:6px 0">${(state.singleData.banks.find(b=>b.id===t.bankId)||{name:'-'}).name}</td><td style="padding:6px 0">${(state.singleData.categories.find(c=>c.id===t.categoryId)||{name:t.categoryName||'-'}).name}</td><td style="padding:6px 0;text-align:right">${fmtMoney(Number(t.amount)||0)}</td></tr>`).join('')}
-        </tbody>
-      </table>
-      <div style="margin-top:8mm;font-size:10pt;color:#666">Generado por JHONATAN ORELLANA - App Personal</div>
-    `;
+    const node = document.createElement('div'); node.style.padding='12mm'; node.style.background='#fff'; node.style.color='#111'; node.style.fontFamily='Arial, Helvetica, sans-serif';
+    node.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6mm"><div><div class="report-title">Reporte Financiero - JHONATAN ORELLANA</div><div class="report-sub" style="color:#444;margin-top:2mm">Fecha: ${dateToDDMMYYYY(new Date())}</div></div><div style="text-align:right"><div class="report-title">${$('#balance').textContent}</div></div></div><hr style="border:none;border-top:1px solid #ddd;margin-bottom:6mm"><div class="report-sub" style="margin-bottom:3mm">Bancos</div><div class="report-normal" style="margin-bottom:6mm">${state.singleData.banks.length ? `<ul style="margin:0 0 6mm 14px">${state.singleData.banks.map(b=>`<li style="margin-bottom:2mm">${b.name}: ${fmtMoney(Number(b.balance)||0)}</li>`).join('')}</ul>` : '<div style="color:#666">Sin cuentas registradas</div>'}</div><div class="report-sub" style="margin-bottom:3mm">Deudas</div><div class="report-normal" style="margin-bottom:6mm">${state.singleData.debts.length ? `<ul style="margin:0 0 6mm 14px">${state.singleData.debts.map(d=>`<li style="margin-bottom:2mm">${d.name} - Saldo: ${fmtMoney(Number(d.outstanding)||0)} - Cuota: ${fmtMoney(Number(d.monthlyPayment)||0)}</li>`).join('')}</ul>` : '<div style="color:#666">Sin deudas</div>'}</div><div class="report-sub" style="margin-bottom:3mm">Últimas transacciones</div><table style="width:100%;border-collapse:collapse;font-size:10pt"><thead><tr><th style="text-align:left;border-bottom:1px solid #ddd;padding:6px 0">Fecha</th><th style="text-align:left;border-bottom:1px solid #ddd;padding:6px 0">Cuenta</th><th style="text-align:left;border-bottom:1px solid #ddd;padding:6px 0">Categoría</th><th style="text-align:right;border-bottom:1px solid #ddd;padding:6px 0">Monto</th></tr></thead><tbody>${state.singleData.transactions.slice(0,40).map(t=>`<tr><td style="padding:6px 0">${t.dateStr || ''}</td><td style="padding:6px 0">${(state.singleData.banks.find(b=>b.id===t.bankId)||{name:'-'}).name}</td><td style="padding:6px 0">${(state.singleData.categories.find(c=>c.id===t.categoryId)||{name:t.categoryName||'-'}).name}</td><td style="padding:6px 0;text-align:right">${fmtMoney(Number(t.amount)||0)}</td></tr>`).join('')}</tbody></table><div style="margin-top:8mm;font-size:10pt;color:#666">Generado por JHONATAN ORELLANA - App Personal</div>`;
     if(window.html2pdf) html2pdf().set({ margin:10, filename:`reporte_${(new Date()).toISOString().slice(0,10)}.pdf`, image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(node).save();
     else alert('html2pdf no cargado. Recarga con conexión.');
   }
 
-  // ---------- TECLA 'N' para nueva transacción ----------
+  // TECLA 'N' -> nueva transacción
   let modalOpen = false;
   const modalBackdrop = $('#modal-backdrop');
   const observer = new MutationObserver(()=>{ modalOpen = modalBackdrop.style.display === 'flex'; });
@@ -636,7 +632,7 @@
     }
   });
 
-  // ---------- BIND UI ----------
+  // Bind UI
   function bindUI(){
     document.querySelectorAll('nav.bottom-nav button').forEach(b => b.addEventListener('click', ()=> switchView(b.dataset.view)));
     $('#btn-add-transaction').onclick = ()=> openTransactionModal();
@@ -650,16 +646,40 @@
     $('#search').addEventListener('input', ()=> renderTransactions());
     $('#modal-backdrop').onclick = (e)=> { if(e.target.id === 'modal-backdrop') closeModal(); };
     $('#btn-manage-join').onclick = ()=> openJoinModal();
-    $('#btn-cloud-toggle').onclick = ()=> { state.cloudOn = !state.cloudOn; localStorage.setItem('jo_cloud_mode', state.cloudOn ? 'on' : 'off'); updateSessionInfo(); if(state.cloudOn) { state.apiBase = $('#cloud-api').value.trim() || state.apiBase; localStorage.setItem('jo_api_base', state.apiBase); if(state.session) syncLoadFromCloudIfPossible(); } };
+    $('#btn-cloud-toggle').onclick = ()=> { state.cloudOn = !state.cloudOn; localStorage.setItem('jo_cloud_mode', state.cloudOn ? 'on' : 'off'); updateSessionInfo(); if(state.cloudOn && $('#auto-sync').checked) startAutoSync(); else stopAutoSync(); };
     $('#cloud-api').onchange = (e)=> { state.apiBase = e.target.value.trim(); localStorage.setItem('jo_api_base', state.apiBase); };
     $('#org-id-manual').onchange = (e)=> { state.orgId = e.target.value.trim(); localStorage.setItem('jo_org_id', state.orgId); };
+    $('#btn-sync-now').onclick = manualSyncNow;
+    $('#auto-sync').onchange = (e)=> { if(e.target.checked) startAutoSync(); else stopAutoSync(); };
   }
 
-  // ---------- START ----------
+  // Manual sync trigger
+  async function manualSyncNow(){
+    if(!state.cloudOn) return alert('Activa Cloud ON para sincronizar');
+    if(!state.apiBase) return alert('Configura CLOUD_API_BASE');
+    if(!state.session) return alert('Vincula el dispositivo (JOIN) antes de sincronizar');
+    try{
+      showToast('Sincronizando...', false);
+      await syncFetchAndMerge();
+      // update last remote time in session (if available)
+      state.session.lastRemoteAt = state.singleData.meta.updatedAt || state.session.lastRemoteAt;
+      localStorage.setItem(SESSION_KEY, JSON.stringify(state.session));
+      updateTimestampsUI();
+    } catch(e){ console.error(e); showToast('Sync falló: '+e.message, true); }
+  }
+
+  // helper used when user changes local data without calling pushAndMaybeSync (e.g. delete via confirm)
+  async function syncAfterLocalChange(){
+    persistLocal();
+    renderAll();
+    if(state.cloudOn && state.session) {
+      try{ await cloudSaveData(state.singleData); showToast('Cambios enviados a nube'); } catch(e){ showToast('No se pudo enviar cambios: '+e.message, true); }
+    }
+  }
+
+  // Initialization
   (function init(){
-    // load saved cloud mode
-    const cm = localStorage.getItem('jo_cloud_mode');
-    state.cloudOn = cm === 'on';
+    const cm = localStorage.getItem('jo_cloud_mode'); state.cloudOn = cm === 'on';
     const s = localStorage.getItem('jo_api_base'); if(s) state.apiBase = s;
     const sess = localStorage.getItem(SESSION_KEY); if(sess) state.session = JSON.parse(sess);
     const org = localStorage.getItem('jo_org_id'); if(org) state.orgId = org;
@@ -667,105 +687,18 @@
     bindUI();
     renderAll();
     switchView('dashboard');
+    // start auto sync if previously enabled
+    const auto = localStorage.getItem('jo_auto_sync'); if(auto === 'on'){ $('#auto-sync').checked = true; if(state.cloudOn) startAutoSync(); }
   })();
 
-  // expose for debugging
+  // Expose for debugging
   window._jo_state = state;
-  window._jo_syncSave = syncSaveToCloudIfPossible;
-  window._jo_syncLoad = syncLoadFromCloudIfPossible;
+  window._jo_manualSync = manualSyncNow;
+  window._jo_cloudGetData = cloudGetData;
+  window._jo_cloudSaveData = cloudSaveData;
 
   </script>
-
-  <!--
-    -----------------------------
-    EJEMPLO DE CLOUD FUNCTION (Node.js + Express)
-    (cópialo y despliega en Cloud Functions / Cloud Run)
-    -----------------------------
-    // index.js (Cloud Function)
-    const express = require('express');
-    const admin = require('firebase-admin');
-    admin.initializeApp();
-    const db = admin.firestore();
-    const app = express();
-    app.use(require('cors')({ origin: true }));
-    app.use(express.json());
-
-    // Util: generate token simple (firmado con random). Para producción usa JWT/Firestore tokens.
-    const crypto = require('crypto');
-    function generateToken(){ return crypto.randomBytes(32).toString('hex'); }
-
-    // POST /join  -> { ok, orgId, token, expiresAt }
-    app.post('/join', async (req, res) => {
-      try{
-        const { joinCode } = req.body;
-        if(!joinCode) return res.status(400).json({ ok:false, error:'joinCode required' });
-        // buscar org con joinCode
-        const q = await db.collection('organizations').where('joinCode','==',joinCode).limit(1).get();
-        if(q.empty) return res.status(404).json({ ok:false, error:'joinCode not found' });
-        const orgDoc = q.docs[0];
-        const orgId = orgDoc.id;
-        // crea session token en colección server-side (in-memory no sirve)
-        const token = generateToken();
-        const expiresAt = Date.now() + 1000*60*60*24; // 24h (ajustar)
-        await db.collection('serverSessions').doc(token).set({ orgId, expiresAt, createdAt: admin.firestore.FieldValue.serverTimestamp() });
-        return res.json({ ok:true, orgId, token, expiresAt });
-      }catch(e){ console.error(e); return res.status(500).json({ ok:false, error: e.message }); }
-    });
-
-    // middleware: verifica session token
-    async function requireToken(req,res,next){
-      try{
-        const auth = req.headers.authorization || '';
-        if(!auth.startsWith('Bearer ')) return res.status(401).json({ ok:false, error:'missing token' });
-        const token = auth.split(' ')[1];
-        const snap = await db.collection('serverSessions').doc(token).get();
-        if(!snap.exists) return res.status(401).json({ ok:false, error:'invalid token' });
-        const data = snap.data();
-        if(data.expiresAt < Date.now()) return res.status(401).json({ ok:false, error:'token expired' });
-        req.orgId = data.orgId;
-        next();
-      }catch(e){ console.error(e); return res.status(500).json({ ok:false, error: e.message }); }
-    }
-
-    // GET /data?orgId=ID
-    app.get('/data', requireToken, async (req,res) => {
-      try{
-        const orgId = req.query.orgId || req.orgId;
-        if(!orgId) return res.status(400).json({ ok:false, error:'orgId required' });
-        const ref = db.collection('organizations').doc(orgId).collection('DATA').doc('DATA');
-        const snap = await ref.get();
-        if(!snap.exists) return res.json({ ok:true, data: { transactions:[], banks:[], debts:[], fixed:[], savings:[], categories:[], meta:{} } });
-        return res.json({ ok:true, data: snap.data().data });
-      }catch(e){ console.error(e); return res.status(500).json({ ok:false, error:e.message }); }
-    });
-
-    // POST /data  body { orgId, data }
-    app.post('/data', requireToken, async (req,res) => {
-      try{
-        const { orgId, data } = req.body;
-        if(!orgId || !data) return res.status(400).json({ ok:false, error:'orgId and data required' });
-        // write single doc (merge)
-        const ref = db.collection('organizations').doc(orgId).collection('DATA').doc('DATA');
-        await ref.set({ data, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge:true });
-        return res.json({ ok:true });
-      }catch(e){ console.error(e); return res.status(500).json({ ok:false, error:e.message }); }
-    });
-
-    // deploy
-    exports.app = functions.https.onRequest(app);
-
-    ------------------------------------------------------------------
-    RECOMENDACIONES:
-    - Protege la colección serverSessions: sólo el servidor debe poder escribirla.
-    - Ajusta expiresAt corto (ej. 1 hora) y posibilidad de renovar.
-    - No expongas claves privadas en el cliente. El token aquí es efímero y emitido por el servidor.
-    - En Firestore, aplica reglas que bloqueen cualquier lectura/escritura directa del cliente:
-        match /databases/{database}/documents {
-          match /{document=**} { allow read, write: if false; }
-        }
-    ------------------------------------------------------------------
-  -->
-
 </body>
 </html>
+
 
