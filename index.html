@@ -3,863 +3,957 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>JHONATAN ORELLANA — Finanzas (Cashflow-style)</title>
+<title>JHONATAN ORELLANA — Finanzas PRO (Actualizado)</title>
 
-<!--
-  ÚNICO ARCHIVO index.html
-  Versión: Mejorada (transferencias, patrimonio, gastos mensuales, empresas, diseño)
-  Nota importante:
-    - Esta versión **NO** usa Firebase Auth en cliente.
-    - Requiere un BACKEND (Cloud Function / Cloud Run) que exponga:
-       POST /join   { joinCode } -> { ok, orgId, token, expiresAt }
-       GET  /data?orgId=ID (Aut: Bearer TOKEN) -> { ok, data, updatedAt? }
-       POST /data  { orgId, data } (Aut: Bearer TOKEN) -> { ok, updatedAt? }
-    - Configura CLOUD_API_BASE en Export > CLOUD_API_BASE y usa Vincular (JOIN).
-    - Firestore debe protegerse para que sólo el servidor admin acceda.
-    - El documento único es: organizations/{ORG_ID}/DATA/DATA campo "data"
--->
-
-<link rel="preconnect" href="https://fonts.gstatic.com">
+<!-- Fuente -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 
+<!-- Librerías CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+
 <style>
+  /* Reset and layout: Forcing everything to fit viewport and hide visible scrollbars */
   :root{
-    --bg:#071824; --card:#0b2630; --muted:#9fb1bd;
-    --accent:#16a085; --accent-2:#2ecc71; --accent-3:#3498db;
-    --danger:#ff6b6b; --glass: rgba(255,255,255,0.03);
-    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    --bg:#061421; --panel:#071e27; --card:#082b33; --muted:#9fb1bd;
+    --accent:#10b981; --accent-2:#06b6d4; --danger:#ff6b6b;
+    --glass: rgba(255,255,255,0.03);
+    font-family:'Inter',system-ui,-apple-system,"Segoe UI",Roboto,Arial;
   }
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#021018);color:#e6f6f6;-webkit-font-smoothing:antialiased}
-  .container{max-width:420px;margin:12px auto;border-radius:18px;overflow:hidden;background:linear-gradient(180deg,#06262b,#052028);min-height:88vh;box-shadow:0 22px 60px rgba(2,16,22,0.7);display:flex;flex-direction:column}
-  header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.02)}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#021018);color:#eafaf5;overflow:hidden; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;}
+  /* hide scrollbars globally but allow scrolling programmatically */
+  ::-webkit-scrollbar{width:0;height:0}
+  *{scrollbar-width:none; -ms-overflow-style:-ms-autohiding-scrollbar}
+  /* App container sized to viewport */
+  .app{height:calc(100vh - 16px);max-width:1400px;margin:8px auto;padding:12px;border-radius:12px;background:linear-gradient(180deg,#04161a,#021018);display:grid;grid-template-columns:300px 1fr;gap:14px;align-items:start}
+  /* Sidebar */
+  .sidebar{background:linear-gradient(180deg,#04202a,#03161a);padding:12px;border-radius:12px;display:flex;flex-direction:column;gap:12px;height:100%;overflow:auto}
   .brand{display:flex;gap:12px;align-items:center}
-  .logo{width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-3));display:flex;align-items:center;justify-content:center;font-weight:900;color:#001216;font-size:18px}
-  .app-title{font-weight:800;font-size:16px}
-  .app-sub{font-size:12px;color:var(--muted)}
-  .actions{display:flex;gap:8px;align-items:center}
-  .badge{background:rgba(255,255,255,0.03);padding:6px 8px;border-radius:10px;font-size:12px;color:var(--muted)}
-  .btn{border:0;padding:8px 10px;border-radius:10px;cursor:pointer;font-weight:700}
-  .btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent-3));color:#001216}
+  .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-weight:900;color:#001;padding:6px;font-size:18px}
+  nav.side{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+  nav.side button{background:transparent;border:0;color:var(--muted);text-align:left;padding:10px;border-radius:10px;cursor:pointer;font-weight:700;display:flex;align-items:center;gap:8px}
+  nav.side button.active{color:var(--accent);background:linear-gradient(90deg, rgba(16,185,129,0.06), rgba(6,182,212,0.02))}
+  .side-foot{margin-top:auto;font-size:13px;color:var(--muted)}
+  /* Inputs */
+  input,select,textarea,button{font-family:inherit}
+  input,select,textarea{background:#04282d;border:1px solid rgba(255,255,255,0.03);padding:8px;border-radius:8px;color:#eafaf5;font-size:13px}
+  select{appearance:none;-webkit-appearance:none}
+  option{background:#04282d;color:#eafaf5}
+  /* Main */
+  .main{display:flex;flex-direction:column;gap:12px;height:100%;overflow:hidden}
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .controls{display:flex;gap:10px;align-items:center}
+  .btn{padding:8px 12px;border-radius:10px;border:0;cursor:pointer;font-weight:800;font-size:13px}
+  .btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#002b2b}
   .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
-  main{padding:12px;overflow:auto;flex:1}
-  .card{background:linear-gradient(180deg,var(--card),#062a30);border-radius:12px;padding:12px;margin-bottom:12px;box-shadow:0 8px 26px rgba(0,0,0,0.6)}
-  .row{display:flex;gap:8px;align-items:center}
-  .col{flex:1}
-  h2{margin:0;font-size:16px}
-  p.muted{color:var(--muted);font-size:12px;margin:6px 0 0}
-  input,select,textarea{width:100%;padding:9px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit;font-size:13px}
-  table{width:100%;border-collapse:collapse;margin-top:8px}
-  th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.02);text-align:left;font-size:13px}
-  .right{text-align:right;}
+  .btn.warn{background:linear-gradient(90deg,#f97316,#f59e0b);color:#071421}
+  .card{background:linear-gradient(180deg,var(--card),#072a2f);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+  th,td{padding:6px;border-bottom:1px solid rgba(255,255,255,0.03);text-align:left}
+  td.right{text-align:right}
+  .muted{color:var(--muted);font-size:13px}
   .small{font-size:12px;color:var(--muted)}
-  .muted-small{font-size:11px;color:var(--muted)}
-  .danger{background:var(--danger);color:#120000;border:0;padding:8px 10px;border-radius:8px;cursor:pointer}
-  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:120}
-  .modal{background:linear-gradient(180deg,#071c20,#05161a);padding:14px;border-radius:12px;max-width:420px;width:94%}
-  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:#071421;color:#d6f6ef;padding:12px;border-radius:10px;box-shadow:0 8px 26px rgba(0,0,0,0.6);display:none;z-index:130}
-  nav.bottom{display:flex;gap:6px;padding:10px;background:linear-gradient(180deg,transparent,rgba(255,255,255,0.01));border-top:1px solid rgba(255,255,255,0.02)}
-  nav.bottom button{flex:1;background:transparent;border:0;color:var(--muted);padding:8px;border-radius:10px;font-weight:700}
-  nav.bottom button.active{color:var(--accent);background:rgba(255,255,255,0.02)}
-  .flex-between{display:flex;justify-content:space-between;align-items:center}
-  .pill{padding:6px 8px;border-radius:999px;background:rgba(255,255,255,0.02);font-weight:700}
-  /* visual emphasis */
-  .accent-cta{background:linear-gradient(90deg,var(--accent-2),var(--accent-3));color:#012;}
-  /* responsive: emulate mobile vertical */
-  @media (min-width:720px){ .container{transform:scale(1.02);} }
-  /* nicer tables */
-  th{font-size:12px;color:var(--muted);font-weight:700}
-  td{font-size:13px}
+  .badge{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.02);font-weight:800}
+  /* Modal */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.55);display:none;align-items:center;justify-content:center;z-index:999}
+  .modal{width:880px;max-width:96%;background:linear-gradient(180deg,#061f24,#04161a);padding:0;border-radius:12px;overflow:hidden;max-height:90vh}
+  .modal-header{display:flex;align-items:center;gap:12px;padding:12px;background:linear-gradient(90deg, rgba(16,185,129,0.06), rgba(6,182,212,0.02));border-bottom:1px solid rgba(255,255,255,0.02)}
+  .modal-body{padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;overflow:auto;max-height:62vh}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;padding:10px;border-top:1px solid rgba(255,255,255,0.02)}
+  label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+  .mini-card{background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent);padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.02)}
+  .highlight{border:1px solid rgba(16,185,129,0.12);box-shadow:0 8px 24px rgba(6,182,212,0.03)}
+  /* Responsive: reduce paddings to fit */
+  @media (max-width:1100px){ .app{grid-template-columns:260px 1fr} .logo{width:52px;height:52px} }
+  @media (max-width:900px){ .app{grid-template-columns:1fr;height:100vh;padding:8px} .sidebar{order:2;height:28vh;overflow:auto} .main{order:1} .modal{width:96%} .modal-body{grid-template-columns:1fr} }
+  /* Compact lists (no external scrollbars visible) */
+  .card .content-scroll{max-height:46vh;overflow:auto;padding-right:6px}
+  /* small helpers */
+  .muted small{color:var(--muted)}
 </style>
 </head>
 <body>
-  <div class="container" role="application" aria-label="Jhonatan Orellana - Finanzas">
-    <header>
+  <!--
+    INSTRUCCIONES GENERALES:
+    - Archivo único: SPA para administrar finanzas.
+    - Cloud path: organizations/{ORG_ID}/DATA/DATA
+    - joinCode: "JGSQPV"
+    - orgId: "oxIgjNwqNPiAneP5alpM"
+    - Login local: usuario "JHONATAN", contraseña "JHONATAN" (se usa solo para UI/cloud toggle; no es seguro para producción)
+    - Para evitar autocompletado de contraseña: el login usa inputs con autocomplete desactivado (ver modal).
+    - PDF: ahora incluye más métricas y la gráfica incrustada.
+  -->
+
+  <div class="app" role="application" aria-label="App Finanzas PRO">
+    <aside class="sidebar" aria-label="Panel lateral">
       <div class="brand">
         <div class="logo">JO</div>
         <div>
-          <div class="app-title">JHONATAN ORELLANA</div>
-          <div class="app-sub">Control financiero · Cashflow style</div>
+          <h1 style="margin:0;font-size:16px">JHONATAN ORELLANA</h1>
+          <div class="small muted">Finanzas · UNA DATA · Org: <span id="orgBadge">oxIgjNwqNPiAneP5alpM</span></div>
         </div>
       </div>
-      <div class="actions">
-        <div id="orgBadge" class="badge">No vinculado</div>
-        <button id="btnLink" class="btn ghost">Vincular</button>
-        <button id="btnCloud" class="btn ghost">Cloud: OFF</button>
-      </div>
-    </header>
 
-    <main>
-      <!-- Resumen -->
-      <section id="view-dashboard" class="card">
-        <div class="flex-between">
-          <div>
-            <h2>Resumen</h2>
-            <p class="muted">Balance actual, patrimonio y cashflow estimado</p>
-          </div>
-          <div class="muted-small" id="monthLabel"></div>
+      <nav class="side" aria-label="Navegación">
+        <button data-view="dashboard" class="active">Resumen</button>
+        <button data-view="transactions">Transacciones</button>
+        <button data-view="banks">Bancos</button>
+        <button data-view="assets">Activos / Pasivos</button>
+        <button data-view="businesses">Empresas</button>
+        <button data-view="fixed">Gastos Mensuales</button>
+        <button data-view="debts">Deudas</button>
+        <button data-view="categories">Categorías</button>
+        <button data-view="export">Export / Cloud</button>
+      </nav>
+
+      <div style="margin-top:auto">
+        <div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
+          <div class="small">Cloud</div>
+          <div><span id="cloudModeBadge" class="badge">LOCAL</span></div>
         </div>
 
-        <div style="display:flex;gap:10px;margin-top:12px">
-          <div style="flex:1" class="card" aria-hidden>
-            <div class="small">Balance líquido</div>
-            <div id="balance" style="font-size:18px;font-weight:800;margin-top:6px">S/ 0.00</div>
-            <div id="flows" class="muted-small" style="margin-top:6px"></div>
-          </div>
-          <div style="width:120px" class="card" aria-hidden>
-            <div class="small">Patrimonio neto</div>
-            <div id="netWorth" style="font-weight:800;margin-top:6px">S/ 0.00</div>
-            <div class="small" style="margin-top:6px">Activos - Pasivos</div>
-          </div>
+        <div style="margin-top:10px" class="small muted">
+          joinCode: <strong id="joinCodeBadge">JGSQPV</strong><br>
+          orgId: <strong id="orgIdBadge">oxIgjNwqNPiAneP5alpM</strong>
         </div>
 
-        <div style="display:flex;gap:8px;margin-top:12px">
-          <button id="btnSimulate" class="btn primary">Simular cashflow</button>
-          <button id="btnAddQuickTx" class="btn ghost">+ Transacción rápida</button>
-        </div>
-
-        <div style="margin-top:12px" class="small muted-small" id="alertsArea">Sin alertas</div>
-      </section>
-
-      <!-- Transacciones -->
-      <section id="view-transactions" class="card" style="display:none">
-        <div class="flex-between">
-          <div><h2>Transacciones</h2><p class="muted">Asocia siempre cuenta y categoría</p></div>
-          <div style="display:flex;gap:8px;align-items:center">
-            <input id="search" placeholder="Buscar..." style="width:140px" />
-            <button id="btnAddTx" class="btn primary">Agregar</button>
-          </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button id="btnLogin" class="btn primary">Login</button>
+          <button id="btnLogout" class="btn ghost" style="display:none">Logout</button>
         </div>
 
         <div style="display:flex;gap:8px;margin-top:10px">
-          <select id="filterAccount"><option value="">-- Todas cuentas --</option></select>
-          <input id="filterFrom" placeholder="desde dd/mm/yyyy" style="width:120px" />
-          <input id="filterTo" placeholder="hasta dd/mm/yyyy" style="width:120px" />
+          <button id="btnForceSync" class="btn ghost">Sync ahora</button>
+          <button id="btnClearLocal" class="btn warn">Borrar local</button>
         </div>
 
-        <div style="margin-top:10px;overflow:auto">
-          <table id="txTable"><thead><tr><th>Fecha</th><th>Cuenta</th><th>Tipo</th><th>Cat.</th><th class="right">Monto</th><th>Acc.</th></tr></thead><tbody></tbody></table>
+        <div style="margin-top:10px" class="small">Estado sync: <span id="syncStatus">idle</span></div>
+      </div>
+    </aside>
+
+    <main class="main" aria-live="polite">
+      <div class="topbar">
+        <div>
+          <h2 style="margin:0;font-size:18px">Panel</h2>
+          <div class="muted small">Usuario: <span id="currentUser">Invitado</span> · Org: <span id="orgShort">oxIgjNwqNPiAneP5alpM</span></div>
+        </div>
+        <div class="controls">
+          <button id="btnQuickTx" class="btn primary">+ Transacción (N)</button>
+          <button id="btnTransfer" class="btn ghost">Transferencia</button>
+        </div>
+      </div>
+
+      <!-- DASHBOARD (compact to fit view) -->
+      <section id="view-dashboard" class="card" style="min-height:220px">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <h3 style="margin:0;font-size:16px">Resumen Ejecutivo</h3>
+                <div class="small muted">Indicadores financieros, alertas y límites</div>
+              </div>
+              <div style="text-align:right">
+                <div class="small">Fecha</div>
+                <div id="todayDate" style="font-weight:900"></div>
+              </div>
+            </div>
+
+            <div class="grid3" style="margin-top:10px">
+              <div class="card mini-card highlight">
+                <div class="small muted">Saldo líquido</div>
+                <div id="balance" style="font-weight:900;font-size:18px;margin-top:6px">S/ 0.00</div>
+                <div class="small muted" id="liquidityRatio">Ratio liquidez: -</div>
+              </div>
+
+              <div class="card mini-card highlight">
+                <div class="small muted">Patrimonio Neto</div>
+                <div id="netWorth" style="font-weight:900;font-size:18px;margin-top:6px">S/ 0.00</div>
+                <div class="small muted" id="assetsSummary">Activos / Pasivos</div>
+              </div>
+
+              <div class="card mini-card highlight">
+                <div class="small muted">Gastos mensuales</div>
+                <div id="avgExpenses" style="font-weight:900;font-size:18px;margin-top:6px">S/ 0.00</div>
+                <div class="small muted" id="runway">Runway: - meses</div>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:10px;margin-top:10px">
+              <div style="flex:1" class="card mini-card"><div class="small muted">Top categorías</div><div id="topCategories" class="small" style="margin-top:6px">—</div></div>
+              <div style="width:360px" class="card mini-card"><div class="small muted">Saldo por cuenta</div><div id="bankBreakdown" class="small" style="margin-top:6px">—</div></div>
+            </div>
+
+            <div style="margin-top:10px" class="card mini-card"><div class="small muted">Alertas y límites</div><div id="alertsArea" style="margin-top:6px" class="small muted">Sin alertas</div></div>
+          </div>
+
+          <div style="width:360px">
+            <h4 style="margin:0;font-size:14px">Ingresos vs Egresos (12 meses)</h4>
+            <canvas id="chartFlows" height="240" style="margin-top:8px;background:transparent;border-radius:6px"></canvas>
+            <div class="small muted" style="margin-top:8px">Tendencia — útil para decisiones</div>
+          </div>
         </div>
       </section>
 
-      <!-- Bancos y transferencias -->
-      <section id="view-banks" class="card" style="display:none">
-        <div class="flex-between">
-          <div><h2>Bancos & Transferencias</h2><p class="muted">Cuentas vinculadas a tus movimientos</p></div>
+      <!-- TRANSACTIONS -->
+      <section id="view-transactions" class="card content-scroll" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><h3 style="margin:0;font-size:16px">Transacciones</h3><div class="small muted">Vincula siempre una cuenta bancaria</div></div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="search" placeholder="Buscar descripción o categoría..." style="width:220px" />
+            <select id="filterAccount" style="min-width:160px"><option value="">Todas cuentas</option></select>
+            <button id="btnAddTx" class="btn primary">Agregar</button>
+          </div>
+        </div>
+        <div style="margin-top:8px;overflow:auto">
+          <table id="txTable"><thead><tr><th>Fecha</th><th>Cuenta</th><th>Tipo</th><th>Categoría</th><th class="right">Monto</th><th>Acciones</th></tr></thead><tbody></tbody></table>
+        </div>
+      </section>
+
+      <!-- BANKS -->
+      <section id="view-banks" class="card content-scroll" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><h3 style="margin:0;font-size:16px">Bancos</h3><div class="small muted">Cuentas, transferencias y origen de fondos</div></div>
           <div style="display:flex;gap:8px">
             <button id="btnAddBank" class="btn primary">Nueva cuenta</button>
-            <button id="btnTransfer" class="btn ghost">Transferir</button>
+            <button id="btnExportBanks" class="btn ghost">Export</button>
           </div>
         </div>
-
-        <div style="margin-top:8px" id="banksArea"></div>
+        <div id="banksArea" style="margin-top:8px"></div>
       </section>
 
-      <!-- Patrimonio (activos) -->
-      <section id="view-assets" class="card" style="display:none">
-        <div class="flex-between">
-          <div><h2>Patrimonio</h2><p class="muted">Registra activos con valor estimado y vincula a bancos</p></div>
-          <div><button id="btnAddAsset" class="btn primary">Nuevo activo</button></div>
+      <!-- ASSETS / LIABILITIES -->
+      <section id="view-assets" class="card content-scroll" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><h3 style="margin:0;font-size:16px">Activos / Pasivos</h3><div class="small muted">Subtipos: Patrimonio, Inversión, Inmueble, Maquinaria, Hipoteca, Tarjeta, etc</div></div>
+          <div style="display:flex;gap:8px">
+            <button id="btnAddAsset" class="btn primary">Nuevo activo</button>
+            <button id="btnAddLiability" class="btn ghost">Nuevo pasivo</button>
+          </div>
         </div>
-
-        <div style="margin-top:10px" id="assetsArea"></div>
+        <div id="assetsArea" style="margin-top:8px"></div>
+        <div id="liabilitiesArea" style="margin-top:8px"></div>
       </section>
 
-      <!-- Gastos mensuales (fijos y planificados) -->
-      <section id="view-fixed" class="card" style="display:none">
-        <div class="flex-between">
-          <div><h2>Gastos mensuales</h2><p class="muted">Pagos fijos: pensión, alquiler, cuotas</p></div>
-          <div><button id="btnAddFixed" class="btn primary">Nuevo gasto fijo</button></div>
-        </div>
-        <div style="margin-top:10px" id="fixedArea"></div>
-        <div style="margin-top:8px" class="muted-small">Acción: aplicar los gastos fijos del mes como transacciones -> botón "Aplicar mes"</div>
-        <div style="margin-top:8px;display:flex;gap:8px"><button id="btnApplyFixed" class="btn primary">Aplicar mes</button><button id="btnAutoApply" class="btn ghost">Auto-apply (activado)</button></div>
-      </section>
-
-      <!-- Empresas / Proyectos -->
-      <section id="view-business" class="card" style="display:none">
-        <div class="flex-between">
-          <div><h2>Empresas & Proyectos</h2><p class="muted">Registra negocios, ingresos pasivos y simula</p></div>
+      <!-- BUSINESSES -->
+      <section id="view-businesses" class="card content-scroll" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><h3 style="margin:0;font-size:16px">Empresas / Proyectos</h3><div class="small muted">Registra rol, aportes y estimaciones</div></div>
           <div><button id="btnAddBiz" class="btn primary">Nueva empresa</button></div>
         </div>
-
-        <div style="margin-top:8px" id="bizArea"></div>
-
-        <div style="margin-top:12px">
-          <h3 style="margin:0">Proyección simplificada (12 meses)</h3>
-          <div class="muted-small">Selecciona una empresa y simula crecimiento</div>
-          <div style="display:flex;gap:8px;margin-top:8px"><select id="bizSelect"><option value="">-- seleccionar --</option></select><button id="btnRunSim" class="btn primary">Correr simulación</button></div>
-          <div id="simResult" style="margin-top:10px"></div>
-        </div>
+        <div id="businessesArea" style="margin-top:8px"></div>
       </section>
 
-      <!-- Export / Sync -->
-      <section id="view-export" class="card" style="display:none">
-        <div class="flex-between">
-          <div><h2>Export / Import / Sincronizar</h2><p class="muted">CSV, JSON, PDF. Backend requerido para sincronización entre dispositivos.</p></div>
-          <div></div>
-        </div>
-
-        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-          <button id="btnCSV" class="btn primary">Exportar CSV</button>
-          <button id="btnJSON" class="btn ghost">Exportar JSON</button>
-          <input id="fileImport" type="file" accept=".csv,application/json" />
-          <button id="btnImport" class="btn primary">Importar</button>
-          <button id="btnPDF" class="btn primary">Generar PDF</button>
-        </div>
-
-        <div style="margin-top:12px" class="card">
-          <div class="muted-small">Backend (Cloud API)</div>
-          <input id="cloudApi" placeholder="CLOUD_API_BASE (https://...)" />
-          <input id="orgManual" placeholder="ORG_ID (opcional)" style="margin-top:8px" />
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <button id="btnLinkManual" class="btn primary">Vincular (JOIN)</button>
-            <button id="btnSyncNow" class="btn ghost">Sync ahora</button>
-            <label class="muted-small" style="align-self:center"><input id="chkAuto" type="checkbox" /> Auto-sync 6s</label>
+      <!-- FIXED -->
+      <section id="view-fixed" class="card content-scroll" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><h3 style="margin:0;font-size:16px">Gastos Mensuales</h3><div class="small muted">Pensión, alquiler, cuotas</div></div>
+          <div style="display:flex;gap:8px">
+            <button id="btnAddFixed" class="btn primary">Agregar fijo</button>
+            <button id="btnApplyFixed" class="btn ghost">Aplicar ahora</button>
           </div>
-          <div style="margin-top:8px" class="muted-small">Estado: <span id="syncStatus">idle</span></div>
+        </div>
+        <div id="fixedArea" style="margin-top:8px"></div>
+      </section>
+
+      <!-- DEBTS -->
+      <section id="view-debts" class="card content-scroll" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><h3 style="margin:0;font-size:16px">Deudas</h3><div class="small muted">Créditos vinculados a bancos</div></div>
+          <div><button id="btnAddDebt" class="btn primary">Nueva deuda</button></div>
+        </div>
+        <div id="debtsArea" style="margin-top:8px"></div>
+      </section>
+
+      <!-- CATEGORIES -->
+      <section id="view-categories" class="card content-scroll" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><h3 style="margin:0;font-size:16px">Categorías</h3><div class="small muted">Registra categorías y límites</div></div>
+          <div><button id="btnAddCategory" class="btn primary">Nueva categoría</button></div>
+        </div>
+        <div id="categoriesArea" style="margin-top:8px"></div>
+      </section>
+
+      <!-- EXPORT -->
+      <section id="view-export" class="card content-scroll" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><h3 style="margin:0;font-size:16px">Export / Import / PDF</h3><div class="small muted">PDF técnico (títulos 12pt, subtítulos 11pt, normal 10pt)</div></div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button id="btnExportCSV" class="btn primary">Export CSV</button>
+            <button id="btnExportJSON" class="btn ghost">Export JSON</button>
+            <input id="fileImport" type="file" accept=".csv,application/json" />
+            <button id="btnImport" class="btn primary">Importar</button>
+            <button id="btnExportPDF" class="btn primary">Generar PDF</button>
+          </div>
         </div>
       </section>
     </main>
-
-    <nav class="bottom">
-      <button data-view="dashboard" class="active">Resumen</button>
-      <button data-view="transactions">Transac.</button>
-      <button data-view="banks">Bancos</button>
-      <button data-view="assets">Patrimonio</button>
-      <button data-view="fixed">Gastos</button>
-      <button data-view="business">Empresas</button>
-      <button data-view="export">Export</button>
-    </nav>
   </div>
 
-  <!-- modales -->
-  <div class="modal-backdrop" id="modalBackdrop"><div class="modal" id="modalContent"></div></div>
-  <div class="toast" id="toast"></div>
+  <!-- MODAL & TOAST -->
+  <div class="modal-backdrop" id="modalBackdrop"><div class="modal" id="modalContent" role="dialog" aria-modal="true"></div></div>
+  <div id="toast" style="position:fixed;left:50%;transform:translateX(-50%);bottom:12px;background:#072a2f;padding:8px;border-radius:8px;display:none;z-index:1000;color:#cff6ef"></div>
 
-  <!-- html2pdf para export PDF -->
-  <script> (function(){ const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js'; document.head.appendChild(s); })(); </script>
-
+  <!-- FIREBASE CONFIG -->
   <script>
-  /* ------------------------------------------------------------
-     APP - Mejorada
-     - Transferencias entre cuentas
-     - Patrimonio (activos) con estimación y vinculación
-     - Gastos mensuales fijos y aplicación mensual
-     - Módulo de empresas/proyectos con simulación sencilla
-     - Mejor diseño y UX móvil vertical
-     - Persistencia local + sincronización con BACKEND (ver instrucciones)
-     ------------------------------------------------------------ */
+    const JOIN_CODE = "JGSQPV";
+    const ORG_ID = "oxIgjNwqNPiAneP5alpM";
+    const FIREBASE_SDK_CONFIG = {
+      apiKey: "AIzaSyBVppNAicRPFXEUdErmHd24se_9bjXiqcM",
+      authDomain: "jhona-1b398.firebaseapp.com",
+      databaseURL: "https://jhona-1b398-default-rtdb.firebaseio.com",
+      projectId: "jhona-1b398",
+      storageBucket: "jhona-1b398.firebasestorage.app",
+      messagingSenderId: "981136306223",
+      appId: "1:981136306223:web:d8948acdb119f0facc56da",
+      measurementId: "G-44TXK10R9R"
+    };
+    const LOCAL_LOGIN = { user: "JHONATAN", pass: "JHONATAN" };
+  </script>
 
-  // ---------------- UTIL ----------------
+  <!-- APP LOGIC -->
+  <script type="module">
+  // Dynamic imports for Firestore only when user activates cloud
+  let firebaseApp = null, firestore = null, fsHelpers = null;
+
+  // Small helpers
   const $ = (s,r=document)=> r.querySelector(s);
-  const $$ = (s,r=document)=> Array.from(r.querySelectorAll(s));
-  function showToast(msg, important=false){
-    const t = $('#toast'); t.textContent = msg; t.style.display='block';
-    t.style.background = important ? 'linear-gradient(90deg,var(--danger),#ff9a9a)' : '#071421';
-    clearTimeout(window.__to); window.__to = setTimeout(()=> t.style.display='none', important?7000:3500, important?7000:3500);
-  }
+  const $$ = (s,r=document)=> Array.from((r||document).querySelectorAll(s));
+  function uid(pref){ return `${pref}_${Date.now()}_${Math.floor(Math.random()*9000+1000)}`; }
   function fmtMoney(v){ v = Number(v)||0; return 'S/ ' + v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-  function parseDate(s){ if(!s) return null; const p=s.split('/'); if(p.length!==3) return null; const d=parseInt(p[0],10), m=parseInt(p[1],10)-1, y=parseInt(p[2],10); const dt=new Date(y,m,d); return isNaN(dt)?null:dt; }
+  function parseDateDDMMYYYY(s){ if(!s) return null; const p=s.split('/'); if(p.length!==3) return null; const d=Number(p[0]), m=Number(p[1])-1, y=Number(p[2]); const D=new Date(y,m,d); return isNaN(D)?null:D; }
   function toDDMMYYYY(d){ if(!d) return ''; return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear(); }
-  function uidPrefix(prefix){ return prefix + '_' + Date.now(); }
+  function showToast(msg,strong=false){ const t=$('#toast'); t.textContent = msg; t.style.display='block'; t.style.background = strong ? 'linear-gradient(90deg,#ff6b6b,#ff9a9a)' : '#072a2f'; clearTimeout(window.__to); window.__to = setTimeout(()=> t.style.display='none', strong?7000:3500); }
 
-  // ---------------- STATE ----------------
-  const STORAGE_KEY = 'jo_cashflow_v1';
-  const SESSION_KEY = 'jo_session_v1';
+  // State
+  const STORAGE_KEY = 'jona_single_data_final_v3';
   const state = {
-    cloudOn: false,
-    apiBase: localStorage.getItem('jo_api_base') || '',
-    orgId: localStorage.getItem('jo_org_id') || '',
-    session: JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'), // { token, orgId, expiresAt, lastRemoteAt }
-    singleData: {
-      transactions: [], // {id,type,dateStr,amount,bankId,categoryId,description,debtId,meta}
-      banks: [],        // {id,name,type,balance,currency,meta}
-      debts: [],        // {id,name,bankId,outstanding,monthlyPayment,interest}
-      fixed: [],        // gastos mensuales fijos {id,name,amount,bankId,categoryId,dueDay}
-      savings: [],
-      categories: [],   // {id,name,limitMonthly}
-      assets: [],       // patrimonio {id,name,estimatedValue,linkedBankId,notes}
-      businesses: [],   // empresas {id,name,monthlyRevenue,monthlyExpense,ownerPercent}
-      meta: { createdAt:null, updatedAt:null }
+    mode: localStorage.getItem('jona_mode') || 'local', // 'local' | 'firestore'
+    logged: JSON.parse(localStorage.getItem('jona_logged')) || false,
+    user: localStorage.getItem('jona_user') || null,
+    firebaseCfgSaved: null,
+    data: {
+      transactions: [], banks: [], debts: [], fixed: [], categories: [], assets: [], liabilities: [], businesses: [], meta: { updatedAt: null }
     },
-    pollId: null,
     syncing: false
   };
 
-  // load/save local
-  function persistLocal(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state.singleData)); localStorage.setItem('jo_api_base', state.apiBase); localStorage.setItem('jo_org_id', state.orgId); localStorage.setItem(SESSION_KEY, JSON.stringify(state.session)); }
-  function loadLocal(){ const raw = localStorage.getItem(STORAGE_KEY); if(!raw) return; try{ state.singleData = JSON.parse(raw); }catch(e){ console.error('parse local', e); } }
-
-  // ---------------- CLOUD HELPERS ----------------
-  function cloudUrl(path){ const base = state.apiBase.trim(); if(!base) throw new Error('CLOUD_API_BASE no configurado'); return base.replace(/\/+$/,'') + '/' + path.replace(/^\/+/,''); }
-
-  async function cloudJoin(joinCode){
-    const url = cloudUrl('join');
-    const res = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body: JSON.stringify({joinCode})});
-    const j = await res.json();
-    if(!res.ok || !j.ok) throw new Error(j?.error || 'join failed');
-    state.session = { token:j.token, orgId:j.orgId, expiresAt:j.expiresAt || Date.now()+3600*1000, lastRemoteAt: null };
-    state.orgId = j.orgId; persistLocal();
-    showToast('Vinculado correctamente');
+  function loadLocal(){
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) try { state.data = JSON.parse(raw); } catch(e){ console.warn('parse local fail', e); }
+    state.data.transactions = state.data.transactions || [];
+    state.data.banks = state.data.banks || [];
+    state.data.debts = state.data.debts || [];
+    state.data.fixed = state.data.fixed || [];
+    state.data.categories = state.data.categories || [];
+    state.data.assets = state.data.assets || [];
+    state.data.liabilities = state.data.liabilities || [];
+    state.data.businesses = state.data.businesses || [];
+  }
+  function persistLocal(){
+    state.data.meta.updatedAt = new Date().toISOString();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
+    localStorage.setItem('jona_mode', state.mode);
+    localStorage.setItem('jona_logged', JSON.stringify(state.logged));
+    if(state.user) localStorage.setItem('jona_user', state.user);
   }
 
-  async function cloudGetData(){
-    if(!state.session || !state.session.token) throw new Error('Sin sesión');
-    const url = cloudUrl('data?orgId=' + encodeURIComponent(state.session.orgId));
-    const res = await fetch(url,{headers:{'Authorization':'Bearer ' + state.session.token}});
-    const j = await res.json();
-    if(!res.ok || !j.ok) throw new Error(j?.error || 'no data');
-    return { data: j.data || {}, updatedAt: j.updatedAt || null };
+  // Firestore init (on demand)
+  async function initFirestore(cfg){
+    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js');
+    const { getFirestore, doc, getDoc, setDoc } = await import('https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js');
+    firebaseApp = initializeApp(cfg);
+    firestore = getFirestore(firebaseApp);
+    fsHelpers = { doc, getDoc, setDoc, firestore };
+    state.firebaseCfgSaved = cfg;
+    return true;
   }
 
-  async function cloudSaveData(data){
-    if(!state.session || !state.session.token) throw new Error('Sin sesión');
-    const url = cloudUrl('data');
-    const res = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer ' + state.session.token},body: JSON.stringify({ orgId: state.session.orgId, data })});
-    const j = await res.json();
-    if(!res.ok || !j.ok) throw new Error(j?.error || 'save failed');
-    return { updatedAt: j.updatedAt || new Date().toISOString() };
+  // Single doc path organizations/{ORG_ID}/DATA/DATA
+  async function fsFetch(){
+    if(!fsHelpers) throw new Error('Firestore no init');
+    const { doc, getDoc, firestore } = fsHelpers;
+    const docRef = doc(firestore, 'organizations', ORG_ID, 'DATA', 'DATA');
+    const snap = await getDoc(docRef);
+    if(!snap.exists()) return { data:null, updatedAt:null };
+    const payload = snap.data();
+    return { data: payload.data || null, updatedAt: payload.updatedAt || null };
+  }
+  async function fsSave(data){
+    if(!fsHelpers) throw new Error('Firestore no init');
+    const { doc, setDoc, firestore } = fsHelpers;
+    const docRef = doc(firestore, 'organizations', ORG_ID, 'DATA', 'DATA');
+    const updatedAt = new Date().toISOString();
+    await setDoc(docRef, { data, updatedAt }, { merge: true });
+    return updatedAt;
   }
 
-  // ---------------- SYNC (merge strategy: timestamp authoritative) ----------------
-  function isoMs(s){ return s ? Date.parse(s) || 0 : 0; }
-
-  async function syncFetchAndMerge(){
-    if(!state.cloudOn || !state.session || state.syncing) return;
+  // Sync logic last-write-wins
+  async function doSync(){
+    if(state.mode !== 'firestore') return showToast('Cloud OFF');
+    if(!state.logged) return showToast('Inicia sesión para sincronizar', true);
+    if(state.syncing) return;
+    state.syncing = true; $('#syncStatus').textContent = 'syncing';
     try{
-      state.syncing = true; $('#syncStatus').textContent = 'checking...';
-      const { data: remoteData, updatedAt } = await cloudGetData();
-      const remoteTS = isoMs(updatedAt) || isoMs(remoteData?.meta?.updatedAt) || 0;
-      const localTS = isoMs(state.singleData.meta.updatedAt) || 0;
-
-      if(remoteTS > localTS){
-        // remote wins -> replace local
-        state.singleData = Object.assign({
-          transactions:[], banks:[], debts:[], fixed:[], savings:[], categories:[], assets:[], businesses:[], meta:{}
-        }, remoteData || {});
-        state.singleData.meta.updatedAt = updatedAt || state.singleData.meta.updatedAt;
-        persistLocal(); renderAll(); showToast('Datos actualizados desde nube');
-      } else if(localTS > remoteTS){
-        // local newer -> push
-        $('#syncStatus').textContent = 'pushing...';
-        state.singleData.meta.updatedAt = new Date().toISOString();
-        const res = await cloudSaveData(state.singleData);
-        if(res && res.updatedAt) state.singleData.meta.updatedAt = res.updatedAt;
-        persistLocal(); showToast('Datos enviados a nube');
+      const remote = await fsFetch();
+      const remoteTS = remote.updatedAt ? Date.parse(remote.updatedAt) : 0;
+      const localTS = state.data.meta && state.data.meta.updatedAt ? Date.parse(state.data.meta.updatedAt) : 0;
+      if(remote.data && remoteTS > localTS){
+        state.data = remote.data;
+        persistLocal();
+        renderAll();
+        showToast('Datos cargados desde la nube (remote wins)');
       } else {
-        // equal or none -> no-op
+        await fsSave(state.data);
+        persistLocal();
+        showToast('Datos guardados en Firestore (local pushed)');
       }
-      $('#syncStatus').textContent = 'idle';
     } catch(e){
-      console.warn('sync error', e); $('#syncStatus').textContent = 'error';
-    } finally { state.syncing = false; updateTimestamps(); }
+      console.error('doSync err', e);
+      showToast('Sync error: ' + (e.message||e), true);
+    } finally { state.syncing=false; $('#syncStatus').textContent='idle'; }
   }
 
-  function startAutoSync(){ stopAutoSync(); state.pollId = setInterval(()=>{ if(state.cloudOn && state.session) syncFetchAndMerge(); }, 6000); $('#syncStatus').textContent='auto'; localStorage.setItem('jo_auto_sync','on'); }
-  function stopAutoSync(){ if(state.pollId) clearInterval(state.pollId); state.pollId = null; $('#syncStatus').textContent='idle'; localStorage.setItem('jo_auto_sync','off'); }
+  // CRUD helpers
+  function pushAndRender(mut){ mut(state.data); persistLocal(); renderAll(); if(state.mode === 'firestore' && state.logged) doSync().catch(e=>console.warn('bg sync fail', e)); }
+  function addBank(obj){ obj.id = uid('b'); obj.balance = Number(obj.balance)||0; obj.createdAt = new Date().toISOString(); pushAndRender(d => d.banks.unshift(obj)); }
+  function addCategory(obj){ obj.id = uid('cat'); obj.createdAt = new Date().toISOString(); pushAndRender(d => d.categories.unshift(obj)); }
+  function addAsset(obj){ obj.id = uid('asset'); obj.estimatedValue = Number(obj.estimatedValue)||0; obj.createdAt = new Date().toISOString(); pushAndRender(d => d.assets.unshift(obj)); }
+  function addLiability(obj){ obj.id = uid('liab'); obj.amount = Number(obj.amount)||0; obj.createdAt = new Date().toISOString(); pushAndRender(d => d.liabilities.unshift(obj)); }
+  function addBusiness(obj){ obj.id = uid('biz'); obj.estimateValue = Number(obj.estimateValue)||0; obj.createdAt = new Date().toISOString(); pushAndRender(d => d.businesses.unshift(obj)); }
+  function addFixed(obj){ obj.id = uid('fix'); obj.amount = Number(obj.amount)||0; pushAndRender(d => d.fixed.unshift(obj)); }
+  function addDebt(obj){ obj.id = uid('debt'); obj.outstanding = Number(obj.outstanding)||0; obj.monthlyPayment = Number(obj.monthlyPayment)||0; pushAndRender(d => d.debts.unshift(obj)); }
 
-  // ---------------- CRUD OPERATIONS ----------------
-  async function pushAndMaybeSync(fn){
-    fn(state.singleData);
-    state.singleData.meta.updatedAt = new Date().toISOString();
-    persistLocal(); renderAll();
-    if(state.cloudOn && state.session){
-      try{ $('#syncStatus').textContent='saving'; const r = await cloudSaveData(state.singleData); if(r && r.updatedAt) state.singleData.meta.updatedAt = r.updatedAt; persistLocal(); $('#syncStatus').textContent='idle'; } catch(e){ console.warn(e); $('#syncStatus').textContent='error'; showToast('Error al guardar en nube: '+e.message,true); }
-    }
-  }
-
-  // Categories
-  async function addCategory(obj){ obj.id = uidPrefix('cat'); obj.createdAt = new Date().toISOString(); await pushAndMaybeSync(sd=> sd.categories.unshift(obj)); }
-  async function delCategory(id){ await pushAndMaybeSync(sd=> sd.categories = sd.categories.filter(x=>x.id!==id)); }
-
-  // Banks
-  async function addBank(obj){ obj.id = uidPrefix('b'); obj.balance = Number(obj.balance)||0; obj.createdAt = new Date().toISOString(); await pushAndMaybeSync(sd=> sd.banks.unshift(obj)); showToast('Cuenta creada'); }
-  async function updateBank(id, data){ await pushAndMaybeSync(sd=> sd.banks = sd.banks.map(b=> b.id===id? Object.assign(b,data):b)); }
-  async function delBank(id){ await pushAndMaybeSync(sd=> { sd.banks = sd.banks.filter(b=>b.id!==id); /* also unlink assets/fixed */ sd.assets.forEach(a=>{ if(a.linkedBankId===id) a.linkedBankId = null; }); sd.fixed.forEach(f=>{ if(f.bankId===id) f.bankId = null; }); }); showToast('Cuenta eliminada'); }
-
-  // Debts
-  async function addDebt(d){ d.id = uidPrefix('debt'); d.outstanding = Number(d.outstanding)||0; await pushAndMaybeSync(sd=> sd.debts.unshift(d)); }
-  async function payDebt(debtId, amount, bankId){
-    await pushAndMaybeSync(sd=>{
-      const d = sd.debts.find(x=>x.id===debtId); if(d) d.outstanding = Math.max(0, (Number(d.outstanding)||0) - amount);
-      // update bank balance
-      const b = sd.banks.find(x=>x.id===bankId); if(b) b.balance = (Number(b.balance)||0) - amount;
-      // add transaction
-      sd.transactions.unshift({ id: uidPrefix('t'), type:'Egreso', dateStr: toDDMMYYYY(new Date()), amount, bankId, description: 'Pago deuda: ' + (d?d.name:'') , createdAt: new Date().toISOString(), debtId });
-    });
-    showToast('Pago registrado');
-  }
-
-  // Fixed expenses
-  async function addFixed(f){ f.id = uidPrefix('fix'); f.amount = Number(f.amount)||0; await pushAndMaybeSync(sd=> sd.fixed.unshift(f)); }
-  async function applyMonthlyFixed(){
-    const today = new Date(); const dateStr = toDDMMYYYY(today);
-    await pushAndMaybeSync(sd=>{
-      sd.fixed.forEach(f=>{
-        const tx = { id: uidPrefix('t'), type:'Egreso', dateStr, amount: Number(f.amount)||0, bankId: f.bankId||null, categoryId: f.categoryId||null, description: 'Gasto fijo: '+f.name, createdAt: new Date().toISOString(), meta:{ fromFixed: f.id } };
-        sd.transactions.unshift(tx);
-        if(f.bankId){
-          const b = sd.banks.find(x=>x.id===f.bankId); if(b) b.balance = (Number(b.balance)||0) - tx.amount;
-        }
-      });
-    });
-    showToast('Gastos fijos aplicados al mes');
-  }
-
-  // Transactions
   async function addTransaction(tx){
-    if(!parseDate(tx.dateStr)) throw new Error('Fecha inválida');
-    tx.id = uidPrefix('t'); tx.amount = Number(tx.amount)||0; tx.createdAt = new Date().toISOString();
-    await pushAndMaybeSync(sd=>{
-      sd.transactions.unshift(tx);
-      if(tx.bankId){
-        const b = sd.banks.find(x=>x.id===tx.bankId); if(b) b.balance = (Number(b.balance)||0) + (tx.type==='Egreso' ? -tx.amount : tx.amount);
-      }
+    if(!parseDateDDMMYYYY(tx.dateStr)) throw new Error('Fecha inválida (dd/mm/yyyy)');
+    if(!tx.bankId) throw new Error('Seleccione una cuenta bancaria');
+    tx.id = uid('t'); tx.amount = Number(tx.amount)||0; tx.createdAt = new Date().toISOString();
+    pushAndRender(d=>{
+      d.transactions.unshift(tx);
+      const b = d.banks.find(x=>x.id===tx.bankId);
+      if(b) b.balance = (Number(b.balance)||0) + (tx.type === 'Egreso' ? -tx.amount : tx.amount);
+      if(tx.debtId && tx.type === 'Egreso'){ const debt = d.debts.find(x=>x.id===tx.debtId); if(debt) debt.outstanding = Math.max(0, (Number(debt.outstanding)||0) - tx.amount); }
     });
-    showToast('Transacción guardada');
   }
-  async function delTransaction(id){ await pushAndMaybeSync(sd=> sd.transactions = sd.transactions.filter(t=>t.id!==id)); showToast('Transacción eliminada'); }
 
-  // Transfer between own banks
-  async function transferBetweenBanks(fromId, toId, amount, dateStr, note){
-    amount = Number(amount)||0; if(amount<=0) throw new Error('Monto inválido');
-    await pushAndMaybeSync(sd=>{
-      const from = sd.banks.find(b=>b.id===fromId); const to = sd.banks.find(b=>b.id===toId);
+  function transferBetweenBanks(fromId,toId,amount,dateStr,note){
+    amount = Number(amount)||0; if(amount <= 0) throw new Error('Monto inválido');
+    pushAndRender(d=>{
+      const from = d.banks.find(b=>b.id===fromId), to = d.banks.find(b=>b.id===toId);
       if(from) from.balance = (Number(from.balance)||0) - amount;
       if(to) to.balance = (Number(to.balance)||0) + amount;
-      const txOut = { id: uidPrefix('t'), type:'Egreso', dateStr, amount, bankId: fromId, categoryId: null, description: 'Transferencia a ' + (to?to.name:'-') + (note?(' | '+note):''), createdAt: new Date().toISOString(), meta:{ transferTo: toId } };
-      const txIn  = { id: uidPrefix('t'), type:'Ingreso', dateStr, amount, bankId: toId, categoryId: null, description: 'Transferencia desde ' + (from?from.name:'-') + (note?(' | '+note):''), createdAt: new Date().toISOString(), meta:{ transferFrom: fromId } };
-      sd.transactions.unshift(txIn); sd.transactions.unshift(txOut);
-    });
-    showToast('Transferencia realizada');
-  }
-
-  // Assets / Patrimonio
-  async function addAsset(a){ a.id = uidPrefix('asset'); a.estimatedValue = Number(a.estimatedValue)||0; await pushAndMaybeSync(sd=> sd.assets.unshift(a)); showToast('Activo registrado'); }
-  async function updateAsset(id,data){ await pushAndMaybeSync(sd=> sd.assets = sd.assets.map(x=>x.id===id?Object.assign(x,data):x)); }
-  async function delAsset(id){ await pushAndMaybeSync(sd=> sd.assets = sd.assets.filter(x=>x.id!==id)); }
-
-  // Businesses
-  async function addBusiness(b){ b.id = uidPrefix('biz'); b.monthlyRevenue = Number(b.monthlyRevenue)||0; b.monthlyExpense = Number(b.monthlyExpense)||0; await pushAndMaybeSync(sd=> sd.businesses.unshift(b)); showToast('Empresa creada'); }
-  async function delBusiness(id){ await pushAndMaybeSync(sd=> sd.businesses = sd.businesses.filter(x=>x.id!==id)); }
-
-  // ---------------- UI RENDER ----------------
-  function switchView(view){
-    const all = ['dashboard','transactions','banks','assets','fixed','business','export'];
-    all.forEach(v=>{ const el = document.getElementById('view-'+v); if(el) el.style.display = (v===view)?'block':'none'; });
-    document.querySelectorAll('nav.bottom button').forEach(b=> b.classList.toggle('active', b.dataset.view===view));
-    updateHeader();
-  }
-
-  function updateHeader(){
-    $('#orgBadge').textContent = state.orgId ? ('Org: '+state.orgId.slice(0,8)) : 'No vinculado';
-    $('#btnCloud').textContent = state.cloudOn ? 'Cloud: ON' : 'Cloud: OFF';
-    $('#monthLabel').textContent = (new Date()).toLocaleString('default',{month:'long',year:'numeric'});
-  }
-
-  function renderAll(){
-    renderDashboard(); renderTransactions(); renderBanks(); renderAssets(); renderFixed(); renderBusinesses();
-    populateSelects(); updateHeader(); updateTimestamps();
-  }
-
-  function renderDashboard(){
-    // flows this month
-    const now = new Date(), month = now.getMonth(), year = now.getFullYear();
-    let inc=0, eg=0;
-    state.singleData.transactions.forEach(t=>{
-      const d = parseDate(t.dateStr||''); if(!d) return;
-      if(d.getMonth()===month && d.getFullYear()===year){
-        if(t.type === 'Egreso') eg += Number(t.amount)||0; else inc += Number(t.amount)||0;
-      }
-    });
-    $('#balance').textContent = fmtMoney(inc - eg);
-    $('#flows').textContent = `Ingresos: ${fmtMoney(inc)} · Egresos: ${fmtMoney(eg)}`;
-
-    // net worth
-    const assetsTotal = state.singleData.assets.reduce((a,x)=>a + (Number(x.estimatedValue)||0),0);
-    const bankTotal = state.singleData.banks.reduce((a,x)=>a + (Number(x.balance)||0),0);
-    const debtsTotal = state.singleData.debts.reduce((a,x)=>a + (Number(x.outstanding)||0),0);
-    const net = assetsTotal + bankTotal - debtsTotal;
-    $('#netWorth').textContent = fmtMoney(net);
-
-    // alerts: limits and low balances
-    let alerts = [];
-    state.singleData.categories.forEach(cat=>{
-      if(!cat.limitMonthly || Number(cat.limitMonthly)<=0) return;
-      const total = state.singleData.transactions.reduce((acc,t)=>{
-        const d = parseDate(t.dateStr||''); if(!d) return acc;
-        if(d.getMonth()===month && d.getFullYear()===year && t.categoryId === cat.id) acc += Number(t.amount)||0;
-        return acc;
-      },0);
-      if(total > Number(cat.limitMonthly)) alerts.push(`<div style="color:var(--danger)"><strong>${cat.name}</strong> superó límite: ${fmtMoney(total)} / ${fmtMoney(cat.limitMonthly)}</div>`);
-      else if(total >= Number(cat.limitMonthly)*0.8) alerts.push(`<div><strong>${cat.name}</strong> cerca del límite: ${fmtMoney(total)} / ${fmtMoney(cat.limitMonthly)}</div>`);
-    });
-    state.singleData.banks.forEach(b=>{ if(Number(b.balance) < 0) alerts.push(`<div style="color:var(--danger)"><strong>${b.name}</strong> saldo negativo ${fmtMoney(b.balance)}</div>`); });
-    $('#alertsArea').innerHTML = alerts.length ? alerts.join('') : '<div class="muted-small">Sin alertas</div>';
-  }
-
-  function renderTransactions(){
-    const tbody = $('#txTable tbody'); if(!tbody) return; tbody.innerHTML = '';
-    const rows = applyFilters();
-    rows.forEach(t=>{
-      const bank = state.singleData.banks.find(b=>b.id===t.bankId);
-      const cat = state.singleData.categories.find(c=>c.id===t.categoryId);
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${t.dateStr||''}</td><td>${bank?bank.name:'-'}</td><td>${t.type}</td><td>${cat?cat.name:(t.categoryName||'-')}</td><td class="right">${fmtMoney(t.amount)}</td><td><button data-id="${t.id}" data-act="edit" class="btn ghost">E</button> <button data-id="${t.id}" data-act="del" class="btn danger">X</button></td>`;
-      tbody.appendChild(tr);
-    });
-    $$('#txTable button').forEach(btn=> btn.onclick = async ()=>{ const id=btn.dataset.id, act=btn.dataset.act; if(act==='del'){ if(confirm('Eliminar transacción?')) await delTransaction(id); } if(act==='edit'){ const tx = state.singleData.transactions.find(x=>x.id===id); if(tx) openTxModal(tx); } });
-  }
-
-  function applyFilters(){
-    const q = $('#search').value.trim().toLowerCase();
-    const bank = $('#filterAccount').value;
-    const from = $('#filterFrom').value.trim();
-    const to = $('#filterTo').value.trim();
-    return state.singleData.transactions.filter(t=>{
-      const d = parseDate(t.dateStr||''); if(from){ const f = parseDate(from); if(!f || !d || d < f) return false; } if(to){ const tt = parseDate(to); if(!tt || !d || d > tt) return false; }
-      if(bank && t.bankId !== bank) return false;
-      if(q){ const txt = `${t.description||''} ${(t.categoryName||'')}`.toLowerCase(); if(!txt.includes(q)) return false; }
-      return true;
+      const out = { id: uid('t'), type:'Egreso', dateStr, amount, bankId: fromId, description:'Transferencia a ' + (to?to.name:''), createdAt:new Date().toISOString(), meta:{transferTo:toId} };
+      const inc = { id: uid('t'), type:'Ingreso', dateStr, amount, bankId: toId, description:'Transferencia desde ' + (from?from.name:''), createdAt:new Date().toISOString(), meta:{transferFrom:fromId} };
+      d.transactions.unshift(inc); d.transactions.unshift(out);
     });
   }
 
-  function renderBanks(){
-    const wrap = $('#banksArea'); if(!wrap) return;
-    if(!state.singleData.banks.length) { wrap.innerHTML = '<div class="muted-small">No hay cuentas registradas</div>'; return; }
-    const rows = state.singleData.banks.map(b=>`<tr><td>${b.name}<div class="small muted-small">${b.type || ''}</div></td><td class="right">${fmtMoney(Number(b.balance)||0)}</td><td><button data-id="${b.id}" data-act="edit" class="btn ghost">E</button> <button data-id="${b.id}" data-act="del" class="btn danger">X</button></td></tr>`).join('');
-    wrap.innerHTML = `<table><thead><tr><th>Cuenta</th><th class="right">Saldo</th><th>Acc.</th></tr></thead><tbody>${rows}</tbody></table>`;
-    $$('#banksArea button').forEach(btn=> btn.onclick = async ()=>{ const id=btn.dataset.id, act=btn.dataset.act; if(act==='del'){ if(confirm('Eliminar cuenta?')) await delBank(id); } if(act==='edit'){ const b = state.singleData.banks.find(x=>x.id===id); if(b) openBankModal(b); } });
+  function applyMonthlyFixed(){
+    const today = toDDMMYYYY(new Date());
+    pushAndRender(d=>{
+      d.fixed.forEach(f=>{
+        const tx = { id: uid('t'), type:'Egreso', dateStr: today, amount: Number(f.amount)||0, bankId: f.bankId||null, categoryId: f.categoryId||null, description: 'Gasto fijo: ' + f.name, createdAt: new Date().toISOString(), meta:{fromFixed:f.id} };
+        d.transactions.unshift(tx);
+        if(f.bankId){ const b = d.banks.find(x=>x.id===f.bankId); if(b) b.balance = (Number(b.balance)||0) - tx.amount; }
+      });
+    });
+    showToast('Gastos fijos aplicados');
   }
 
-  function renderAssets(){
-    const wrap = $('#assetsArea'); if(!wrap) return;
-    if(!state.singleData.assets.length) { wrap.innerHTML = '<div class="muted-small">Sin activos registrados</div>'; return; }
-    const rows = state.singleData.assets.map(a=>`<tr><td>${a.name}<div class="small muted-small">${a.notes||''}</div></td><td class="right">${fmtMoney(Number(a.estimatedValue)||0)}</td><td>${(state.singleData.banks.find(b=>b.id===a.linkedBankId)||{name:'-'}) .name}</td><td><button data-id="${a.id}" data-act="edit" class="btn ghost">E</button> <button data-id="${a.id}" data-act="del" class="btn danger">X</button></td></tr>`).join('');
-    wrap.innerHTML = `<table><thead><tr><th>Activo</th><th class="right">Valor</th><th>Vinculado</th><th>Acc.</th></tr></thead><tbody>${rows}</tbody></table>`;
-    $$('#assetsArea button').forEach(btn=> btn.onclick = async ()=>{ const id=btn.dataset.id, act=btn.dataset.act; if(act==='del'){ if(confirm('Eliminar activo?')) await delAsset(id); } if(act==='edit'){ const a = state.singleData.assets.find(x=>x.id===id); openAssetModal(a); } });
-  }
-
-  function renderFixed(){
-    const wrap = $('#fixedArea'); if(!wrap) return;
-    if(!state.singleData.fixed.length) { wrap.innerHTML = '<div class="muted-small">Sin gastos fijos</div>'; return; }
-    const rows = state.singleData.fixed.map(f=>`<tr><td>${f.name}<div class="small muted-small">${f.categoryId? (state.singleData.categories.find(c=>c.id===f.categoryId)||{name:''}).name : ''}</div></td><td class="right">${fmtMoney(Number(f.amount)||0)}</td><td>${(state.singleData.banks.find(b=>b.id===f.bankId)||{name:'-'}) .name}</td><td><button data-id="${f.id}" data-act="edit" class="btn ghost">E</button> <button data-id="${f.id}" data-act="del" class="btn danger">X</button></td></tr>`).join('');
-    wrap.innerHTML = `<table><thead><tr><th>Gasto</th><th class="right">Monto</th><th>Cuenta</th><th>Acc.</th></tr></thead><tbody>${rows}</tbody></table>`;
-    $$('#fixedArea button').forEach(btn=> btn.onclick = async ()=>{ const id=btn.dataset.id, act=btn.dataset.act; if(act==='del'){ if(confirm('Eliminar gasto fijo?')){ state.singleData.fixed = state.singleData.fixed.filter(x=>x.id!==id); state.singleData.meta.updatedAt=new Date().toISOString(); persistLocal(); renderAll(); } } if(act==='edit'){ const f = state.singleData.fixed.find(x=>x.id===id); openFixedModal(f); } });
-  }
-
-  function renderBusinesses(){
-    const wrap = $('#bizArea'); if(!wrap) return;
-    if(!state.singleData.businesses.length) { wrap.innerHTML = '<div class="muted-small">Sin empresas</div>'; return; }
-    const rows = state.singleData.businesses.map(b=>`<tr><td>${b.name}<div class="small muted-small">Rev: ${fmtMoney(b.monthlyRevenue)} · Costos: ${fmtMoney(b.monthlyExpense)}</div></td><td class="right">${fmtMoney(b.monthlyRevenue - b.monthlyExpense)}</td><td><button data-id="${b.id}" data-act="edit" class="btn ghost">E</button> <button data-id="${b.id}" data-act="del" class="btn danger">X</button></td></tr>`).join('');
-    wrap.innerHTML = `<table><thead><tr><th>Empresa</th><th class="right">Flujo neto</th><th>Acc.</th></tr></thead><tbody>${rows}</tbody></table>`;
-    $$('#bizArea button').forEach(btn=> btn.onclick = async ()=>{ const id=btn.dataset.id, act=btn.dataset.act; if(act==='del'){ if(confirm('Eliminar empresa?')) await delBusiness(id); } if(act==='edit'){ const b = state.singleData.businesses.find(x=>x.id===id); openBizModal(b); } });
-    // populate bizSelect
-    const sel = $('#bizSelect'); if(sel){ sel.innerHTML = '<option value="">-- seleccionar --</option>' + state.singleData.businesses.map(b=>`<option value="${b.id}">${b.name}</option>`).join(''); }
-  }
-
-  function populateSelects(){
-    // accounts
-    const selAcc = $('#filterAccount'); if(selAcc){ selAcc.innerHTML = '<option value="">-- Todas cuentas --</option>' + state.singleData.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join(''); }
-    // cloud inputs
-    $('#cloudApi').value = state.apiBase;
-    $('#orgManual').value = state.orgId;
-  }
-
-  function updateTimestamps(){
-    $('#syncStatus').textContent = state.syncing ? 'syncing' : 'idle';
-  }
-
-  // ---------------- MODALES & UI CONTROLS ----------------
-  function showModal(html){ $('#modalContent').innerHTML = html; $('#modalBackdrop').style.display = 'flex'; }
-  function closeModal(){ $('#modalContent').innerHTML=''; $('#modalBackdrop').style.display='none'; }
-
-  // Quick transaction modal
-  function openTxModal(existing){
-    const banksOpt = '<option value="">-- seleccionar --</option>' + state.singleData.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
-    const catOpt = '<option value="">-- categ. --</option>' + state.singleData.categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
-    const def = existing || { type:'Egreso', amount:0, dateStr: toDDMMYYYY(new Date()), bankId:'', categoryId:'', description:'' };
-    showModal(`<div><h3 style="margin:0">${existing ? 'Editar transacción' : 'Nueva transacción'}</h3>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-        <div><label>Tipo</label><select id="txType"><option ${def.type==='Ingreso'?'selected':''}>Ingreso</option><option ${def.type==='Egreso'?'selected':''}>Egreso</option></select></div>
-        <div><label>Monto</label><input id="txAmount" value="${def.amount||0}" /></div>
-        <div><label>Cuenta</label><select id="txBank">${banksOpt}</select></div>
-        <div><label>Categoría</label><select id="txCat">${catOpt}</select></div>
-        <div style="grid-column:1/-1"><label>Descripción</label><input id="txDesc" value="${(def.description||'').replace(/"/g,'&quot;')}" /></div>
-        <div><label>Fecha</label><input id="txDate" value="${def.dateStr}" /></div>
-      </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="txCancel" class="btn ghost">Cancelar</button><button id="txSave" class="btn primary">Guardar</button></div>
-    </div>`);
-    if(existing) setTimeout(()=>{ if(existing.bankId) $('#txBank').value = existing.bankId; if(existing.categoryId) $('#txCat').value = existing.categoryId; },50);
-    $('#txCancel').onclick = closeModal;
-    $('#txSave').onclick = async ()=> {
-      try{
-        const type = $('#txType').value; const amount = Number($('#txAmount').value)||0; const bankId = $('#txBank').value || null; const categoryId = $('#txCat').value || null; const desc = $('#txDesc').value.trim(); const dateStr = $('#txDate').value.trim();
-        if(!amount || amount<=0) return alert('Monto inválido'); if(!parseDate(dateStr)) return alert('Fecha inválida (dd/mm/yyyy)');
-        await addTransaction({ type, amount, bankId, categoryId, description: desc, dateStr });
-        closeModal();
-      } catch(e){ console.error(e); alert('Error: '+e.message); }
-    };
-  }
-
-  function openBankModal(bank){
-    const def = bank || { name:'', balance:0, type:'Cuenta', currency:'PEN' };
-    showModal(`<div><h3 style="margin:0">${bank ? 'Editar cuenta' : 'Nueva cuenta'}</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><div><label>Nombre</label><input id="bName" value="${def.name}" /></div><div><label>Tipo</label><input id="bType" value="${def.type}" /></div><div><label>Saldo inicial</label><input id="bBalance" value="${Number(def.balance)||0}" /></div><div><label>Moneda</label><input id="bCurr" value="${def.currency||'PEN'}" /></div></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="bCancel" class="btn ghost">Cancelar</button><button id="bSave" class="btn primary">Guardar</button></div></div>`);
-    $('#bCancel').onclick = closeModal;
-    $('#bSave').onclick = async ()=> {
-      try{
-        const name = $('#bName').value.trim(), type = $('#bType').value.trim(), balance = Number($('#bBalance').value)||0, currency = $('#bCurr').value.trim()||'PEN';
-        if(!name) return alert('Nombre requerido');
-        if(bank) await updateBank(bank.id, { name, type, balance, currency }); else await addBank({ name, type, balance, currency });
-        closeModal();
-      } catch(e){ console.error(e); alert('Error: '+e.message); }
-    };
-  }
-
-  function openTransferModal(){
-    if(state.singleData.banks.length < 2) return alert('Necesitas al menos 2 cuentas para transferir');
-    const bankOpts = state.singleData.banks.map(b=>`<option value="${b.id}">${b.name} • ${fmtMoney(b.balance)}</option>`).join('');
-    showModal(`<div><h3 style="margin:0">Transferencia interna</h3>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-        <div><label>Desde</label><select id="trFrom">${bankOpts}</select></div>
-        <div><label>Hacia</label><select id="trTo">${bankOpts}</select></div>
-        <div><label>Monto</label><input id="trAmount" value="0" /></div>
-        <div><label>Fecha</label><input id="trDate" value="${toDDMMYYYY(new Date())}" /></div>
-        <div style="grid-column:1/-1"><label>Nota</label><input id="trNote" /></div>
-      </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="trCancel" class="btn ghost">Cancelar</button><button id="trSave" class="btn primary">Transferir</button></div>
-    </div>`);
-    $('#trCancel').onclick = closeModal;
-    $('#trSave').onclick = async ()=> {
-      try{
-        const from = $('#trFrom').value, to = $('#trTo').value, amt = Number($('#trAmount').value)||0, dateStr = $('#trDate').value.trim(), note = $('#trNote').value.trim();
-        if(from===to) return alert('Selecciona cuentas diferentes');
-        if(amt<=0) return alert('Monto inválido');
-        if(!parseDate(dateStr)) return alert('Fecha inválida');
-        await transferBetweenBanks(from,to,amt,dateStr,note);
-        closeModal();
-      } catch(e){ console.error(e); alert('Error: '+e.message); }
-    };
-  }
-
-  function openAssetModal(a){
-    const def = a || { name:'', estimatedValue:0, linkedBankId:'', notes:'' };
-    const bankOpts = '<option value="">-- Ninguna --</option>' + state.singleData.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
-    showModal(`<div><h3 style="margin:0">${a ? 'Editar activo' : 'Nuevo activo'}</h3>
-      <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px">
-        <div><label>Nombre</label><input id="aName" value="${def.name}" /></div>
-        <div><label>Valor estimado</label><input id="aValue" value="${Number(def.estimatedValue)||0}" /></div>
-        <div><label>Vinculado a cuenta (opcional)</label><select id="aBank">${bankOpts}</select></div>
-        <div><label>Notas</label><input id="aNotes" value="${(def.notes||'').replace(/"/g,'&quot;')}" /></div>
-      </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="aCancel" class="btn ghost">Cancelar</button><button id="aSave" class="btn primary">Guardar</button></div>
-    </div>`);
-    if(a) setTimeout(()=> $('#aBank').value = a.linkedBankId || '',50);
-    $('#aCancel').onclick = closeModal;
-    $('#aSave').onclick = async ()=> {
-      try{
-        const name = $('#aName').value.trim(), val = Number($('#aValue').value)||0, bankId = $('#aBank').value || null, notes = $('#aNotes').value.trim();
-        if(!name) return alert('Nombre es requerido');
-        if(a) await updateAsset(a.id, { name, estimatedValue: val, linkedBankId: bankId, notes }); else await addAsset({ name, estimatedValue: val, linkedBankId: bankId, notes });
-        closeModal();
-      } catch(e){ console.error(e); alert('Error: '+e.message); }
-    };
-  }
-
-  function openFixedModal(f){
-    const def = f || { name:'', amount:0, bankId:'', categoryId:'' };
-    const banksOpt = '<option value="">-- Ninguna --</option>' + state.singleData.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
-    const catOpt = '<option value="">-- Ninguna --</option>' + state.singleData.categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
-    showModal(`<div><h3 style="margin:0">${f ? 'Editar gasto fijo' : 'Nuevo gasto fijo'}</h3>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-        <div><label>Nombre</label><input id="fName" value="${def.name}" /></div>
-        <div><label>Monto</label><input id="fAmount" value="${Number(def.amount)||0}" /></div>
-        <div><label>Cuenta</label><select id="fBank">${banksOpt}</select></div>
-        <div><label>Categoría</label><select id="fCat">${catOpt}</select></div>
-      </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="fCancel" class="btn ghost">Cancelar</button><button id="fSave" class="btn primary">Guardar</button></div>
-    </div>`);
-    if(f) setTimeout(()=>{ $('#fBank').value = f.bankId||''; $('#fCat').value = f.categoryId||''; },50);
-    $('#fCancel').onclick = closeModal;
-    $('#fSave').onclick = async ()=> {
-      try{
-        const name = $('#fName').value.trim(), amount = Number($('#fAmount').value)||0, bankId = $('#fBank').value || null, categoryId = $('#fCat').value || null;
-        if(!name) return alert('Nombre requerido');
-        if(f){ Object.assign(f, { name, amount, bankId, categoryId }); state.singleData.meta.updatedAt = new Date().toISOString(); persistLocal(); renderAll(); } else await addFixed({ name, amount, bankId, categoryId });
-        closeModal();
-      } catch(e){ console.error(e); alert('Error: '+e.message); }
-    };
-  }
-
-  function openBizModal(biz){
-    const def = biz || { name:'', monthlyRevenue:0, monthlyExpense:0, notes:'' };
-    showModal(`<div><h3 style="margin:0">${biz ? 'Editar empresa' : 'Nueva empresa'}</h3>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-        <div><label>Nombre</label><input id="bizName" value="${def.name}" /></div>
-        <div><label>Ingreso mensual</label><input id="bizRev" value="${Number(def.monthlyRevenue)||0}" /></div>
-        <div><label>Gasto mensual</label><input id="bizExp" value="${Number(def.monthlyExpense)||0}" /></div>
-        <div><label>Notas</label><input id="bizNotes" value="${(def.notes||'').replace(/"/g,'&quot;')}" /></div>
-      </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="bizCancel" class="btn ghost">Cancelar</button><button id="bizSave" class="btn primary">Guardar</button></div>
-    </div>`);
-    $('#bizCancel').onclick = closeModal;
-    $('#bizSave').onclick = async ()=> {
-      try{
-        const name = $('#bizName').value.trim(), rev = Number($('#bizRev').value)||0, exp = Number($('#bizExp').value)||0, notes = $('#bizNotes').value.trim();
-        if(!name) return alert('Nombre requerido');
-        if(biz) { Object.assign(biz, { name, monthlyRevenue:rev, monthlyExpense:exp, notes }); state.singleData.meta.updatedAt = new Date().toISOString(); persistLocal(); renderAll(); }
-        else await addBusiness({ name, monthlyRevenue:rev, monthlyExpense:exp, notes });
-        closeModal();
-      } catch(e){ console.error(e); alert('Error: '+e.message); }
-    };
-  }
-
-  // ---------------- EXPORT / IMPORT / PDF ----------------
+  // Export / Import / PDF
   function exportCSV(){
-    const rows = state.singleData.transactions.map(t=>{
-      const bank = state.singleData.banks.find(b=>b.id===t.bankId);
-      const cat = state.singleData.categories.find(c=>c.id===t.categoryId);
-      return [t.dateStr||'', bank?bank.name:'', t.type||'', cat?cat.name:(t.categoryName||''), (t.description||'').replace(/"/g,'""'), t.amount||0];
-    });
+    const rows = state.data.transactions.map(t=>{ const b = state.data.banks.find(b=>b.id===t.bankId); const c = state.data.categories.find(c=>c.id===t.categoryId); return [t.dateStr||'', b?b.name:'', t.type||'', c?c.name:(t.categoryName||''), (t.description||'').replace(/"/g,'""'), t.amount||0]; });
     const csv = ['fecha,cuenta,tipo,categoria,descripcion,monto', ...rows.map(r=> r.map((c,i)=> i===4?`"${c}"`:c).join(',') )].join('\n');
-    const blob = new Blob([csv], { type:'text/csv' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'transacciones.csv'; a.click(); URL.revokeObjectURL(url);
+    const blob = new Blob([csv], { type:'text/csv' }); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='transacciones.csv'; a.click(); URL.revokeObjectURL(url);
   }
-
-  function exportJSON(){
-    const blob = new Blob([JSON.stringify(state.singleData,null,2)], { type:'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'backup.json'; a.click(); URL.revokeObjectURL(url);
-  }
+  function exportJSON(){ const blob = new Blob([JSON.stringify(state.data,null,2)], { type:'application/json' }); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='backup.json'; a.click(); URL.revokeObjectURL(url); }
 
   async function importFile(file){
-    if(!file) return alert('Selecciona archivo');
-    const text = await file.text();
+    if(!file) return alert('Selecciona archivo'); const text = await file.text();
     if(file.name.toLowerCase().endsWith('.csv')){
-      // simple csv parsing
-      const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-      const headers = lines.shift().split(',').map(h=>h.toLowerCase());
+      const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean); const headers = lines.shift().split(',').map(h=>h.toLowerCase());
       for(const ln of lines){
         const parts = ln.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g).map(p=>p.replace(/^"|"$/g,'').replace(/""/g,'"'));
         const obj = {}; headers.forEach((h,i)=> obj[h]=parts[i]||'');
-        const bank = state.singleData.banks.find(b=>b.name===obj.cuenta);
-        const cat = state.singleData.categories.find(c=>c.name===obj.categoria);
-        await addTransaction({ type: obj.tipo||'Ingreso', amount: Number(obj.monto)||0, bankId: bank?bank.id:null, categoryId: cat?cat.id:null, categoryName: obj.categoria||'', description: obj.descripcion||'', dateStr: obj.fecha });
+        const bank = state.data.banks.find(b=>b.name===obj.cuenta);
+        const cat = state.data.categories.find(c=>c.name===obj.categoria);
+        try{ await addTransaction({ type: obj.tipo||'Ingreso', amount: Number(obj.monto)||0, bankId: bank?bank.id:null, categoryId: cat?cat.id:null, categoryName: obj.categoria||'', description: obj.descripcion||'', dateStr: obj.fecha }); } catch(e){ console.warn('import tx fail', e); }
       }
       showToast('CSV importado');
     } else {
-      try{
-        const data = JSON.parse(text);
-        // caution: merging naive; better import items iteratively
-        if(data.banks) for(const b of data.banks) await addBank(b);
-        if(data.categories) for(const c of data.categories) await addCategory(c);
-        if(data.assets) for(const a of data.assets) await addAsset(a);
-        if(data.businesses) for(const x of data.businesses) await addBusiness(x);
-        if(data.fixed) for(const f of data.fixed) await addFixed(f);
-        if(data.debts) for(const d of data.debts) await addDebt(d);
-        if(data.transactions) for(const t of data.transactions) await addTransaction(t);
+      try{ const d = JSON.parse(text);
+        (d.banks||[]).forEach(b=> addBank(b));
+        (d.categories||[]).forEach(c=> addCategory(c));
+        (d.assets||[]).forEach(a=> addAsset(a));
+        (d.liabilities||[]).forEach(l=> addLiability(l));
+        (d.businesses||[]).forEach(bz=> addBusiness(bz));
+        (d.fixed||[]).forEach(f=> addFixed(f));
+        (d.debts||[]).forEach(dd=> addDebt(dd));
+        (d.transactions||[]).forEach(t=> addTransaction(Object.assign({},t)).catch(()=>{}));
         showToast('JSON importado');
       } catch(e){ alert('JSON inválido'); }
     }
   }
 
-  function exportPDF(){
-    const node = document.createElement('div'); node.style.padding='12mm'; node.style.background='#fff'; node.style.color='#111'; node.style.fontFamily='Arial, Helvetica, sans-serif';
-    node.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:800;font-size:12pt">Reporte - JHONATAN ORELLANA</div><div style="text-align:right">${toDDMMYYYY(new Date())}</div></div><hr style="margin:8px 0"><div style="font-size:11pt;font-weight:700;margin-top:6px">Balance: ${$('#balance').textContent}</div><div style="margin-top:6px;font-size:11pt;font-weight:700">Patrimonio neto: ${$('#netWorth').textContent}</div><hr style="margin:8px 0"><div style="font-size:11pt;font-weight:700">Últimas transacciones</div><table style="width:100%;font-size:10pt;border-collapse:collapse;margin-top:6px"><thead><tr><th style="text-align:left;border-bottom:1px solid #ddd">Fecha</th><th style="text-align:left;border-bottom:1px solid #ddd">Cuenta</th><th style="text-align:left;border-bottom:1px solid #ddd">Desc</th><th style="text-align:right;border-bottom:1px solid #ddd">Monto</th></tr></thead><tbody>${state.singleData.transactions.slice(0,40).map(t=>`<tr><td style="padding:6px 0">${t.dateStr||''}</td><td style="padding:6px 0">${(state.singleData.banks.find(b=>b.id===t.bankId)||{name:'-'}) .name}</td><td style="padding:6px 0">${(t.description||'')}</td><td style="padding:6px 0;text-align:right">${fmtMoney(t.amount)}</td></tr>`).join('')}</tbody></table>`;
-    if(window.html2pdf) html2pdf().set({margin:10, filename:`reporte_${(new Date()).toISOString().slice(0,10)}.pdf`, html2canvas:{scale:2}}).from(node).save();
-    else alert('html2pdf no cargado. Recarga con internet.');
+  async function exportPDF(){
+    // Build a rich PDF: include metrics, banks, assets, debts, and chart image (if available)
+    // compute metrics
+    const banksTotal = state.data.banks.reduce((s,b)=>s + (Number(b.balance)||0),0);
+    const assetsTotal = state.data.assets.reduce((s,a)=>s + (Number(a.estimatedValue)||0),0);
+    const liabilitiesTotal = state.data.liabilities.reduce((s,l)=>s + (Number(l.amount)||0),0);
+    const debtsTotal = state.data.debts.reduce((s,d)=>s + (Number(d.outstanding)||0),0);
+    const totalIncome12 = state.data.transactions.reduce((s,t)=>{ const td=parseDateDDMMYYYY(t.dateStr||''); if(!td) return s; const yearDiff=(new Date()).getFullYear()-td.getFullYear(); if(yearDiff>1) return s; if(t.type!=='Egreso') return s + (Number(t.amount)||0); return s; },0);
+    const totalExpenses12 = state.data.transactions.reduce((s,t)=>{ const td=parseDateDDMMYYYY(t.dateStr||''); if(!td) return s; const yearDiff=(new Date()).getFullYear()-td.getFullYear(); if(yearDiff>1) return s; if(t.type==='Egreso') return s + (Number(t.amount)||0); return s; },0);
+    const savingsRate = totalIncome12>0 ? ((totalIncome12 - totalExpenses12)/totalIncome12)*100 : 0;
+    const debtRatio = (debtsTotal > 0 || assetsTotal > 0) ? (debtsTotal / (assetsTotal + banksTotal)) : 0;
+    // chart image
+    let chartImg = null;
+    try{ if(window.flowsChart) chartImg = window.flowsChart.toBase64Image(); } catch(e){ chartImg = null; }
+    const node = document.createElement('div'); node.style.padding='12mm'; node.style.background='#fff'; node.style.color='#111'; node.style.fontFamily='Arial,Helvetica,sans-serif';
+    node.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:900;font-size:12pt">REPORTE FINANCIERO — JHONATAN ORELLANA</div>
+        <div style="font-size:10pt">${toDDMMYYYY(new Date())}</div>
+      </div>
+      <hr style="border:none;border-top:1px solid #ddd;margin:8px 0"/>
+      <section><div style="font-size:11pt;font-weight:700">1. Resumen ejecutivo</div>
+        <div style="font-size:10pt;margin-top:6px">Saldo líquido: <strong>${fmtMoney(banksTotal)}</strong> · Patrimonio neto: <strong>${fmtMoney(assetsTotal + banksTotal - (liabilitiesTotal + debtsTotal))}</strong></div>
+        <div style="font-size:10pt;margin-top:4px">Gasto anual (12m): <strong>${fmtMoney(totalExpenses12)}</strong> · Ingreso anual (12m): <strong>${fmtMoney(totalIncome12)}</strong> · Tasa de ahorro: <strong>${savingsRate.toFixed(1)}%</strong></div>
+        <div style="font-size:10pt;margin-top:4px">Ratio deuda/activos: <strong>${(debtRatio*100).toFixed(1)}%</strong></div>
+      </section>
+      <hr style="border:none;border-top:1px solid #ddd;margin:8px 0"/>
+      <section><div style="font-size:11pt;font-weight:700">2. Gráfica Ingresos vs Egresos (12m)</div>
+        ${chartImg ? `<div style="margin-top:8px;text-align:center"><img src="${chartImg}" style="max-width:100%;height:auto;border:1px solid #ddd"/></div>` : '<div style="font-size:10pt;margin-top:6px">Gráfica no disponible.</div>'}
+      </section>
+      <hr style="border:none;border-top:1px solid #ddd;margin:8px 0"/>
+      <section><div style="font-size:11pt;font-weight:700">3. Bancos & Saldos</div>
+        <table style="width:100%;font-size:10pt;border-collapse:collapse;margin-top:6px"><thead><tr><th style="text-align:left;border-bottom:1px solid #ddd">Cuenta</th><th style="text-align:right;border-bottom:1px solid #ddd">Saldo</th></tr></thead><tbody>${state.data.banks.map(b=>`<tr><td style="padding:6px 0">${b.name}</td><td style="text-align:right;padding:6px 0">${fmtMoney(b.balance)}</td></tr>`).join('')}</tbody></table>
+      </section>
+      <hr style="border:none;border-top:1px solid #ddd;margin:8px 0"/>
+      <section><div style="font-size:11pt;font-weight:700">4. Activos & Pasivos (detallado)</div>
+        <div style="font-size:10pt;margin-top:6px"><strong>Activos totales:</strong> ${fmtMoney(assetsTotal)} · <strong>Pasivos totales:</strong> ${fmtMoney(liabilitiesTotal)}</div>
+        <div style="font-size:10pt;margin-top:6px"><strong>Activos:</strong></div>
+        <ul style="font-size:10pt">${state.data.assets.map(a=>`<li>${a.name} — ${fmtMoney(a.estimatedValue)} — Subtipo: ${a.subtype||'-'} — Compra: ${a.purchaseDate||'-'} — Vida útil: ${a.usefulLife||'-'} años — Dep: ${a.depreciationRate||0}%</li>`).join('')}</ul>
+        <div style="font-size:10pt;margin-top:6px"><strong>Pasivos:</strong></div>
+        <ul style="font-size:10pt">${state.data.liabilities.map(l=>`<li>${l.name} — ${fmtMoney(l.amount)} — Subtipo: ${l.subtype||'-'} — Tasa: ${l.interestRate||0}% — Venc: ${l.maturityDate||'-'}</li>`).join('')}</ul>
+      </section>
+      <hr style="border:none;border-top:1px solid #ddd;margin:8px 0"/>
+      <section><div style="font-size:11pt;font-weight:700">5. Deudas y calendario de pagos</div>
+        <div style="font-size:10pt;margin-top:6px">Total deuda: <strong>${fmtMoney(debtsTotal)}</strong></div>
+        <ul style="font-size:10pt">${state.data.debts.map(d=>`<li>${d.name} — Banco: ${(state.data.banks.find(b=>b.id===d.bankId)||{name:'-'}) .name} — Saldo: ${fmtMoney(d.outstanding)} — Cuota: ${fmtMoney(d.monthlyPayment)} — Tasa: ${d.interestRate||0}%</li>`).join('')}</ul>
+      </section>
+      <hr style="border:none;border-top:1px solid #ddd;margin:8px 0"/>
+      <section><div style="font-size:11pt;font-weight:700">6. Transacciones recientes</div>
+        <table style="width:100%;font-size:10pt;border-collapse:collapse;margin-top:6px"><thead><tr><th style="text-align:left;border-bottom:1px solid #ddd">Fecha</th><th style="text-align:left;border-bottom:1px solid #ddd">Cuenta</th><th style="text-align:left;border-bottom:1px solid #ddd">Desc</th><th style="text-align:right;border-bottom:1px solid #ddd">Monto</th></tr></thead><tbody>${state.data.transactions.slice(0,100).map(t=>`<tr><td style="padding:6px 0">${t.dateStr||''}</td><td style="padding:6px 0">${(state.data.banks.find(b=>b.id===t.bankId)||{name:'-'}) .name}</td><td style="padding:6px 0">${t.description||''}</td><td style="text-align:right;padding:6px 0">${fmtMoney(t.amount)}</td></tr>`).join('')}</tbody></table>
+      </section>
+      <div style="margin-top:8px;font-size:9pt;color:#666">Generado por JHONATAN ORELLANA — App PRO</div>
+    `;
+    if(window.html2pdf) html2pdf().set({ margin:10, filename:`reporte_tecnico_${(new Date()).toISOString().slice(0,10)}.pdf`, html2canvas:{scale:2} }).from(node).save();
+    else alert('html2pdf no cargado');
   }
 
-  // ---------------- SIMULACIÓN CASHFLOW / LIBERTAD FINANCIERA ----------------
-  function simulateCashflow(bizId){
-    const biz = state.singleData.businesses.find(b=>b.id===bizId); if(!biz) return alert('Selecciona empresa');
-    // Simple projection: net monthly cash for 12 months, growth assumption small
-    const monthlyNet = Number(biz.monthlyRevenue) - Number(biz.monthlyExpense);
-    let projection = [], current = monthlyNet;
-    for(let i=0;i<12;i++){
-      // assume modest growth 1% month if positive, or reduce 0.5% if negative
-      projection.push({ month:i+1, cash: current });
-      if(current > 0) current *= 1.01; else current *= 0.995;
+  // Charts & metrics
+  let flowsChart = null;
+  window.flowsChart = null;
+  function renderFlowsChart(){
+    const labels=[], incData=[], egData=[];
+    const now = new Date();
+    for(let i=11;i>=0;i--){
+      const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+      labels.push(d.toLocaleString('es-PE',{month:'short',year:'2-digit'}));
+      let inc=0, eg=0;
+      state.data.transactions.forEach(t=>{ const td=parseDateDDMMYYYY(t.dateStr||''); if(!td) return; if(td.getMonth()===d.getMonth() && td.getFullYear()===d.getFullYear()){ if(t.type==='Egreso') eg += Number(t.amount)||0; else inc += Number(t.amount)||0; }});
+      incData.push(inc); egData.push(eg);
     }
-    // build simple report
-    const total = projection.reduce((a,p)=>a+p.cash,0);
-    let html = `<div class="card"><strong>Empresa: ${biz.name}</strong><div class="muted-small">Proyección 12 meses</div><table style="width:100%;margin-top:8px"><thead><tr><th>Mes</th><th class="right">Cash</th></tr></thead><tbody>${projection.map(p=>`<tr><td>Mes ${p.month}</td><td class="right">${fmtMoney(p.cash)}</td></tr>`).join('')}</tbody></table><div style="margin-top:8px;font-weight:800">Total 12 meses: ${fmtMoney(total)}</div></div>`;
-    $('#simResult').innerHTML = html;
+    const ctx = document.getElementById('chartFlows');
+    const data = { labels, datasets:[ { label:'Ingresos', data:incData, backgroundColor:'#10b981', borderColor:'#10b981' }, { label:'Egresos', data:egData, backgroundColor:'#ff6b6b', borderColor:'#ff6b6b' } ] };
+    if(flowsChart){ flowsChart.data = data; flowsChart.update(); } else { flowsChart = new Chart(ctx,{ type:'bar', data, options:{ responsive:true, maintainAspectRatio:true, plugins:{legend:{display:true}}, scales:{ x:{ stacked:false }, y:{ beginAtZero:true } } } }); window.flowsChart = flowsChart; }
   }
 
-  // ---------------- EVENTS BIND ----------------
-  function bindUI(){
-    // nav
-    $$('nav.bottom button').forEach(b=> b.onclick = ()=> switchView(b.dataset.view));
-
-    // header buttons
-    $('#btnLink').onclick = ()=> openJoinModal();
-    $('#btnCloud').onclick = ()=> { state.cloudOn = !state.cloudOn; persistLocal(); updateHeader(); showToast('Cloud ' + (state.cloudOn? 'ON':'OFF')); };
-
-    // dashboard actions
-    $('#btnAddQuickTx').onclick = ()=> openTxModal();
-    $('#btnSimulate').onclick = ()=> { if(!state.singleData.businesses.length) return alert('Sin empresas'); openBizModal(null); };
-
-    // transactions
-    $('#btnAddTx').onclick = ()=> openTxModal();
-    $('#search').oninput = renderTransactions;
-
-    // banks
-    $('#btnAddBank').onclick = ()=> openBankModal(null);
-    $('#btnTransfer').onclick = ()=> openTransferModal();
-
-    // assets
-    $('#btnAddAsset').onclick = ()=> openAssetModal(null);
-
-    // fixed
-    $('#btnAddFixed').onclick = ()=> openFixedModal(null);
-    $('#btnApplyFixed').onclick = ()=> { if(confirm('Aplicar gastos fijos del mes ahora?')) applyMonthlyFixed(); };
-    $('#btnAutoApply').onclick = ()=> { showToast('Auto-apply no implementado; use "Aplicar mes"'); };
-
-    // businesses
-    $('#btnAddBiz').onclick = ()=> openBizModal(null);
-    $('#btnRunSim').onclick = ()=> { const id = $('#bizSelect').value; if(!id) return alert('Selecciona empresa'); simulateCashflow(id); };
-
-    // export / import
-    $('#btnCSV').onclick = exportCSV;
-    $('#btnJSON').onclick = exportJSON;
-    $('#btnImport').onclick = ()=> importFile($('#fileImport').files[0]);
-    $('#btnPDF').onclick = exportPDF;
-
-    // cloud controls
-    $('#cloudApi').onchange = e=> { state.apiBase = e.target.value.trim(); persistLocal(); };
-    $('#orgManual').onchange = e=> { state.orgId = e.target.value.trim(); persistLocal(); };
-    $('#btnLinkManual').onclick = ()=> openJoinModal();
-    $('#btnSyncNow').onclick = async ()=> { if(!state.cloudOn) return alert('Activa Cloud ON'); if(!state.session) return alert('Vincula primero'); try{ await syncFetchAndMerge(); } catch(e){ alert('Sync error: '+e.message); } };
-    $('#chkAuto').onchange = e=> { if(e.target.checked){ startAutoSync(); } else stopAutoSync(); };
-
-    // key "N" open new tx
-    window.addEventListener('keydown', e=> { if(e.key.toLowerCase()==='n' && !e.ctrlKey && !e.metaKey && !e.altKey){ const tag = document.activeElement && document.activeElement.tagName; if(['INPUT','TEXTAREA','SELECT'].includes(tag)) return; openTxModal(null); } });
+  function dashboardMetrics(){
+    const now = new Date(), month = now.getMonth(), year = now.getFullYear();
+    const banksTotal = state.data.banks.reduce((s,b)=>s + (Number(b.balance)||0),0);
+    const assetsTotal = state.data.assets.reduce((s,a)=>s + (Number(a.estimatedValue)||0),0);
+    const liabilitiesTotal = state.data.liabilities.reduce((s,l)=>s + (Number(l.amount)||0),0);
+    const debtsTotal = state.data.debts.reduce((s,d)=>s + (Number(d.outstanding)||0),0);
+    const monthly=[]; for(let i=1;i<=6;i++){ const d=new Date(now.getFullYear(), now.getMonth()-i+1,1); let total=0; state.data.transactions.forEach(t=>{ const td=parseDateDDMMYYYY(t.dateStr||''); if(!td) return; if(td.getMonth()===d.getMonth() && td.getFullYear()===d.getFullYear() && t.type==='Egreso') total += Number(t.amount)||0; }); monthly.push(total); }
+    const avgExpenses = monthly.length ? (monthly.reduce((a,b)=>a+b,0)/monthly.length) : 0;
+    const liquidityRatio = debtsTotal ? (banksTotal / debtsTotal).toFixed(2) : '∞';
+    const runway = avgExpenses > 0 ? (banksTotal / avgExpenses).toFixed(1) : '∞';
+    const catSums = {};
+    state.data.transactions.forEach(t=>{ const td=parseDateDDMMYYYY(t.dateStr||''); if(!td) return; if(td.getMonth()===month && td.getFullYear()===year && t.type==='Egreso'){ const cid = t.categoryId || t.categoryName || 'Sin categoría'; catSums[cid] = (catSums[cid]||0) + (Number(t.amount)||0); }});
+    const topCats = Object.entries(catSums).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k,v])=> `${k}: ${fmtMoney(v)}`).join('<br/>') || '—';
+    const bankBreak = state.data.banks.map(b=>`${b.name}: ${fmtMoney(b.balance)}`).join('<br/>') || '—';
+    const alerts = [];
+    state.data.categories.forEach(cat=>{ if(!cat.limitMonthly || Number(cat.limitMonthly)<=0) return; const spent = state.data.transactions.reduce((acc,t)=>{ const td=parseDateDDMMYYYY(t.dateStr||''); if(!td) return acc; if(td.getMonth()===month && td.getFullYear()===year && t.categoryId===cat.id) acc += Number(t.amount)||0; return acc; },0); if(spent > Number(cat.limitMonthly)) alerts.push(`<strong style="color:#ff8b8b">${cat.name}</strong> superó límite ${fmtMoney(spent)} / ${fmtMoney(cat.limitMonthly)}`); else if(spent >= Number(cat.limitMonthly)*0.8) alerts.push(`<strong>${cat.name}</strong> cerca del límite ${fmtMoney(spent)} / ${fmtMoney(cat.limitMonthly)}`); });
+    state.data.banks.forEach(b=>{ if(Number(b.balance) < 0) alerts.push(`<strong style="color:#ff8b8b">${b.name}</strong> saldo negativo ${fmtMoney(b.balance)}`); });
+    $('#balance').textContent = fmtMoney(banksTotal);
+    $('#netWorth').textContent = fmtMoney(assetsTotal + banksTotal - (liabilitiesTotal + debtsTotal));
+    $('#avgExpenses').textContent = fmtMoney(avgExpenses);
+    $('#liquidityRatio').textContent = `Ratio liquidez: ${liquidityRatio}`;
+    $('#assetsSummary').textContent = `Activos: ${fmtMoney(assetsTotal)} · Pasivos: ${fmtMoney(liabilitiesTotal)}`;
+    $('#runway').textContent = `Runway: ${runway} meses`;
+    $('#topCategories').innerHTML = topCats;
+    $('#bankBreakdown').innerHTML = bankBreak;
+    $('#alertsArea').innerHTML = alerts.length ? alerts.join('<br/>') : '<span class="muted">Sin alertas</span>';
   }
 
-  // ---------------- JOIN modal (manual) ----------------
-  function openJoinModal(){
-    showModal(`<div><h3 style="margin:0">Vincular dispositivo (JOIN)</h3>
-      <div class="muted-small" style="margin-top:8px">Ingresa JOIN CODE proporcionado por la organización central. El backend validará y emitirá token de sesión.</div>
-      <div style="margin-top:8px"><input id="joinInput" placeholder="JOINCODE" /></div>
-      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px"><button id="joinCancel" class="btn ghost">Cancelar</button><button id="joinDo" class="btn primary">Vincular</button></div>
-    </div>`);
-    $('#joinCancel').onclick = closeModal;
-    $('#joinDo').onclick = async ()=> {
-      const code = $('#joinInput').value.trim(); if(!code) return alert('Ingrese código'); if(!state.apiBase) return alert('Configura CLOUD_API_BASE en Export');
-      try{ await cloudJoin(code); closeModal(); renderAll(); } catch(e){ console.error(e); alert('No se pudo vincular: '+e.message); }
+  // Render functions
+  function renderTransactions(){
+    const tbody = $('#txTable tbody'); if(!tbody) return; tbody.innerHTML = '';
+    const q = $('#search').value.trim().toLowerCase();
+    const filterBank = $('#filterAccount').value;
+    const rows = state.data.transactions.filter(t=>{ if(filterBank && t.bankId !== filterBank) return false; if(q){ const cat = state.data.categories.find(c=>c.id===t.categoryId); const text = `${t.description||''} ${cat?cat.name:''}`.toLowerCase(); if(!text.includes(q)) return false; } return true; });
+    rows.forEach(t=>{ const bank = state.data.banks.find(b=>b.id===t.bankId); const cat = state.data.categories.find(c=>c.id===t.categoryId); const tr=document.createElement('tr'); tr.innerHTML = `<td>${t.dateStr||''}</td><td>${bank?bank.name:'-'}</td><td>${t.type}</td><td>${cat?cat.name:(t.categoryName||'-')}</td><td class="right">${fmtMoney(t.amount)}</td><td><button data-id="${t.id}" data-act="edit" class="btn ghost">E</button> <button data-id="${t.id}" data-act="del" class="btn" style="background:#ff7b7b">X</button></td>`; tbody.appendChild(tr); });
+    $$('#txTable button').forEach(btn=> btn.onclick = ()=> { const id=btn.dataset.id, act=btn.dataset.act; if(act==='del'){ if(confirm('Eliminar transacción?')){ state.data.transactions = state.data.transactions.filter(x=>x.id!==id); persistLocal(); renderAll(); } } if(act==='edit'){ const tx=state.data.transactions.find(x=>x.id===id); if(tx) openTxModal(tx); } });
+  }
+
+  function renderBanks(){
+    const wrap = $('#banksArea'); if(!wrap) return;
+    if(state.data.banks.length === 0){ wrap.innerHTML = '<div class="small muted">No hay cuentas registradas</div>'; return; }
+    const rows = state.data.banks.map(b=>`<tr><td><strong>${b.name}</strong><div class="small muted">${b.type||''}</div></td><td class="right">${fmtMoney(Number(b.balance)||0)}</td><td><button data-id="${b.id}" data-act="edit" class="btn ghost">E</button> <button data-id="${b.id}" data-act="del" class="btn" style="background:#ff7b7b">X</button></td></tr>`).join('');
+    wrap.innerHTML = `<table><thead><tr><th>Cuenta</th><th class="right">Saldo</th><th>Acc</th></tr></thead><tbody>${rows}</tbody></table>`;
+    $$('#banksArea button').forEach(btn=> btn.onclick = ()=> { const id=btn.dataset.id, act=btn.dataset.act; if(act==='del'){ if(confirm('Eliminar cuenta?')){ state.data.banks = state.data.banks.filter(x=>x.id!==id); persistLocal(); renderAll(); } } if(act==='edit'){ const b=state.data.banks.find(x=>x.id===id); openBankModal(b); } });
+    $('#filterAccount').innerHTML = '<option value="">Todas cuentas</option>' + state.data.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
+  }
+
+  function renderAssets(){
+    const wrap = $('#assetsArea'); if(!wrap) return;
+    const assetsHtml = state.data.assets.length ? `<table><thead><tr><th>Activo</th><th class="right">Valor</th><th>Subtipo</th><th>Vinculado</th><th>Acc</th></tr></thead><tbody>${state.data.assets.map(a=>`<tr><td><strong>${a.name}</strong><div class="small muted">Compra: ${a.purchaseDate||'-'} · Vida útil: ${a.usefulLife||'-'} años</div></td><td class="right">${fmtMoney(Number(a.estimatedValue)||0)}</td><td>${a.subtype||'-'}</td><td>${(state.data.banks.find(b=>b.id===a.linkedBankId)||{name:'-'}) .name}</td><td><button data-id="${a.id}" data-act="edit" class="btn ghost">E</button> <button data-id="${a.id}" data-act="del" class="btn" style="background:#ff7b7b">X</button></td></tr>`).join('')}</tbody></table>` : '<div class="small muted">Sin activos registrados</div>';
+    wrap.innerHTML = `<div class="small muted">Activos</div>${assetsHtml}`;
+    $$('#assetsArea button').forEach(b=> b.onclick = ()=> { const id=b.dataset.id, act=b.dataset.act; if(act==='del'){ if(confirm('Eliminar activo?')){ state.data.assets = state.data.assets.filter(x=>x.id!==id); persistLocal(); renderAll(); } } if(act==='edit'){ const a=state.data.assets.find(x=>x.id===id); openAssetModal(a); } });
+  }
+
+  function renderLiabilities(){
+    const wrap = $('#liabilitiesArea'); if(!wrap) return;
+    const liabHtml = state.data.liabilities.length ? `<div class="small muted">Pasivos</div><table><thead><tr><th>Pasivo</th><th class="right">Monto</th><th>Subtipo</th><th>Acc</th></tr></thead><tbody>${state.data.liabilities.map(l=>`<tr><td><strong>${l.name}</strong><div class="small muted">Int: ${l.interestRate||0}% · Venc: ${l.maturityDate||'-'}</div></td><td class="right">${fmtMoney(Number(l.amount)||0)}</td><td>${l.subtype||'-'}</td><td><button data-id="${l.id}" data-act="edit" class="btn ghost">E</button> <button data-id="${l.id}" data-act="del" class="btn" style="background:#ff7b7b">X</button></td></tr>`).join('')}</tbody></table>` : '<div class="small muted">Sin pasivos</div>';
+    wrap.innerHTML = liabHtml;
+    $$('#liabilitiesArea button').forEach(b=> b.onclick = ()=> { const id=b.dataset.id, act=b.dataset.act; if(act==='del'){ if(confirm('Eliminar pasivo?')){ state.data.liabilities = state.data.liabilities.filter(x=>x.id!==id); persistLocal(); renderAll(); } } if(act==='edit'){ const l=state.data.liabilities.find(x=>x.id===id); openLiabilityModal(l); } });
+  }
+
+  function renderBusinesses(){
+    const wrap = $('#businessesArea'); if(!wrap) return;
+    if(state.data.businesses.length === 0){ wrap.innerHTML = '<div class="small muted">Sin empresas registradas</div>'; return; }
+    const rows = state.data.businesses.map(b=>`<tr><td><strong>${b.name}</strong><div class="small muted">Rol: ${b.role||'-'}</div></td><td class="right">${fmtMoney(Number(b.estimateValue)||0)}</td><td>${b.notes||''}</td><td><button data-id="${b.id}" data-act="edit" class="btn ghost">E</button> <button data-id="${b.id}" data-act="del" class="btn" style="background:#ff7b7b">X</button></td></tr>`).join('');
+    wrap.innerHTML = `<table><thead><tr><th>Empresa</th><th class="right">Valor estimado</th><th>Notas</th><th>Acc</th></tr></thead><tbody>${rows}</tbody></table>`;
+    $$('#businessesArea button').forEach(b=> b.onclick = ()=> { const id=b.dataset.id, act=b.dataset.act; if(act==='del'){ if(confirm('Eliminar empresa?')){ state.data.businesses = state.data.businesses.filter(x=>x.id!==id); persistLocal(); renderAll(); } } if(act==='edit'){ const bz=state.data.businesses.find(x=>x.id===id); openBusinessModal(bz); } });
+  }
+
+  function renderFixed(){ const wrap = $('#fixedArea'); if(!wrap) return; if(state.data.fixed.length===0){ wrap.innerHTML = '<div class="small muted">Sin gastos fijos</div>'; return; } const rows = state.data.fixed.map(f=>`<tr><td>${f.name}</td><td class="right">${fmtMoney(Number(f.amount)||0)}</td><td>${(state.data.banks.find(b=>b.id===f.bankId)||{name:'-'}) .name}</td><td><button data-id="${f.id}" data-act="edit" class="btn ghost">E</button> <button data-id="${f.id}" data-act="del" class="btn" style="background:#ff7b7b">X</button></td></tr>`).join(''); wrap.innerHTML = `<table><thead><tr><th>Nombre</th><th class="right">Monto</th><th>Cuenta</th><th>Acc</th></tr></thead><tbody>${rows}</tbody></table>`; $$('#fixedArea button').forEach(b=> b.onclick = ()=> { const id=b.dataset.id, act=b.dataset.act; if(act==='del'){ if(confirm('Eliminar gasto fijo?')){ state.data.fixed = state.data.fixed.filter(x=>x.id!==id); persistLocal(); renderAll(); } } if(act==='edit'){ const f=state.data.fixed.find(x=>x.id===id); openFixedModal(f); } }); }
+
+  function renderDebts(){ const wrap = $('#debtsArea'); if(!wrap) return; if(state.data.debts.length===0){ wrap.innerHTML = '<div class="small muted">Sin deudas</div>'; return; } const rows = state.data.debts.map(d=>`<tr><td>${d.name}</td><td>${(state.data.banks.find(b=>b.id===d.bankId)||{name:'-'}) .name}</td><td class="right">${fmtMoney(Number(d.outstanding)||0)}</td><td class="right">${fmtMoney(Number(d.monthlyPayment)||0)}</td><td><button data-id="${d.id}" data-act="pay" class="btn primary">Pagar</button> <button data-id="${d.id}" data-act="del" class="btn" style="background:#ff7b7b">X</button></td></tr>`).join(''); wrap.innerHTML = `<table><thead><tr><th>Deuda</th><th>Banco</th><th class="right">Saldo</th><th class="right">Cuota</th><th>Acc</th></tr></thead><tbody>${rows}</tbody></table>`; $$('#debtsArea button').forEach(b=> b.onclick = ()=> { const id=b.dataset.id, act=b.dataset.act; if(act==='del'){ if(confirm('Eliminar deuda?')){ state.data.debts = state.data.debts.filter(x=>x.id!==id); persistLocal(); renderAll(); } } if(act==='pay'){ const d=state.data.debts.find(x=>x.id===id); openDebtPayModal(d); } }); }
+
+  function renderCategories(){ const wrap = $('#categoriesArea'); if(!wrap) return; if(state.data.categories.length===0){ wrap.innerHTML = '<div class="small muted">Sin categorías</div>'; return; } const rows = state.data.categories.map(c=>`<tr><td>${c.name}</td><td class="right">${c.limitMonthly?fmtMoney(Number(c.limitMonthly)||0):'Sin límite'}</td><td><button data-id="${c.id}" data-act="edit" class="btn ghost">E</button> <button data-id="${c.id}" data-act="del" class="btn" style="background:#ff7b7b">X</button></td></tr>`).join(''); wrap.innerHTML = `<table><thead><tr><th>Categoría</th><th class="right">Límite</th><th>Acc</th></tr></thead><tbody>${rows}</tbody></table>`; $$('#categoriesArea button').forEach(b=> b.onclick = ()=> { const id=b.dataset.id, act=b.dataset.act; if(act==='del'){ if(confirm('Eliminar categoría?')){ state.data.categories = state.data.categories.filter(x=>x.id!==id); persistLocal(); renderAll(); } } if(act==='edit'){ const c=state.data.categories.find(x=>x.id===id); openCategoryModal(c); } }); }
+
+  function renderAll(){
+    $('#todayDate').textContent = toDDMMYYYY(new Date());
+    renderFlowsChart();
+    dashboardMetrics();
+    renderTransactions(); renderBanks(); renderAssets(); renderLiabilities(); renderBusinesses(); renderFixed(); renderDebts(); renderCategories();
+    $('#cloudModeBadge').textContent = state.mode.toUpperCase();
+    $('#currentUser').textContent = state.user || (state.logged ? 'JHONATAN' : 'Invitado');
+    $('#orgBadge').textContent = ORG_ID; $('#joinCodeBadge').textContent = JOIN_CODE; $('#orgIdBadge').textContent = ORG_ID; $('#orgShort').textContent = ORG_ID;
+  }
+
+  // Modal utilities (modal login uses non-autocomplete inputs to avoid browser suggestions)
+  function showModal({icon='✚', title='', subtitle='', body='', actions=''}){ const html=`<div class="modal-header"><div style="width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--accent),var(--accent-2));font-weight:900">${icon}</div><div><div style="font-weight:900;font-size:15px">${title}</div><div class="small muted" style="margin-top:4px">${subtitle}</div></div></div><div class="modal-body">${body}</div><div class="modal-actions">${actions}</div>`; $('#modalContent').innerHTML = html; $('#modalBackdrop').style.display = 'flex'; setTimeout(()=>{ const f = $('#modalContent input, #modalContent select, #modalContent textarea'); if(f) f.focus(); },50); }
+  function closeModal(){ $('#modalContent').innerHTML=''; $('#modalBackdrop').style.display='none'; }
+
+  // TRANSACTION modal
+  function openTxModal(existing){
+    const bankOpt = '<option value="">-- seleccionar cuenta --</option>' + state.data.banks.map(b=>`<option value="${b.id}">${b.name} (${fmtMoney(b.balance)})</option>`).join('');
+    const catOpt = '<option value="">-- categoría --</option>' + state.data.categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    const def = existing || { type:'Egreso', amount:0, dateStr: toDDMMYYYY(new Date()), bankId:'', categoryId:'', description:'' };
+    const body = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="mini-card"><label>Tipo</label><select id="txType"><option ${def.type==='Ingreso'?'selected':''}>Ingreso</option><option ${def.type==='Egreso'?'selected':''}>Egreso</option></select></div>
+      <div class="mini-card"><label>Monto</label><input id="txAmount" type="number" value="${def.amount||0}" /></div>
+      <div class="mini-card" style="grid-column:1/3"><label>Cuenta</label><select id="txBank">${bankOpt}</select></div>
+      <div class="mini-card" style="grid-column:1/3"><label>Categoría</label><select id="txCat">${catOpt}</select></div>
+      <div class="mini-card"><label>Fecha (dd/mm/yyyy)</label><input id="txDate" value="${def.dateStr}" /></div>
+      <div class="mini-card"><label>Descripción</label><input id="txDesc" value="${(def.description||'').replace(/"/g,'&quot;')}" /></div>
+    </div>`;
+    const actions = `<button id="txCancel" class="btn ghost">Cancelar</button><button id="txSave" class="btn primary">Guardar</button>`;
+    showModal({ icon:'💸', title: existing ? 'Editar transacción' : 'Nueva transacción', subtitle:'Vincula la cuenta bancaria', body, actions });
+    if(existing) setTimeout(()=>{ if(existing.bankId) $('#txBank').value = existing.bankId; if(existing.categoryId) $('#txCat').value = existing.categoryId; },40);
+    $('#txCancel').onclick = closeModal;
+    $('#txSave').onclick = async ()=> {
+      try{
+        const type = $('#txType').value; const amount = Number($('#txAmount').value)||0; const bankId = $('#txBank').value || null; const categoryId = $('#txCat').value || null; const dateStr = $('#txDate').value.trim(); const desc = $('#txDesc').value.trim();
+        if(!amount || amount <= 0) return alert('Monto inválido');
+        if(!parseDateDDMMYYYY(dateStr)) return alert('Fecha inválida (dd/mm/yyyy)');
+        await addTransaction({ type, amount, bankId, categoryId, description: desc, dateStr });
+        closeModal();
+      } catch(e){ console.error(e); alert('Error: '+(e.message||e)); }
     };
   }
 
-  // ---------------- INITIALIZE ----------------
-  (function init(){
-    loadLocal(); bindUI(); renderAll();
-    // auto-sync restore
-    const auto = localStorage.getItem('jo_auto_sync'); if(auto === 'on'){ $('#chkAuto').checked = true; if(state.cloudOn) startAutoSync(); }
+  // Bank modal (compact)
+  function openBankModal(b){
+    const def = b || { name:'', balance:0, type:'Cuenta', notes:'' };
+    const body = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="mini-card"><label>Nombre</label><input id="bName" value="${def.name}" /></div>
+      <div class="mini-card"><label>Tipo</label><input id="bType" value="${def.type}" /></div>
+      <div class="mini-card"><label>Saldo inicial</label><input id="bBalance" type="number" value="${Number(def.balance)||0}" /></div>
+      <div class="mini-card" style="grid-column:1/3"><label>Notas</label><input id="bNotes" value="${(def.notes||'').replace(/"/g,'&quot;')}" /></div>
+    </div>`;
+    const actions = `<button id="bCancel" class="btn ghost">Cancelar</button><button id="bSave" class="btn primary">Guardar cuenta</button>`;
+    showModal({ icon:'🏦', title: b ? 'Editar cuenta' : 'Nueva cuenta', subtitle:'Cuenta bancaria / billetera', body, actions });
+    $('#bCancel').onclick = closeModal;
+    $('#bSave').onclick = ()=> { const name=$('#bName').value.trim(), type=$('#bType').value.trim(), balance=Number($('#bBalance').value)||0, notes=$('#bNotes').value.trim(); if(!name) return alert('Nombre requerido'); if(b){ Object.assign(b,{name,type,balance,notes}); persistLocal(); renderAll(); } else addBank({name,type,balance,notes}); closeModal(); };
+  }
+
+  // Asset modal (economist-level)
+  function openAssetModal(a){
+    const subtypes = ['Inmueble','Maquinaria','Inversión','Patrimonio','Vehículo','Otro'];
+    const bankOpt = '<option value="">-- Ninguna --</option>' + state.data.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
+    const def = a || { name:'', estimatedValue:0, subtype:'Inmueble', purchaseDate:'', depreciationRate:0, usefulLife:0, salvageValue:0, linkedBankId:'', notes:'' };
+    const body = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="mini-card"><label>Nombre</label><input id="aName" value="${def.name}" /></div>
+      <div class="mini-card"><label>Subtipo</label><select id="aSubtype">${subtypes.map(s=>`<option ${def.subtype===s?'selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="mini-card"><label>Valor estimado</label><input id="aValue" type="number" value="${Number(def.estimatedValue)||0}" /></div>
+      <div class="mini-card"><label>Fecha compra (dd/mm/yyyy)</label><input id="aPurchase" value="${def.purchaseDate||''}" /></div>
+      <div class="mini-card"><label>Depreciación anual (%)</label><input id="aDep" type="number" value="${Number(def.depreciationRate)||0}" /></div>
+      <div class="mini-card"><label>Vida útil (años)</label><input id="aLife" type="number" value="${Number(def.usefulLife)||0}" /></div>
+      <div class="mini-card" style="grid-column:1/3"><label>Valor residual</label><input id="aSalvage" type="number" value="${Number(def.salvageValue)||0}" /></div>
+      <div class="mini-card" style="grid-column:1/3"><label>Vinculado a cuenta</label><select id="aBank">${bankOpt}</select></div>
+      <div class="mini-card" style="grid-column:1/3"><label>Notas</label><textarea id="aNotes">${(def.notes||'')}</textarea></div>
+    </div>`;
+    const actions = `<button id="aCancel" class="btn ghost">Cancelar</button><button id="aSave" class="btn primary">Guardar activo</button>`;
+    showModal({ icon:'🏠', title: a ? 'Editar activo' : 'Nuevo activo', subtitle:'Campos: depreciación, vida útil, valor residual', body, actions });
+    if(a) setTimeout(()=> $('#aBank').value = a.linkedBankId || '', 40);
+    $('#aCancel').onclick = closeModal;
+    $('#aSave').onclick = ()=> {
+      const name=$('#aName').value.trim(), subtype=$('#aSubtype').value, val=Number($('#aValue').value)||0, purchase=$('#aPurchase').value.trim(), dep=Number($('#aDep').value)||0, life=Number($('#aLife').value)||0, salvage=Number($('#aSalvage').value)||0, bankId=$('#aBank').value||null, notes=$('#aNotes').value.trim();
+      if(!name) return alert('Nombre requerido');
+      const obj = { name, subtype, estimatedValue:val, purchaseDate:purchase, depreciationRate:dep, usefulLife:life, salvageValue:salvage, linkedBankId:bankId, notes };
+      if(a){ Object.assign(a,obj); persistLocal(); renderAll(); } else addAsset(obj);
+      closeModal();
+    };
+  }
+
+  // Liability modal
+  function openLiabilityModal(l){
+    const subtypes = ['Préstamo Bancario','Hipoteca','Tarjeta','Proveedor','Garantía','Otro'];
+    const bankOpt = '<option value="">-- Ninguna --</option>' + state.data.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
+    const def = l || { name:'', amount:0, subtype:'Préstamo Bancario', interestRate:0, maturityDate:'', collateral:'', linkedBankId:'', notes:'' };
+    const body = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="mini-card"><label>Nombre</label><input id="liName" value="${def.name}" /></div>
+      <div class="mini-card"><label>Subtipo</label><select id="liSubtype">${subtypes.map(s=>`<option ${def.subtype===s?'selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="mini-card"><label>Monto</label><input id="liAmount" type="number" value="${Number(def.amount)||0}" /></div>
+      <div class="mini-card"><label>Tasa interés anual (%)</label><input id="liInterest" type="number" value="${Number(def.interestRate)||0}" /></div>
+      <div class="mini-card"><label>Fecha vencimiento (dd/mm/yyyy)</label><input id="liMaturity" value="${def.maturityDate||''}" /></div>
+      <div class="mini-card" style="grid-column:1/3"><label>Colateral</label><input id="liCollateral" value="${(def.collateral||'')}" /></div>
+      <div class="mini-card" style="grid-column:1/3"><label>Vinculado a cuenta</label><select id="liBank">${bankOpt}</select></div>
+      <div class="mini-card" style="grid-column:1/3"><label>Notas</label><textarea id="liNotes">${(def.notes||'')}</textarea></div>
+    </div>`;
+    const actions = `<button id="liCancel" class="btn ghost">Cancelar</button><button id="liSave" class="btn primary">Guardar pasivo</button>`;
+    showModal({ icon:'⚖️', title: l ? 'Editar pasivo' : 'Nuevo pasivo', subtitle:'Detalle económico: interés, vencimiento, colateral', body, actions });
+    if(l) setTimeout(()=> $('#liBank').value = l.linkedBankId||'', 40);
+    $('#liCancel').onclick = closeModal;
+    $('#liSave').onclick = ()=> {
+      const name=$('#liName').value.trim(), subtype=$('#liSubtype').value, amount=Number($('#liAmount').value)||0, interest=Number($('#liInterest').value)||0, maturity=$('#liMaturity').value.trim(), collateral=$('#liCollateral').value.trim(), bankId=$('#liBank').value||null, notes=$('#liNotes').value.trim();
+      if(!name) return alert('Nombre requerido');
+      const obj = { name, subtype, amount, interestRate:interest, maturityDate:maturity, collateral, linkedBankId:bankId, notes };
+      if(l){ Object.assign(l,obj); persistLocal(); renderAll(); } else addLiability(obj);
+      closeModal();
+    };
+  }
+
+  // Business, Fixed, Category, Debt modals (similar)
+  function openBusinessModal(bz){
+    const def = bz || { name:'', estimateValue:0, contribution:0, role:'Propietario', notes:'' };
+    const body = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="mini-card"><label>Nombre negocio</label><input id="bzName" value="${def.name}" /></div>
+      <div class="mini-card"><label>Rol</label><input id="bzRole" value="${def.role}" /></div>
+      <div class="mini-card"><label>Valor estimado</label><input id="bzValue" type="number" value="${Number(def.estimateValue)||0}" /></div>
+      <div class="mini-card"><label>Aporte / Participación</label><input id="bzContribution" type="number" value="${Number(def.contribution)||0}" /></div>
+      <div class="mini-card" style="grid-column:1/3"><label>Notas</label><textarea id="bzNotes">${(def.notes||'')}</textarea></div>
+    </div>`;
+    const actions = `<button id="bzCancel" class="btn ghost">Cancelar</button><button id="bzSave" class="btn primary">Guardar empresa</button>`;
+    showModal({ icon:'🏢', title: bz ? 'Editar empresa' : 'Nueva empresa', subtitle:'Registra proyectos o negocios', body, actions });
+    $('#bzCancel').onclick = closeModal;
+    $('#bzSave').onclick = ()=> {
+      const name=$('#bzName').value.trim(), role=$('#bzRole').value.trim(), val=Number($('#bzValue').value)||0, contrib=Number($('#bzContribution').value)||0, notes=$('#bzNotes').value.trim();
+      if(!name) return alert('Nombre requerido');
+      const obj = { name, estimateValue:val, contribution:contrib, role, notes };
+      if(bz){ Object.assign(bz,obj); persistLocal(); renderAll(); } else addBusiness(obj);
+      closeModal();
+    };
+  }
+
+  function openFixedModal(f){
+    const def = f || { name:'', amount:0, bankId:'', categoryId:'', frequency:'monthly' };
+    const bankOpt = '<option value="">-- Ninguna --</option>' + state.data.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
+    const catOpt = '<option value="">-- Ninguna --</option>' + state.data.categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    const body = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="mini-card"><label>Nombre</label><input id="fName" value="${def.name}" /></div>
+      <div class="mini-card"><label>Monto</label><input id="fAmount" type="number" value="${Number(def.amount)||0}" /></div>
+      <div class="mini-card"><label>Cuenta</label><select id="fBank">${bankOpt}</select></div>
+      <div class="mini-card"><label>Categoría</label><select id="fCat">${catOpt}</select></div>
+      <div class="mini-card"><label>Frecuencia</label><select id="fFreq"><option ${def.frequency==='monthly'?'selected':''} value="monthly">Mensual</option><option ${def.frequency==='weekly'?'selected':''} value="weekly">Semanal</option><option ${def.frequency==='annual'?'selected':''} value="annual">Anual</option></select></div>
+    </div>`;
+    const actions = `<button id="fCancel" class="btn ghost">Cancelar</button><button id="fSave" class="btn primary">Guardar gasto fijo</button>`;
+    showModal({ icon:'📅', title: f? 'Editar gasto fijo' : 'Nuevo gasto fijo', subtitle: 'Pagos recurrentes', body, actions });
+    if(f) setTimeout(()=>{ $('#fBank').value=f.bankId||''; $('#fCat').value=f.categoryId||''; },50);
+    $('#fCancel').onclick = closeModal;
+    $('#fSave').onclick = ()=> { const name=$('#fName').value.trim(), amount=Number($('#fAmount').value)||0, bankId=$('#fBank').value||null, categoryId=$('#fCat').value||null, freq=$('#fFreq').value||'monthly'; if(!name) return alert('Nombre requerido'); if(f){ Object.assign(f,{name,amount,bankId,categoryId,frequency:freq}); persistLocal(); renderAll(); } else addFixed({name,amount,bankId,categoryId,frequency:freq}); closeModal(); };
+  }
+
+  function openCategoryModal(c){
+    const def = c || { name:'', limitMonthly:0 };
+    const body = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="mini-card"><label>Nombre</label><input id="catName" value="${def.name}" /></div><div class="mini-card"><label>Límite mensual (0 = sin límite)</label><input id="catLimit" type="number" value="${def.limitMonthly||0}" /></div></div>`;
+    const actions = `<button id="catCancel" class="btn ghost">Cancelar</button><button id="catSave" class="btn primary">Guardar categoría</button>`;
+    showModal({ icon:'🏷️', title: c ? 'Editar categoría' : 'Nueva categoría', subtitle: 'Establece límites por categoría', body, actions });
+    $('#catCancel').onclick = closeModal;
+    $('#catSave').onclick = ()=> { const name=$('#catName').value.trim(), limit=Number($('#catLimit').value)||0; if(!name) return alert('Nombre requerido'); if(c){ Object.assign(c,{name,limitMonthly:limit}); persistLocal(); renderAll(); } else addCategory({name,limitMonthly:limit}); closeModal(); };
+  }
+
+  function openDebtModal(d){
+    const bankOpt = '<option value="">-- Ninguna --</option>' + state.data.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
+    const def = d || { name:'', bankId:'', outstanding:0, monthlyPayment:0, interestRate:0, notes:'' };
+    const body = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="mini-card"><label>Nombre</label><input id="dName" value="${def.name}" /></div>
+      <div class="mini-card"><label>Banco</label><select id="dBank">${bankOpt}</select></div>
+      <div class="mini-card"><label>Saldo pendiente</label><input id="dOut" type="number" value="${Number(def.outstanding)||0}" /></div>
+      <div class="mini-card"><label>Cuota mensual</label><input id="dPay" type="number" value="${Number(def.monthlyPayment)||0}" /></div>
+      <div class="mini-card"><label>Tasa interés (%)</label><input id="dInterest" type="number" value="${Number(def.interestRate)||0}" /></div>
+      <div class="mini-card" style="grid-column:1/3"><label>Notas</label><input id="dNotes" value="${(def.notes||'').replace(/"/g,'&quot;')}" /></div>
+    </div>`;
+    const actions = `<button id="dCancel" class="btn ghost">Cancelar</button><button id="dSave" class="btn primary">Guardar deuda</button>`;
+    showModal({ icon:'💳', title: d? 'Editar deuda' : 'Nueva deuda', subtitle:'Registra préstamo y vincula banco', body, actions });
+    if(d) setTimeout(()=> $('#dBank').value = d.bankId||'',40);
+    $('#dCancel').onclick = closeModal;
+    $('#dSave').onclick = ()=> { const name=$('#dName').value.trim(), bankId=$('#dBank').value||null, out=Number($('#dOut').value)||0, pay=Number($('#dPay').value)||0, interest=Number($('#dInterest').value)||0, notes=$('#dNotes').value.trim(); if(!name) return alert('Nombre requerido'); if(d){ Object.assign(d,{name,bankId,outstanding:out,monthlyPayment:pay,interestRate:interest,notes}); persistLocal(); renderAll(); } else addDebt({name,bankId,outstanding:out,monthlyPayment:pay,interestRate:interest,notes}); closeModal(); };
+  }
+
+  function openDebtPayModal(debt){
+    if(!debt) return alert('Deuda no encontrada');
+    const bankOpt = state.data.banks.map(b=>`<option value="${b.id}">${b.name} (${fmtMoney(b.balance)})</option>`).join('');
+    const body = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="mini-card"><label>Monto</label><input id="payAmount" type="number" value="${Math.min(Number(debt.monthlyPayment)||0, Number(debt.outstanding)||0)}" /></div><div class="mini-card"><label>Cuenta</label><select id="payBank">${bankOpt}</select></div><div class="mini-card" style="grid-column:1/3"><label>Descripción</label><input id="payDesc" value="Pago deuda ${debt.name}" /></div></div>`;
+    const actions = `<button id="payCancel" class="btn ghost">Cancelar</button><button id="paySave" class="btn primary">Registrar pago</button>`;
+    showModal({ icon:'💵', title:`Pagar deuda: ${debt.name}`, subtitle:'Registra pago y vincula cuenta', body, actions });
+    $('#payCancel').onclick = closeModal;
+    $('#paySave').onclick = async ()=> { const amt=Number($('#payAmount').value)||0; const bankId=$('#payBank').value; const desc=$('#payDesc').value.trim(); if(!amt||amt<=0) return alert('Monto inválido'); await addTransaction({ type:'Egreso', amount:amt, bankId, debtId:debt.id, dateStr: toDDMMYYYY(new Date()), description: desc }); closeModal(); };
+  }
+
+  // Bind UI
+  function bindUI(){
+    $$('nav.side button').forEach(b=> b.addEventListener('click', ()=> { $$('nav.side button').forEach(x=> x.classList.toggle('active', x===b)); document.querySelectorAll('main section').forEach(s=> s.style.display='none'); const view=document.getElementById('view-'+b.dataset.view); if(view) view.style.display='block'; }));
+    $('#btnQuickTx').onclick = ()=> openTxModal(null);
+    $('#btnAddTx').onclick = ()=> openTxModal(null);
+    $('#btnAddBank').onclick = ()=> openBankModal(null);
+    $('#btnAddAsset').onclick = ()=> openAssetModal(null);
+    $('#btnAddLiability').onclick = ()=> openLiabilityModal(null);
+    $('#btnAddBiz').onclick = ()=> openBusinessModal(null);
+    $('#btnAddFixed').onclick = ()=> openFixedModal(null);
+    $('#btnAddDebt').onclick = ()=> openDebtModal(null);
+    $('#btnAddCategory').onclick = ()=> openCategoryModal(null);
+    $('#btnTransfer').onclick = ()=> openTransferModal();
+    $('#btnApplyFixed').onclick = ()=> { if(confirm('Aplicar gastos fijos del mes?')) applyMonthlyFixed(); };
+    $('#btnExportCSV').onclick = exportCSV;
+    $('#btnExportJSON').onclick = exportJSON;
+    $('#btnImport').onclick = ()=> importFile($('#fileImport').files[0]);
+    $('#btnExportPDF').onclick = exportPDF;
+    $('#fileImport').onchange = e => importFile(e.target.files[0]);
+    $('#search').oninput = renderTransactions;
+    $('#btnForceSync').onclick = async ()=> {
+      if(state.mode !== 'firestore'){
+        if(!state.logged) return showLoginModal('Debes iniciar sesión antes de activar Cloud');
+        const ok = confirm(`Conectar al orgId: ${ORG_ID} con joinCode: ${JOIN_CODE}?`);
+        if(!ok) return;
+        try{ await initFirestore(FIREBASE_SDK_CONFIG); state.mode = 'firestore'; persistLocal(); showToast('Cloud inicializado. Sincronizando...'); await doSync(); } catch(e){ alert('No fue posible iniciar Firestore: ' + (e.message||e)); }
+      } else {
+        if(!state.logged) return showLoginModal('Inicia sesión para sincronizar');
+        await doSync();
+      }
+    };
+    $('#btnClearLocal').onclick = ()=> { if(confirm('Borrar datos locales? Esto no afectará la nube.')){ localStorage.removeItem(STORAGE_KEY); state.data = { transactions:[], banks:[], debts:[], fixed:[], categories:[], assets:[], liabilities:[], businesses:[], meta:{} }; persistLocal(); renderAll(); } };
+    // login button -> show secure modal (no browser suggestions)
+    $('#btnLogin').onclick = ()=> showLoginModal();
+    $('#btnLogout').onclick = ()=> { if(confirm('Cerrar sesión?')){ state.logged=false; state.user=null; localStorage.removeItem('jona_logged'); localStorage.removeItem('jona_user'); $('#btnLogin').style.display='inline-block'; $('#btnLogout').style.display='none'; showToast('Sesión cerrada'); renderAll(); } };
+    // keyboard 'N' shortcut
+    window.addEventListener('keydown', (e)=> { if(e.key.toLowerCase()==='n' && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) openTxModal(null); });
+  }
+
+  // Login modal (prevents autocomplete and suggestions)
+  function showLoginModal(msg){
+    const body = `<form id="loginForm" autocomplete="off" style="display:grid;grid-template-columns:1fr;gap:8px">
+      <div class="mini-card"><label>Usuario</label><input id="loginUser" name="loginUser_${Date.now()}" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" /></div>
+      <div class="mini-card"><label>Contraseña</label><input id="loginPass" type="password" name="loginPass_${Date.now()}" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" /></div>
+      <div class="mini-card"><label><input id="loginRemember" type="checkbox" /> Recordar (solo local)</label></div>
+    </form>`;
+    const actions = `<button id="loginCancel" class="btn ghost">Cancelar</button><button id="loginSubmit" class="btn primary">Ingresar</button>`;
+    showModal({ icon:'🔒', title:'Iniciar sesión (local)', subtitle: msg || 'Ingresa credenciales', body, actions });
+    $('#loginCancel').onclick = closeModal;
+    $('#loginSubmit').onclick = ()=> {
+      const u = $('#loginUser').value.trim(), p = $('#loginPass').value;
+      if(u === LOCAL_LOGIN.user && p === LOCAL_LOGIN.pass){
+        state.logged = true; state.user = u; localStorage.setItem('jona_logged', JSON.stringify(true)); localStorage.setItem('jona_user', u);
+        $('#btnLogin').style.display='none'; $('#btnLogout').style.display='inline-block';
+        showToast('Sesión iniciada: ' + u);
+        closeModal(); renderAll();
+      } else { alert('Credenciales incorrectas'); }
+    };
+  }
+
+  function openTransferModal(){
+    if(state.data.banks.length < 2) return alert('Necesitas al menos 2 cuentas');
+    const opts = state.data.banks.map(b=>`<option value="${b.id}">${b.name} (${fmtMoney(b.balance)})</option>`).join('');
+    const body = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="mini-card"><label>Desde</label><select id="trFrom">${opts}</select></div>
+      <div class="mini-card"><label>Hacia</label><select id="trTo">${opts}</select></div>
+      <div class="mini-card"><label>Monto</label><input id="trAmount" type="number" value="0" /></div>
+      <div class="mini-card"><label>Fecha</label><input id="trDate" value="${toDDMMYYYY(new Date())}" /></div>
+      <div class="mini-card" style="grid-column:1/3"><label>Nota</label><input id="trNote" /></div>
+    </div>`;
+    const actions = `<button id="trCancel" class="btn ghost">Cancelar</button><button id="trSave" class="btn primary">Transferir</button>`;
+    showModal({ icon:'🔁', title:'Transferencia interna', subtitle:'Mover dinero entre cuentas propias', body, actions });
+    $('#trCancel').onclick = closeModal;
+    $('#trSave').onclick = ()=> { const from=$('#trFrom').value, to=$('#trTo').value, amt=Number($('#trAmount').value)||0, dateStr=$('#trDate').value.trim(), note=$('#trNote').value.trim(); if(from===to) return alert('Elija cuentas distintas'); if(amt<=0) return alert('Monto inválido'); if(!parseDateDDMMYYYY(dateStr)) return alert('Fecha inválida'); transferBetweenBanks(from,to,amt,dateStr,note); closeModal(); };
+  }
+
+  // Init
+  (async function init(){
+    loadLocal();
+    bindUI();
+    document.querySelector('nav.side button[data-view="dashboard"]').click();
+    renderAll();
+    if(state.logged){ $('#btnLogin').style.display='none'; $('#btnLogout').style.display='inline-block'; }
+    // silent attempt to load Firestore SDK (will not sync until user activates)
+    try{ await initFirestore(FIREBASE_SDK_CONFIG); console.info('Firestore SDK cargado (esperando confirmación para sync).'); } catch(e){ console.warn('SDK init failed (ok if offline)'); }
+    window._jona_state = state;
+    showToast('App lista. Añade cuenta -> registra transacción.');
   })();
 
-  // expose debug
-  window._jo_state = state;
-  window._jo_sync = syncFetchAndMerge;
-
   </script>
+
+  <!-- SUGERIDAS reglas Firestore (COMENTADO)
+    Ruta utilizada: organizations/{orgId}/DATA/DATA
+
+    DESARROLLO (no usar en producción):
+    rules_version = '2';
+    service cloud.firestore {
+      match /databases/{database}/documents {
+        match /{document=**} {
+          allow read, write: if true;
+        }
+      }
+    }
+
+    RECOMENDADA (con auth y claims orgId):
+    rules_version = '2';
+    service cloud.firestore {
+      match /databases/{database}/documents {
+        match /organizations/{orgId}/DATA/DATA {
+          allow read, write: if request.auth != null && request.auth.token.orgId == orgId;
+        }
+      }
+    }
+
+    NOTA: para seguridad real, usa un backend con Admin SDK que valide joinCode y gestione accesos.
+  -->
+
 </body>
 </html>
