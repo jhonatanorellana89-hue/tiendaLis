@@ -3,105 +3,102 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>JHONATAN ORELLANA — Suite Financiera (Actualizado)</title>
+<title>JHONATAN ORELLANA — Suite Empresarial (Didáctica)</title>
 
-<!-- Fuentes y librerías -->
+<!-- Fuente y librerías -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+<!-- Feather icons (ligeras y didácticas) -->
 <script src="https://unpkg.com/feather-icons"></script>
 
 <style>
   /* ===========================
-     Diseño: más didáctico y profesional
-     - Paneles ligeramente plomizos/opaques
-     - Tipografía más grande para lectura cómoda
-     - Mantener todo en la misma pantalla sin scroll general
+     Paleta didáctica y profesional
+     - Contraste alto para legibilidad empresarial
+     - Tonos: azul corporativo, verde positivo, naranja acciones, violeta para categorías
+     - Iconografía ligera (feather)
      =========================== */
   :root{
-    --bg:#e9f1f7;
-    --panel: rgba(245,247,250,0.95);
-    --muted:#4b5563;
-    --text:#052235;
-    --accent:#075fae;
-    --accent-2:#4f9ef7;
-    --positive:#14b78b;
-    --warn:#f59e0b;
-    --danger:#ef4444;
-    --card-shadow: 0 18px 50px rgba(8,24,48,0.06);
-    --radius:12px;
-    --maxw:1400px;
+    --bg: #f2f7fb;
+    --panel: #ffffff;
+    --muted: #6b7280;
+    --text: #072033;
+    --accent: #0b6fd1;     /* azul principal */
+    --accent-2: #5b8ef0;
+    --positive: #10b981;
+    --warn: #f59e0b;
+    --danger: #ef4444;
+    --violet: #6b46c1;
+    --glass: rgba(11,24,32,0.04);
+    --card-shadow: 0 10px 30px rgba(11,24,32,0.06);
+    --maxw: 1400px;
     font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   }
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#f8fbff);color:var(--text);-webkit-font-smoothing:antialiased}
-  /* Contenedor centrado */
-  .app-root{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px}
-  /* App: grid con sidebar y main, sin scroll global */
-  .app{width:100%;max-width:var(--maxw);display:grid;grid-template-columns:320px 1fr;gap:18px;border-radius:16px;padding:18px;background:linear-gradient(180deg,#ffffff,#f7fbff);box-shadow:0 30px 80px rgba(3,10,30,0.06);min-height:72vh}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#eef6ff,#f7fbff);color:var(--text);-webkit-font-smoothing:antialiased}
+  .app-root{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .app{width:100%;max-width:var(--maxw);display:grid;grid-template-columns:320px 1fr;gap:20px;border-radius:14px;padding:18px;background:linear-gradient(180deg,#ffffff,#f7fbff);box-shadow:0 30px 80px rgba(2,6,23,0.06)}
   /* SIDEBAR */
-  .sidebar{background:var(--panel);border-radius:var(--radius);padding:18px;border:1px solid rgba(8,24,48,0.04);box-shadow:var(--card-shadow);display:flex;flex-direction:column;gap:14px;min-height:640px}
+  .sidebar{background:linear-gradient(180deg,#ffffff,#f6fbff);border-radius:12px;padding:18px;border:1px solid var(--glass);box-shadow:var(--card-shadow);display:flex;flex-direction:column;gap:14px;min-height:640px}
   .brand{display:flex;gap:12px;align-items:center}
-  .brand .logo{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:20px;box-shadow:0 8px 30px rgba(11,118,209,0.12)}
-  .brand h1{font-size:16px;margin:0;line-height:1.05}
+  .brand .logo{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:18px;box-shadow:0 8px 30px rgba(11,118,209,0.12)}
+  .brand h1{font-size:15px;margin:0;line-height:1.05}
   .brand p{margin:0;color:var(--muted);font-size:12px}
   nav.side{display:flex;flex-direction:column;gap:8px;margin-top:6px}
-  nav.side button{display:flex;align-items:center;gap:12px;border-radius:10px;padding:12px;border:0;background:transparent;cursor:pointer;font-weight:700;color:var(--muted);text-align:left;transition:all .16s;font-size:14px}
-  nav.side button:hover{background:rgba(7,95,174,0.05);color:var(--accent)}
-  nav.side button.active{background:linear-gradient(90deg, rgba(7,95,174,0.08), rgba(79,158,247,0.03));color:var(--accent);box-shadow:inset 0 0 0 1px rgba(7,95,174,0.02)}
+  nav.side button{display:flex;align-items:center;gap:12px;border-radius:10px;padding:10px;border:0;background:transparent;cursor:pointer;font-weight:700;color:var(--muted);text-align:left;transition:all .16s}
+  nav.side button:hover{background:rgba(11,110,209,0.04);color:var(--accent)}
+  nav.side button.active{background:linear-gradient(90deg, rgba(11,110,209,0.08), rgba(91,142,240,0.03));color:var(--accent);box-shadow:inset 0 0 0 1px rgba(11,118,209,0.02)}
+  nav.side button svg{stroke-width:1.6}
   .meta{margin-top:auto;font-size:13px;color:var(--muted)}
   .meta small{display:block;color:var(--muted);margin-top:8px}
   /* MAIN */
-  .main{display:flex;flex-direction:column;gap:14px;min-height:640px}
+  .main{display:flex;flex-direction:column;gap:14px}
   .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px}
-  .title-strong{font-weight:900;font-size:20px}
-  .small{font-size:13px;color:var(--muted)}
   .kpigrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-  .kpi{background:var(--panel);border-radius:12px;padding:14px;border:1px solid rgba(8,24,48,0.04);box-shadow:var(--card-shadow);display:flex;flex-direction:column;gap:6px}
-  .kpi .label{font-size:13px;color:var(--muted)}
+  .kpi{background:linear-gradient(180deg,#fff,#fbfdff);border-radius:12px;padding:14px;border:1px solid var(--glass);box-shadow:var(--card-shadow);display:flex;flex-direction:column;gap:8px}
+  .kpi .label{font-size:12px;color:var(--muted)}
   .kpi .value{font-weight:900;font-size:20px;color:var(--text)}
-  .kpi.smalltext{font-size:12px}
-  .card{background:var(--panel);border-radius:12px;padding:16px;border:1px solid rgba(8,24,48,0.04);box-shadow:var(--card-shadow);overflow:auto}
+  .kpi .trend{font-size:12px;color:var(--muted)}
+  .card{background:linear-gradient(180deg,#ffffff,#fbfeff);border-radius:12px;padding:16px;border:1px solid var(--glass);box-shadow:var(--card-shadow);overflow:auto}
+  .flex{display:flex;gap:12px;align-items:center}
   .controls{display:flex;gap:10px;align-items:center}
-  .btn{padding:9px 14px;border-radius:10px;border:0;cursor:pointer;font-weight:800;display:inline-flex;gap:8px;align-items:center;font-size:13px}
+  .btn{padding:8px 12px;border-radius:10px;border:0;cursor:pointer;font-weight:800;display:inline-flex;gap:8px;align-items:center}
   .btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:white;box-shadow:0 8px 24px rgba(11,118,209,0.12)}
-  .btn.ghost{background:transparent;border:1px solid rgba(8,24,48,0.06);color:var(--muted)}
-  .btn.positive{background:linear-gradient(90deg,var(--positive),#10b981);color:white}
+  .btn.ghost{background:transparent;border:1px solid var(--glass);color:var(--muted)}
+  .btn.positive{background:linear-gradient(90deg,#34d399,#10b981);color:white}
   .btn.warn{background:linear-gradient(90deg,var(--warn),#f97316);color:white}
   table{width:100%;border-collapse:collapse;margin-top:8px;font-size:14px}
-  th,td{padding:10px;border-bottom:1px solid rgba(8,24,48,0.04);text-align:left}
+  th,td{padding:10px;border-bottom:1px solid rgba(11,24,32,0.04);text-align:left}
   td.right{text-align:right}
   /* Modal overlay */
   .overlay{position:fixed;inset:0;background:rgba(2,6,23,0.45);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}
-  .modal{width:920px;max-width:100%;background:rgba(255,255,255,0.96);border-radius:12px;padding:18px;box-shadow:0 30px 80px rgba(2,6,23,0.12);border:1px solid rgba(2,6,23,0.04)}
+  .modal{width:920px;max-width:100%;background:linear-gradient(180deg,#ffffff,#fbfeff);border-radius:12px;padding:18px;box-shadow:0 30px 80px rgba(2,6,23,0.12);border:1px solid rgba(2,6,23,0.04)}
   label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
-  input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(8,24,48,0.06);font-size:14px;background:transparent}
+  input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(11,24,32,0.06);font-size:14px;background:transparent}
   textarea{min-height:90px}
-  .fab{position:fixed;right:28px;bottom:28px;background:linear-gradient(135deg,#6b46c1,#8b5cf6);color:white;border-radius:18px;padding:14px 18px;font-weight:900;box-shadow:0 20px 50px rgba(107,70,193,0.12);cursor:pointer;z-index:1100;display:flex;gap:10px;align-items:center}
+  .small{font-size:12px;color:var(--muted)}
+  .fab{position:fixed;right:28px;bottom:28px;background:linear-gradient(135deg,var(--violet),#8b5cf6);color:white;border-radius:18px;padding:14px 18px;font-weight:900;box-shadow:0 20px 50px rgba(107,70,193,0.12);cursor:pointer;z-index:1100;display:flex;gap:10px;align-items:center}
+  /* badges */
   .badge{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:999px;font-weight:700;font-size:12px}
-  .badge.pos{background:rgba(20,183,139,0.12);color:var(--positive)}
+  .badge.pos{background:rgba(16,185,129,0.12);color:var(--positive)}
   .badge.neg{background:rgba(239,68,68,0.08);color:var(--danger)}
-  /* layout interior: asegurar que cada sección tenga área scroll y no cambie altura */
-  main .card, main section.card { max-height:calc(72vh - 160px); min-height:160px; overflow:auto; }
   /* responsive */
-  @media (max-width:1100px){
-    .app{grid-template-columns:1fr; padding:12px}
-    .sidebar{flex-direction:row;overflow:auto;height:92px;padding:10px;border-radius:10px}
-    .kpigrid{grid-template-columns:repeat(2,1fr)}
-    .fab{display:none}
-    .topbar{flex-direction:column;align-items:flex-start}
-  }
-  /* PDF styles (tamaños pedidos: titulo12, subtit11, texto10) */
+  @media (max-width:1100px){ .app{grid-template-columns:1fr; padding:12px} .sidebar{flex-direction:row;overflow:auto;height:92px;padding:10px;border-radius:10px} .kpigrid{grid-template-columns:repeat(2,1fr)} .fab{display:none} .topbar{flex-direction:column;align-items:flex-start} }
+  /* PDF styles */
   .pdf-root{font-family:Arial,Helvetica,sans-serif;color:#111;background:#fff;padding:18px}
+  .pdf-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
   .pdf-title{font-weight:900;font-size:12pt}
-  .pdf-sub{font-weight:700;font-size:11pt}
-  .pdf-text{font-size:10pt}
+  .pdf-sub{font-weight:700;font-size:11pt;margin-top:8px;margin-bottom:6px}
+  .pdf-text{font-size:10pt;line-height:1.45}
+  .pdf-table{width:100%;border-collapse:collapse;margin-top:6px;font-size:10pt}
+  .pdf-table th, .pdf-table td{border:1px solid #ddd;padding:6px;text-align:left}
 </style>
 </head>
 <body>
   <!-- APP -->
   <div class="app-root">
-    <div class="app" role="application" aria-label="Suite Financiera Jhonatan Orellana">
+    <div class="app" role="application" aria-label="Suite Empresarial Finanzas - Didáctica">
       <!-- SIDEBAR -->
       <aside class="sidebar" aria-label="Navegación lateral">
         <div class="brand">
@@ -139,7 +136,7 @@
       <main class="main">
         <div class="topbar">
           <div>
-            <div class="title-strong">Panel Financiero · JHONATAN ORELLANA</div>
+            <div style="font-weight:900;font-size:18px">Panel Empresarial — Didáctico</div>
             <div class="small" id="currentUser">Usuario: Invitado</div>
           </div>
           <div class="controls">
@@ -150,39 +147,39 @@
         </div>
 
         <!-- KPIs -->
-        <section class="kpigrid" aria-hidden="false">
+        <section class="kpigrid">
           <div class="kpi">
-            <div class="label">Dinero libre (fuera de activos)</div>
-            <div class="value" id="kpi-free">S/ 0.00</div>
-            <div class="small">Saldo en cuentas - Pasivos y Deudas</div>
-          </div>
-          <div class="kpi">
-            <div class="label">Saldo Neto (patrimonio)</div>
+            <div class="label">Saldo Neto</div>
             <div class="value" id="kpi-net">S/ 0.00</div>
-            <div class="small">Activos + Cuentas - Pasivos</div>
+            <div class="trend small" id="kpi-net-trend">Activos - Pasivos</div>
           </div>
           <div class="kpi">
             <div class="label">Ingresos (12m)</div>
             <div class="value" id="kpi-inc">S/ 0.00</div>
-            <div class="small">Tendencia anual</div>
+            <div class="trend small" id="kpi-inc-trend">Tendencia</div>
           </div>
           <div class="kpi">
             <div class="label">Gastos (12m)</div>
             <div class="value" id="kpi-exp">S/ 0.00</div>
-            <div class="small">Control de límites</div>
+            <div class="trend small" id="kpi-exp-trend">Límites</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Runway</div>
+            <div class="value" id="kpi-runway">∞ meses</div>
+            <div class="trend small" id="kpi-runway-trend">Liquidez vs Deudas</div>
           </div>
         </section>
 
-        <!-- DASHBOARD -->
+        <!-- DASHBOARD CARD -->
         <section id="view-dashboard" class="card" style="display:block">
           <div style="display:flex;gap:18px;align-items:flex-start">
             <div style="flex:1;min-width:0">
               <div style="display:flex;justify-content:space-between;align-items:center">
-                <div style="font-weight:800">Flujo de caja · 12 meses</div>
+                <div style="font-weight:800">Flujo de caja</div>
                 <div class="small" id="todayDate">Hoy: --</div>
               </div>
               <div style="margin-top:12px">
-                <canvas id="chartFlows" height="220"></canvas>
+                <canvas id="chartFlows" height="200"></canvas>
               </div>
 
               <div style="display:flex;gap:12px;margin-top:16px">
@@ -226,13 +223,13 @@
           </div>
         </section>
 
-        <!-- TRANSACTIONS -->
+        <!-- TRANSACTIONS VIEW -->
         <section id="view-transactions" class="card" style="display:none;min-height:360px">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div style="font-weight:800">Transacciones</div>
             <div style="display:flex;gap:8px;align-items:center">
-              <input id="search" placeholder="Buscar descripción, categoría..." style="padding:10px;border-radius:10px;border:1px solid rgba(8,24,48,0.06)" />
-              <select id="filterAccount" style="padding:10px;border-radius:10px;border:1px solid rgba(8,24,48,0.06)"><option value="">Todas cuentas</option></select>
+              <input id="search" placeholder="Buscar descripción, categoría..." style="padding:10px;border-radius:10px;border:1px solid var(--glass)" />
+              <select id="filterAccount" style="padding:10px;border-radius:10px;border:1px solid var(--glass)"><option value="">Todas cuentas</option></select>
               <button id="btnAddTx" class="btn primary"><i data-feather="plus"></i> Agregar</button>
             </div>
           </div>
@@ -249,8 +246,7 @@
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div style="font-weight:800">Cuentas Bancarias</div>
             <div style="display:flex;gap:8px">
-              <button id="btnAddBankTop" class="btn primary"><i data-feather="plus-circle"></i> Nueva cuenta</button>
-              <button id="btnTransferTop" class="btn warn"><i data-feather="repeat"></i> Transferir</button>
+              <button id="btnAddBankTop" class="btn primary"><i data-feather="plus"></i> Nueva cuenta</button>
               <button id="btnExportBanks" class="btn ghost"><i data-feather="download"></i> Export</button>
             </div>
           </div>
@@ -338,13 +334,12 @@
   <button id="fab" class="fab" title="Nueva transacción"><i data-feather="plus"></i> Nueva Tx</button>
 
   <!-- Toast -->
-  <div id="toast" style="position:fixed;left:50%;transform:translateX(-50%);bottom:28px;background:#ffffff;padding:10px;border-radius:10px;display:none;z-index:1200;box-shadow:0 12px 30px rgba(8,24,48,0.08)"></div>
+  <div id="toast" style="position:fixed;left:50%;transform:translateX(-50%);bottom:28px;background:#ffffff;padding:10px;border-radius:10px;display:none;z-index:1200;box-shadow:var(--card-shadow)"></div>
 
   <!-- ======================
-       FIREBASE CONFIG (PONER LA TUYA / ya proporcionada)
+       FIREBASE CONFIG (tuya actualizada)
        ====================== -->
   <script>
-    // Config proporcionada por el usuario (ya actualizada)
     const firebaseConfig = {
       apiKey: "AIzaSyBVppNAicRPFXEUdErmHd24se_9bjXiqcM",
       authDomain: "jhona-1b398.firebaseapp.com",
@@ -355,60 +350,35 @@
       appId: "1:981136306223:web:d8948acdb119f0facc56da",
       measurementId: "G-44TXK10R9R"
     };
-    // Organización / IDs entregados
     const ORG_ID = "oxIgjNwqNPiAneP5alpM";
-    // Login local (no Firebase Auth) - credenciales locales
     const LOCAL_LOGIN = { user: "JHONATAN", pass: "JHONATAN" };
-
-    // Claves de almacenamiento
-    const STORAGE_KEY = 'jona_business_single_data_v5';
-    const LAST_VIEW_KEY = 'jona_last_view_v1';
   </script>
 
   <!-- ======================
-       Lógica principal (Vanilla ES Modules)
+       Lógica (vanilla ES modules) - mantuve funcionalidad
        ====================== -->
   <script type="module">
-  /* =======================
-     Helpers - Utilidades
-     ======================= */
-  const $ = (sel, root=document) => root.querySelector(sel);
-  const $$ = (sel, root=document) => Array.from((root||document).querySelectorAll(sel));
+  // ---------- Helpers ----------
+  const $ = (s,r=document)=> r.querySelector(s);
+  const $$ = (s,r=document)=> Array.from((r||document).querySelectorAll(s));
   const nowISO = ()=> new Date().toISOString();
   function uid(pref){ return `${pref}_${Date.now()}_${Math.floor(Math.random()*90000)}`; }
   function fmtMoney(v){ v = Number(v)||0; return 'S/ ' + v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
   function parseDateDDMMYYYY(s){ if(!s) return null; const p=s.split('/'); if(p.length!==3) return null; const d=Number(p[0]), m=Number(p[1])-1, y=Number(p[2]); const D=new Date(y,m,d); return isNaN(D)?null:D; }
   function toDDMMYYYY(d){ if(!d) return ''; return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear(); }
-  function showToast(msg, err=false){ const t = $('#toast'); t.textContent = msg; t.style.display = 'block'; t.style.background = err ? '#fff1f0' : '#f6fffb'; t.style.color = err ? 'var(--danger)' : 'var(--text)'; clearTimeout(window.__to); window.__to = setTimeout(()=> t.style.display = 'none', err?7000:3500); }
+  function showToast(msg,err=false){ const t=$('#toast'); t.textContent=msg; t.style.display='block'; t.style.background= err ? '#fff1f0' : '#f6fffb'; t.style.color = err ? 'var(--danger)' : 'var(--text)'; clearTimeout(window.__to); window.__to=setTimeout(()=> t.style.display='none', err?7000:3500); }
 
-  /* =======================
-     Estado de la aplicación
-     ======================= */
+  // ---------- State ----------
+  const STORAGE_KEY = 'jona_business_single_data_v3';
   const state = {
-    user: null,
-    fsHelpers: null,
-    unsubscribeRealtime: null,
-    data: {
-      transactions: [],
-      banks: [],
-      debts: [],
-      fixed: [],
-      categories: [],
-      assets: [],
-      liabilities: [],
-      businesses: [],
-      meta: { updatedAt: null }
-    },
-    ui: { viewScroll: {} }
+    user:null, fsHelpers:null, unsubscribeRealtime:null,
+    data: { transactions:[], banks:[], debts:[], fixed:[], categories:[], assets:[], liabilities:[], businesses:[], meta:{ updatedAt:null } }
   };
 
-  /* =======================
-     Persistencia local
-     ======================= */
+  // Local load/save
   function loadLocal(){
     const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw) try { state.data = JSON.parse(raw); } catch(e){ console.warn('local load', e); }
-    // garantizar arrays
+    if(raw) try { state.data = JSON.parse(raw); } catch(e){ console.warn(e); }
     state.data.transactions = state.data.transactions || [];
     state.data.banks = state.data.banks || [];
     state.data.debts = state.data.debts || [];
@@ -420,10 +390,7 @@
   }
   function persistLocal(){ state.data.meta.updatedAt = nowISO(); localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data)); }
 
-  /* =======================
-     Firestore (v9 modular via CDN imports dinámicos)
-     - Se guarda todo en: organizations/{ORG_ID}/DATA/DATA
-     ======================= */
+  // Firestore init (v9 modular via CDN import)
   async function initFirestore(cfg){
     if(state.fsHelpers) return;
     try{
@@ -432,11 +399,8 @@
       const app = initializeApp(cfg);
       const firestore = getFirestore(app);
       state.fsHelpers = { doc, getDoc, setDoc, onSnapshot, firestore };
-      console.info('Firestore inicializado');
-    } catch(e){
-      console.warn('initFirestore err', e);
-      throw e;
-    }
+      console.info('Firestore initialized');
+    } catch(e){ throw e; }
   }
   async function fsFetch(){
     const { doc, getDoc, firestore } = state.fsHelpers;
@@ -454,15 +418,13 @@
     return updatedAt;
   }
 
-  /* =======================
-     Realtime listener: fusiona remoto con local
-     ======================= */
+  // Realtime listener
   function startRealtime(){
     if(!state.fsHelpers) return;
     const { doc, onSnapshot, firestore } = state.fsHelpers;
     const ref = doc(firestore, 'organizations', ORG_ID, 'DATA', 'DATA');
     if(state.unsubscribeRealtime) try{ state.unsubscribeRealtime(); }catch(e){}
-    state.unsubscribeRealtime = onSnapshot(ref, snap => {
+    state.unsubscribeRealtime = onSnapshot(ref, snap=>{
       if(!snap.exists()) return;
       const payload = snap.data();
       if(!payload) return;
@@ -473,12 +435,10 @@
         renderAll();
         showToast('Sincronizado desde la nube');
       }
-    }, err => console.warn('Realtime err', err));
+    }, err=> console.warn('Realtime err', err));
   }
 
-  /* =======================
-     Merge datasets (estrategia simple: latest wins por createdAt)
-     ======================= */
+  // Merge logic
   function mergeCollections(localArr=[], remoteArr=[], timeField='createdAt'){
     const map = new Map();
     (localArr||[]).forEach(item => { if(!item) return; if(!item.id) item.id = uid('x'); map.set(item.id, item); });
@@ -508,10 +468,8 @@
     };
   }
 
-  /* =======================
-     Auto push (debounced) y control Cloud
-     ======================= */
-  let pushTimer = null;
+  // Auto push
+  let pushTimer=null;
   function schedulePush(delay=900){
     if(!state.fsHelpers) return;
     if(pushTimer) clearTimeout(pushTimer);
@@ -525,9 +483,7 @@
     }, delay);
   }
 
-  /* =======================
-     CRUD y lógica de negocio
-     ======================= */
+  // CRUD operations
   function pushAndRender(mut){
     mut(state.data);
     persistLocal();
@@ -555,24 +511,18 @@
     });
   }
 
-  // Transferencia entre cuentas: crea registro de salida e ingreso y actualiza saldos
   function transferBetweenBanks(fromId,toId,amount,dateStr,note){
     amount = Number(amount)||0; if(amount<=0) throw new Error('Monto inválido');
-    if(!fromId || !toId) throw new Error('Seleccione ambas cuentas');
-    if(fromId === toId) throw new Error('Las cuentas deben ser diferentes');
     pushAndRender(d=>{
       const from = d.banks.find(b=>b.id===fromId), to = d.banks.find(b=>b.id===toId);
       if(from) from.balance = (Number(from.balance)||0) - amount;
       if(to) to.balance = (Number(to.balance)||0) + amount;
-      const idOut = uid('t'), idIn = uid('t');
-      const out = { id:idOut, type:'Egreso', dateStr, amount, bankId:fromId, description: (note ? note : `Transferencia a ${to?to.name:''}`), createdAt:nowISO(), meta:{ transferTo: toId, transferPair: idIn } };
-      const inc = { id:idIn, type:'Ingreso', dateStr, amount, bankId:toId, description: (note ? note : `Transferencia desde ${from?from.name:''}`), createdAt:nowISO(), meta:{ transferFrom: fromId, transferPair: idOut } };
-      d.transactions.unshift(inc);
-      d.transactions.unshift(out);
+      const out = { id:uid('t'), type:'Egreso', dateStr, amount, bankId:fromId, description:'Transferencia a ' + (to?to.name:''), createdAt:nowISO(), meta:{transferTo:toId} };
+      const inc = { id:uid('t'), type:'Ingreso', dateStr, amount, bankId:toId, description:'Transferencia desde ' + (from?from.name:''), createdAt:nowISO(), meta:{transferFrom:fromId} };
+      d.transactions.unshift(inc); d.transactions.unshift(out);
     });
   }
 
-  // Aplicar gastos fijos (crea transacciones Egreso y actualiza saldos)
   function applyMonthlyFixed(){
     const today = toDDMMYYYY(new Date());
     pushAndRender(d=>{
@@ -585,9 +535,7 @@
     showToast('Gastos fijos aplicados');
   }
 
-  /* =======================
-     Export / Import / PDF
-     ======================= */
+  // Export / Import / PDF
   function exportCSV(){
     const rows = state.data.transactions.map(t=>{
       const b = state.data.banks.find(b=>b.id===t.bankId);
@@ -599,6 +547,7 @@
     const blob = new Blob([csv], { type:'text/csv' }); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='transacciones.csv'; a.click(); URL.revokeObjectURL(url);
   }
   function exportJSON(){ const blob = new Blob([JSON.stringify(state.data,null,2)], { type:'application/json' }); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='backup.json'; a.click(); URL.revokeObjectURL(url); }
+
   async function importFile(file){
     if(!file) return alert('Selecciona archivo');
     const text = await file.text();
@@ -631,7 +580,7 @@
 
     const node = document.createElement('div'); node.className='pdf-root';
     node.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div class="pdf-header">
         <div>
           <div class="pdf-title">REPORTE FINANCIERO — JHONATAN ORELLANA</div>
           <div class="pdf-sub">Organización: ${ORG_ID} · Fecha: ${toDDMMYYYY(new Date())}</div>
@@ -656,37 +605,33 @@
 
       <section>
         <div class="pdf-sub">3. Bancos</div>
-        <table style="width:100%;border-collapse:collapse;margin-top:6px"><thead><tr><th>Cuenta</th><th>Tipo</th><th style="text-align:right">Saldo</th></tr></thead>
+        <table class="pdf-table"><thead><tr><th>Cuenta</th><th>Tipo</th><th style="text-align:right">Saldo</th></tr></thead>
           <tbody>${state.data.banks.map(b=>`<tr><td>${b.name}</td><td>${b.type||'-'}</td><td style="text-align:right">${fmtMoney(b.balance)}</td></tr>`).join('')}</tbody></table>
       </section>
 
       <section>
-        <div class="pdf-sub">4. Activos</div>
-        <table style="width:100%;border-collapse:collapse;margin-top:6px"><thead><tr><th>Activo</th><th>Subtipo</th><th style="text-align:right">Valor</th><th style="text-align:right">Ganancias</th></tr></thead>
+        <div class="pdf-sub">4. Activos clave</div>
+        <table class="pdf-table"><thead><tr><th>Activo</th><th>Subtipo</th><th style="text-align:right">Valor</th><th style="text-align:right">Ganancias</th></tr></thead>
           <tbody>${state.data.assets.map(a=>`<tr><td>${a.name}</td><td>${a.subtype||'-'}</td><td style="text-align:right">${fmtMoney(a.estimatedValue)}</td><td style="text-align:right">${fmtMoney(a.accumulatedGain||0)}</td></tr>`).join('')}</tbody></table>
       </section>
 
       <section>
         <div class="pdf-sub">5. Deudas y pasivos</div>
-        <table style="width:100%;border-collapse:collapse;margin-top:6px"><thead><tr><th>Nombre</th><th>Vinculado</th><th style="text-align:right">Saldo</th><th style="text-align:right">Cuota</th></tr></thead>
+        <table class="pdf-table"><thead><tr><th>Nombre</th><th>Vinculado</th><th style="text-align:right">Saldo</th><th style="text-align:right">Cuota</th></tr></thead>
           <tbody>
             ${state.data.debts.map(d=>`<tr><td>${d.name}</td><td>${(state.data.banks.find(b=>b.id===d.bankId)||{name:'-'}) .name}</td><td style="text-align:right">${fmtMoney(d.outstanding)}</td><td style="text-align:right">${fmtMoney(d.monthlyPayment)}</td></tr>`).join('')}
             ${state.data.liabilities.map(l=>`<tr><td>${l.name}</td><td>${(state.data.banks.find(b=>b.id===l.linkedBankId)||{name:'-'}) .name}</td><td style="text-align:right">${fmtMoney(l.amount)}</td><td style="text-align:right">-</td></tr>`).join('')}
           </tbody></table>
       </section>
 
-      <div style="margin-top:12px;font-size:9pt;color:#666">Generado por JHONATAN ORELLANA · Títulos 12pt · Subtítulos 11pt · Texto 10pt</div>
+      <div style="margin-top:12px;font-size:9pt;color:#666">Generado por JHONATAN ORELLANA — Suite Didáctica · Títulos 12pt · Subtítulos 11pt · Texto 10pt</div>
     `;
     if(window.html2pdf){
       html2pdf().set({ margin:12, filename:`reporte_financiero_${(new Date()).toISOString().slice(0,10)}.pdf`, image:{type:'jpeg',quality:0.95}, html2canvas:{scale:2,useCORS:true}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(node).save();
     } else alert('html2pdf no disponible');
   }
 
-  /* =======================
-     Dashboard / Charts
-     - Nuevo KPI: "Dinero libre" = suma saldos cuentas - (deudas + pasivos)
-     - "Saldo Neto" = activos + cuentas - pasivos
-     ======================= */
+  // Charts & dashboard
   let flowsChart = null;
   window.flowsChart = null;
   function renderFlowsChart(){
@@ -707,7 +652,7 @@
       incData.push(inc); egData.push(eg);
     }
     const ctx = document.getElementById('chartFlows');
-    const data = { labels, datasets:[ { label:'Ingresos', type:'line', data:incData, borderColor: '#075fae', backgroundColor: 'rgba(7,95,174,0.06)', tension:0.3, yAxisID:'y' }, { label:'Egresos', type:'bar', data:egData, backgroundColor:'#ef4444', yAxisID:'y' } ] };
+    const data = { labels, datasets:[ { label:'Ingresos', type:'line', data:incData, borderColor: '#0b6fd1', backgroundColor: 'rgba(11,111,209,0.06)', tension:0.3, yAxisID:'y' }, { label:'Egresos', type:'bar', data:egData, backgroundColor:'#ef4444', yAxisID:'y' } ] };
     if(flowsChart){ flowsChart.data = data; flowsChart.update(); } else {
       flowsChart = new Chart(ctx, { data, type:'bar', options:{
         responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top'}}, scales:{ y:{ beginAtZero:true }, x:{ stacked:false } }
@@ -727,17 +672,15 @@
     const avgExpenses = (expenseTotal / 12) || 0;
     const runway = avgExpenses>0 ? (banksTotal/avgExpenses).toFixed(1) : '∞';
     const net = assetsTotal + banksTotal - (liabilitiesTotal + debtsTotal);
-    const freeCash = banksTotal - (liabilitiesTotal + debtsTotal); // dinero líquido fuera de activos
 
-    $('#kpi-free').textContent = fmtMoney(freeCash);
     $('#kpi-net').textContent = fmtMoney(net);
     $('#kpi-inc').textContent = fmtMoney(incomeTotal);
     $('#kpi-exp').textContent = fmtMoney(expenseTotal);
-    $('#kpi-runway')?.textContent = `${runway} meses`;
+    $('#kpi-runway').textContent = `${runway} meses`;
     $('#patrimony').textContent = fmtMoney(net);
     $('#kpi-net-trend').textContent = `Activos ${fmtMoney(assetsTotal)} · Pasivos ${fmtMoney(liabilitiesTotal + debtsTotal)}`;
 
-    // Top categorías mes
+    // top categories this month
     const catSums = {};
     state.data.transactions.forEach(t=>{
       const td=parseDateDDMMYYYY(t.dateStr||''); if(!td) return;
@@ -763,34 +706,14 @@
     $('#alertsArea').innerHTML = alerts.length ? alerts.join('<br/>') : '<span class="small">Sin alertas</span>';
     $('#todayDate').textContent = 'Hoy: ' + toDDMMYYYY(new Date());
 
-    const last = state.data.transactions.slice(0,6).map(t=>{
-      const meta = t.meta && (t.meta.transferTo || t.meta.transferFrom) ? ' ⚡' : '';
-      return `${t.dateStr} · ${t.type}${meta} · ${fmtMoney(t.amount)} · ${(t.description||'')}`;
-    }).join('<br/>') || '—';
+    const last = state.data.transactions.slice(0,6).map(t=> `${t.dateStr} · ${t.type} · ${fmtMoney(t.amount)} · ${(t.description||'')}`).join('<br/>') || '—';
     $('#smallTxList').innerHTML = last;
+    $('#kpi-inc-trend').textContent = `Ingresos anuales: ${fmtMoney(incomeTotal)}`;
+    $('#kpi-exp-trend').textContent = `Gastos anuales: ${fmtMoney(expenseTotal)}`;
     renderFlowsChart();
   }
 
-  /* =======================
-     Render UI: transacciones, bancos, assets, ...
-     - Guardar scrolls y vista actual para que al salir y volver no se "corte"
-     ======================= */
-  function saveViewScroll(viewId){
-    try{
-      const el = document.getElementById('view-'+viewId);
-      if(el) state.ui.viewScroll[viewId] = el.scrollTop || 0;
-      localStorage.setItem(LAST_VIEW_KEY + '_scroll', JSON.stringify(state.ui.viewScroll));
-    } catch(e){}
-  }
-  function restoreViewScroll(viewId){
-    try{
-      const stored = localStorage.getItem(LAST_VIEW_KEY + '_scroll');
-      if(stored) state.ui.viewScroll = JSON.parse(stored);
-      const el = document.getElementById('view-'+viewId);
-      if(el && state.ui.viewScroll[viewId] !== undefined) el.scrollTop = state.ui.viewScroll[viewId];
-    } catch(e){}
-  }
-
+  // Render lists (transactions, banks, assets, etc.)
   function renderTransactions(){
     const tbody = $('#txTable tbody'); if(!tbody) return; tbody.innerHTML='';
     const q = ($('#search') && $('#search').value || '').trim().toLowerCase();
@@ -800,10 +723,8 @@
       const bank = state.data.banks.find(b=>b.id===t.bankId);
       const cat = state.data.categories.find(c=>c.id===t.categoryId);
       const asset = state.data.assets.find(a=>a.id===t.assetId);
-      const isTransfer = t.meta && (t.meta.transferTo || t.meta.transferFrom);
-      const transferLabel = isTransfer ? `<span class="small">⚡ ${ t.meta.transferTo ? '->' + (state.data.banks.find(x=>x.id===t.meta.transferTo)||{name:'?' }).name : '<-' + (state.data.banks.find(x=>x.id===t.meta.transferFrom)||{name:'?' }).name}</span>` : '';
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${t.dateStr||''}</td><td>${bank?bank.name:'-'}</td><td>${t.type}</td><td>${cat?cat.name:(asset?('ACT:'+asset.name):(t.categoryName||'-'))} ${transferLabel}</td><td class="right">${fmtMoney(t.amount)}</td><td><button data-id="${t.id}" data-act="edit" class="btn ghost"><i data-feather="edit-2"></i></button> <button data-id="${t.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></td>`;
+      tr.innerHTML = `<td>${t.dateStr||''}</td><td>${bank?bank.name:'-'}</td><td>${t.type}</td><td>${cat?cat.name:(asset?('ACT:'+asset.name):(t.categoryName||'-'))}</td><td class="right">${fmtMoney(t.amount)}</td><td><button data-id="${t.id}" data-act="edit" class="btn ghost"><i data-feather="edit-2"></i></button> <button data-id="${t.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></td>`;
       tbody.appendChild(tr);
     });
     $$('#txTable button').forEach(btn=> btn.onclick = ()=>{
@@ -818,23 +739,22 @@
   function renderBanks(){
     const wrap = $('#banksArea'); if(!wrap) return;
     if(state.data.banks.length===0){ wrap.innerHTML = '<div class="small">No hay cuentas registradas</div>'; return; }
-    const rows = state.data.banks.map(b=>`<tr><td><strong>${b.name}</strong><div class="small">${b.type||''}</div></td><td class="right">${fmtMoney(Number(b.balance)||0)}</td><td style="white-space:nowrap"><button data-id="${b.id}" data-act="edit" class="btn ghost"><i data-feather="edit-2"></i></button> <button data-id="${b.id}" data-act="transfer" class="btn warn"><i data-feather="repeat"></i> Transferir</button> <button data-id="${b.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></td></tr>`).join('');
+    const rows = state.data.banks.map(b=>`<tr><td><strong>${b.name}</strong><div class="small">${b.type||''}</div></td><td class="right">${fmtMoney(Number(b.balance)||0)}</td><td><button data-id="${b.id}" data-act="edit" class="btn ghost"><i data-feather="edit-2"></i></button> <button data-id="${b.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></td></tr>`).join('');
     wrap.innerHTML = `<table style="width:100%"><thead><tr><th>Cuenta</th><th class="right">Saldo</th><th>Acc</th></tr></thead><tbody>${rows}</tbody></table>`;
     $$('#banksArea button').forEach(btn=> btn.onclick = ()=>{
       const id = btn.dataset.id, act = btn.dataset.act;
       if(act==='del'){ if(confirm('Eliminar cuenta?')){ state.data.banks = state.data.banks.filter(x=>x.id!==id); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } }
       if(act==='edit'){ const b = state.data.banks.find(x=>x.id===id); openBankModal(b); }
-      if(act==='transfer'){ openTransferModal(id); }
       feather.replace();
     });
     $('#filterAccount').innerHTML = '<option value="">Todas cuentas</option>' + state.data.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
     feather.replace();
   }
 
-  function renderAssets(){ const wrap=$('#assetsArea'); if(!wrap) return; if(state.data.assets.length===0){ wrap.innerHTML='<div class="small">Sin activos</div>'; return; } const rows = state.data.assets.map(a=>`<div style="padding:10px;border-bottom:1px solid rgba(8,24,48,0.04)"><div style="display:flex;justify-content:space-between;align-items:center"><div><strong>${a.name}</strong><div class="small">${a.subtype||'-'} · Valor: ${fmtMoney(a.estimatedValue)}</div></div><div style="display:flex;gap:8px"><button data-id="${a.id}" data-act="view" class="btn ghost"><i data-feather="eye"></i></button><button data-id="${a.id}" data-act="edit" class="btn ghost"><i data-feather="edit-2"></i></button><button data-id="${a.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></div></div></div>`).join('');
+  function renderAssets(){ const wrap=$('#assetsArea'); if(!wrap) return; if(state.data.assets.length===0){ wrap.innerHTML='<div class="small">Sin activos</div>'; return; } const rows = state.data.assets.map(a=>`<div style="padding:10px;border-bottom:1px solid rgba(11,24,32,0.04)"><div style="display:flex;justify-content:space-between;align-items:center"><div><strong>${a.name}</strong><div class="small">${a.subtype||'-'} · Valor: ${fmtMoney(a.estimatedValue)}</div></div><div style="display:flex;gap:8px"><button data-id="${a.id}" data-act="view" class="btn ghost"><i data-feather="eye"></i></button><button data-id="${a.id}" data-act="edit" class="btn ghost"><i data-feather="edit-2"></i></button><button data-id="${a.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></div></div></div>`).join('');
     wrap.innerHTML = rows; $$('#assetsArea button').forEach(btn=> btn.onclick = ()=> { const id=btn.dataset.id, act=btn.dataset.act; if(act==='del'){ if(confirm('Eliminar activo?')){ state.data.assets = state.data.assets.filter(x=>x.id!==id); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } } if(act==='edit'){ const a=state.data.assets.find(x=>x.id===id); openAssetModal(a); } if(act==='view'){ openAssetViewModal(state.data.assets.find(x=>x.id===id)); } feather.replace(); }); feather.replace(); }
 
-  function renderLiabilities(){ const wrap=$('#liabilitiesArea'); if(!wrap) return; if(state.data.liabilities.length===0){ wrap.innerHTML='<div class="small">Sin pasivos</div>'; return; } const rows = state.data.liabilities.map(l=>`<div style="padding:10px;border-bottom:1px solid rgba(8,24,48,0.04)"><div style="display:flex;justify-content:space-between"><div><strong>${l.name}</strong><div class="small">Tasa: ${l.interestRate||0}% · Venc: ${l.maturityDate||'-'}</div></div><div style="display:flex;gap:8px"><button data-id="${l.id}" data-act="edit" class="btn ghost"><i data-feather="edit-2"></i></button><button data-id="${l.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></div></div></div>`).join('');
+  function renderLiabilities(){ const wrap=$('#liabilitiesArea'); if(!wrap) return; if(state.data.liabilities.length===0){ wrap.innerHTML='<div class="small">Sin pasivos</div>'; return; } const rows = state.data.liabilities.map(l=>`<div style="padding:10px;border-bottom:1px solid rgba(11,24,32,0.04)"><div style="display:flex;justify-content:space-between"><div><strong>${l.name}</strong><div class="small">Tasa: ${l.interestRate||0}% · Venc: ${l.maturityDate||'-'}</div></div><div style="display:flex;gap:8px"><button data-id="${l.id}" data-act="edit" class="btn ghost"><i data-feather="edit-2"></i></button><button data-id="${l.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></div></div></div>`).join('');
     wrap.innerHTML = rows; $$('#liabilitiesArea button').forEach(b=> b.onclick = ()=> { const id=b.dataset.id, act=b.dataset.act; if(act==='del'){ if(confirm('Eliminar pasivo?')){ state.data.liabilities = state.data.liabilities.filter(x=>x.id!==id); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } } if(act==='edit'){ const l=state.data.liabilities.find(x=>x.id===id); openLiabilityModal(l); } feather.replace(); }); feather.replace(); }
 
   function renderDebts(){ const wrap=$('#debtsArea'); if(!wrap) return; if(state.data.debts.length===0){ wrap.innerHTML='<div class="small">Sin deudas</div>'; return; } const rows = state.data.debts.map(d=>`<tr><td>${d.name}</td><td>${(state.data.banks.find(b=>b.id===d.bankId)||{name:'-'}) .name}</td><td class="right">${fmtMoney(Number(d.outstanding)||0)}</td><td class="right">${fmtMoney(Number(d.monthlyPayment)||0)}</td><td><button data-id="${d.id}" data-act="pay" class="btn positive"><i data-feather="dollar-sign"></i> Pagar</button> <button data-id="${d.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></td></tr>`).join('');
@@ -850,21 +770,14 @@
     wrap.innerHTML = `<table style="width:100%"><thead><tr><th>Empresa</th><th class="right">Valor estimado</th><th>Notas</th><th>Acc</th></tr></thead><tbody>${rows}</tbody></table>`; $$('#businessesArea button').forEach(b=> b.onclick = ()=> { const id=b.dataset.id, act=b.dataset.act; if(act==='del'){ if(confirm('Eliminar empresa?')){ state.data.businesses = state.data.businesses.filter(x=>x.id!==id); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } } if(act==='edit'){ const bz=state.data.businesses.find(x=>x.id===id); openBusinessModal(bz); } feather.replace(); }); feather.replace(); }
 
   function renderAll(){
-    // Render everything y restaurar scroll de la vista actual
     renderFlowsChart(); dashboardMetrics();
     renderTransactions(); renderBanks(); renderAssets(); renderLiabilities(); renderDebts(); renderFixed(); renderCategories(); renderBusinesses();
     $('#cloudMode').textContent = state.fsHelpers ? 'CLOUD' : 'LOCAL';
     $('#currentUser').textContent = state.user || 'Invitado';
     $('#orgBadge').textContent = ORG_ID; $('#orgShort').textContent = ORG_ID;
-    // restore scroll of last view
-    const lastView = localStorage.getItem(LAST_VIEW_KEY) || 'dashboard';
-    restoreViewScroll(lastView);
   }
 
-  /* =======================
-     Modales: CRUD + Transfer modal
-     - Asegura que al guardar se cierre la ventana y se vean los montos inmediatamente
-     ======================= */
+  // ---------- Modales (CRUD) ----------
   function showModal(html){
     $('#panelRoot').innerHTML = html;
     $('#overlay').style.display = 'flex';
@@ -907,7 +820,6 @@
         if(!parseDateDDMMYYYY(dateStr)) return alert('Fecha inválida (dd/mm/yyyy)');
         await addTransaction({ type, amount, bankId, categoryId, assetId, description: desc, dateStr });
         closeModal();
-        showToast('Transacción guardada');
       } catch(e){ alert('Error: ' + (e.message||e)); }
     };
   }
@@ -915,7 +827,7 @@
   function openBankModal(b){
     const def = b || { name:'', balance:0, type:'Cuenta', notes:'' };
     const html = `<div style="font-weight:900;margin-bottom:8px">${b? 'Editar cuenta' : 'Nueva cuenta'}</div>
-      <label>Nombre</label><input id="bName" value="${def.name}" autocomplete="off" />
+      <label>Nombre</label><input id="bName" value="${def.name}" />
       <label>Tipo</label><input id="bType" value="${def.type}" />
       <label>Saldo inicial</label><input id="bBalance" type="number" value="${Number(def.balance)||0}" />
       <label>Notas</label><input id="bNotes" value="${(def.notes||'').replace(/"/g,'&quot;')}" />
@@ -927,48 +839,9 @@
       if(!name) return alert('Nombre requerido');
       if(b){ Object.assign(b,{name,type,balance,notes}); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } else addBank({name,type,balance,notes});
       closeModal();
-      showToast('Cuenta guardada');
     };
   }
 
-  function openTransferModal(fromId){
-    const fromOpt = state.data.banks.map(b=>`<option value="${b.id}" ${b.id===fromId?'selected':''}>${b.name} (${fmtMoney(b.balance)})</option>`).join('');
-    const toOpt = state.data.banks.map(b=>`<option value="${b.id}">${b.name} (${fmtMoney(b.balance)})</option>`).join('');
-    const html = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div style="font-weight:900">Transferencia entre cuentas</div>
-        <div class="small">Se crearán dos registros (Egreso e Ingreso) y se actualizarán saldos</div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label>Desde (origen)</label><select id="trFrom"><option value="">-- seleccionar --</option>${fromOpt}</select></div>
-        <div><label>Hacia (destino)</label><select id="trTo"><option value="">-- seleccionar --</option>${toOpt}</select></div>
-        <div><label>Monto</label><input id="trAmount" type="number" value="0" /></div>
-        <div><label>Fecha (dd/mm/yyyy)</label><input id="trDate" value="${toDDMMYYYY(new Date())}" /></div>
-        <div style="grid-column:1/3"><label>Nota / descripción</label><input id="trNote" placeholder="Ej: Transferencia interna" /></div>
-      </div>
-      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px">
-        <button id="trCancel" class="btn ghost"><i data-feather="x"></i> Cancelar</button>
-        <button id="trSave" class="btn warn"><i data-feather="check"></i> Transferir</button>
-      </div>
-    `;
-    showModal(html);
-    setTimeout(()=>{ if(fromId) $('#trFrom').value = fromId; feather.replace(); },40);
-    $('#trCancel').onclick = closeModal;
-    $('#trSave').onclick = ()=> {
-      const from = $('#trFrom').value, to = $('#trTo').value, amount = Number($('#trAmount').value)||0, dateStr = $('#trDate').value.trim(), note = $('#trNote').value.trim();
-      if(!from || !to) return alert('Seleccione ambas cuentas');
-      if(from === to) return alert('Cuentas deben ser diferentes');
-      if(!amount || amount<=0) return alert('Monto inválido');
-      if(!parseDateDDMMYYYY(dateStr)) return alert('Fecha inválida (dd/mm/yyyy)');
-      try{
-        transferBetweenBanks(from,to,amount,dateStr,note);
-        closeModal();
-        showToast('Transferencia registrada');
-      } catch(e){ alert('Error: '+(e.message||e)); }
-    };
-  }
-
-  // Modales restantes (activos, pasivos, categorías, deuda, pago deuda, fijos) - funciones similares a versiones previas
   function openAssetModal(a){
     const subtypes = ['Inmueble','Maquinaria','Inversión','Patrimonio','Vehículo','Otro'];
     const bankOpt = '<option value="">-- Ninguna --</option>' + state.data.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
@@ -995,7 +868,6 @@
       const obj = { name, subtype, estimatedValue:val, purchaseDate:purchase, depreciationRate:dep, usefulLife:life, salvageValue:salvage, linkedBankId:bankId, notes, accumulatedGain: a ? a.accumulatedGain : 0, incomeRecords: a ? a.incomeRecords : [] };
       if(a){ Object.assign(a,obj); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } else addAsset(obj);
       closeModal();
-      showToast('Activo guardado');
     };
   }
 
@@ -1033,7 +905,6 @@
       const obj = { name, subtype, amount, interestRate:interest, maturityDate:maturity, collateral, linkedBankId:bankId, notes };
       if(l){ Object.assign(l,obj); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } else addLiability(obj);
       closeModal();
-      showToast('Pasivo guardado');
     };
   }
 
@@ -1048,7 +919,7 @@
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px"><button id="bzCancel" class="btn ghost"><i data-feather="x"></i> Cancelar</button><button id="bzSave" class="btn primary"><i data-feather="save"></i> Guardar</button></div>`;
     showModal(html);
     $('#bzCancel').onclick = closeModal;
-    $('#bzSave').onclick = ()=> { const name=$('#bzName').value.trim(), role=$('#bzRole').value, val=Number($('#bzValue').value)||0, contrib=Number($('#bzContribution').value)||0, notes=$('#bzNotes').value.trim(); if(!name) return alert('Nombre requerido'); const obj={name,estimateValue:val,contribution:contrib,role,notes}; if(bz){ Object.assign(bz,obj); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } else addBusiness(obj); closeModal(); showToast('Empresa guardada'); };
+    $('#bzSave').onclick = ()=> { const name=$('#bzName').value.trim(), role=$('#bzRole').value, val=Number($('#bzValue').value)||0, contrib=Number($('#bzContribution').value)||0, notes=$('#bzNotes').value.trim(); if(!name) return alert('Nombre requerido'); const obj={name,estimateValue:val,contribution:contrib,role,notes}; if(bz){ Object.assign(bz,obj); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } else addBusiness(obj); closeModal(); };
   }
 
   function openFixedModal(f){
@@ -1061,7 +932,7 @@
     showModal(html);
     if(f) setTimeout(()=>{ $('#fBank').value=f.bankId||''; $('#fCat').value=f.categoryId||''; },50);
     $('#fCancel').onclick = closeModal;
-    $('#fSave').onclick = ()=> { const name=$('#fName').value.trim(), amount=Number($('#fAmount').value)||0, bankId=$('#fBank').value||null, categoryId=$('#fCat').value||null, freq=$('#fFreq').value||'monthly'; if(!name) return alert('Nombre requerido'); if(f){ Object.assign(f,{name,amount,bankId,categoryId,frequency:freq}); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } else addFixed({name,amount,bankId,categoryId,frequency:freq}); closeModal(); showToast('Gasto fijo guardado'); };
+    $('#fSave').onclick = ()=> { const name=$('#fName').value.trim(), amount=Number($('#fAmount').value)||0, bankId=$('#fBank').value||null, categoryId=$('#fCat').value||null, freq=$('#fFreq').value||'monthly'; if(!name) return alert('Nombre requerido'); if(f){ Object.assign(f,{name,amount,bankId,categoryId,frequency:freq}); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } else addFixed({name,amount,bankId,categoryId,frequency:freq}); closeModal(); };
   }
 
   function openCategoryModal(c){
@@ -1072,7 +943,7 @@
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px"><button id="catCancel" class="btn ghost"><i data-feather="x"></i> Cancelar</button><button id="catSave" class="btn primary"><i data-feather="save"></i> Guardar</button></div>`;
     showModal(html);
     $('#catCancel').onclick = closeModal;
-    $('#catSave').onclick = ()=>{ const name=$('#catName').value.trim(), limit=Number($('#catLimit').value)||0; if(!name) return alert('Nombre requerido'); if(c){ Object.assign(c,{name,limitMonthly:limit}); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } else addCategory({name,limitMonthly:limit}); closeModal(); showToast('Categoría guardada'); };
+    $('#catSave').onclick = ()=>{ const name=$('#catName').value.trim(), limit=Number($('#catLimit').value)||0; if(!name) return alert('Nombre requerido'); if(c){ Object.assign(c,{name,limitMonthly:limit}); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } else addCategory({name,limitMonthly:limit}); closeModal(); };
   }
 
   function openDebtModal(d){
@@ -1091,7 +962,7 @@
     showModal(html);
     if(d) setTimeout(()=> $('#dBank').value = d.bankId||'',40);
     $('#dCancel').onclick = closeModal;
-    $('#dSave').onclick = ()=> { const name=$('#dName').value.trim(), bankId=$('#dBank').value||null, out=Number($('#dOut').value)||0, pay=Number($('#dPay').value)||0, interest=Number($('#dInterest').value)||0, notes=$('#dNotes').value.trim(); if(!name) return alert('Nombre requerido'); if(d){ Object.assign(d,{name,bankId,outstanding:out,monthlyPayment:pay,interestRate:interest,notes}); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } else addDebt({name,bankId,outstanding:out,monthlyPayment:pay,interestRate:interest,notes}); closeModal(); showToast('Deuda guardada'); };
+    $('#dSave').onclick = ()=> { const name=$('#dName').value.trim(), bankId=$('#dBank').value||null, out=Number($('#dOut').value)||0, pay=Number($('#dPay').value)||0, interest=Number($('#dInterest').value)||0, notes=$('#dNotes').value.trim(); if(!name) return alert('Nombre requerido'); if(d){ Object.assign(d,{name,bankId,outstanding:out,monthlyPayment:pay,interestRate:interest,notes}); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } else addDebt({name,bankId,outstanding:out,monthlyPayment:pay,interestRate:interest,notes}); closeModal(); };
   }
 
   function openDebtPayModal(debt){
@@ -1106,26 +977,17 @@
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px"><button id="payCancel" class="btn ghost"><i data-feather="x"></i> Cancelar</button><button id="paySave" class="btn positive"><i data-feather="check-circle"></i> Registrar pago</button></div>`;
     showModal(html);
     $('#payCancel').onclick = closeModal;
-    $('#paySave').onclick = async ()=> { const amt=Number($('#payAmount').value)||0; const bankId=$('#payBank').value; const desc=$('#payDesc').value.trim(); if(!amt||amt<=0) return alert('Monto inválido'); await addTransaction({ type:'Egreso', amount:amt, bankId, debtId:debt.id, dateStr: toDDMMYYYY(new Date()), description: desc }); closeModal(); showToast('Pago registrado'); };
+    $('#paySave').onclick = async ()=> { const amt=Number($('#payAmount').value)||0; const bankId=$('#payBank').value; const desc=$('#payDesc').value.trim(); if(!amt||amt<=0) return alert('Monto inválido'); await addTransaction({ type:'Egreso', amount:amt, bankId, debtId:debt.id, dateStr: toDDMMYYYY(new Date()), description: desc }); closeModal(); };
   }
 
-  /* =======================
-     UI Bindings & Navigation
-     - Guardado de vista actual y restauración para evitar "corte" de diseño
-     ======================= */
+  // ---------- UI bindings ----------
   function bindUI(){
-    const navBtns = $$('nav.side button');
-    navBtns.forEach(b=> b.addEventListener('click', ()=>{
-      // save scroll of current view
-      const last = localStorage.getItem(LAST_VIEW_KEY) || 'dashboard';
-      saveViewScroll(last);
-
-      navBtns.forEach(x=> x.classList.toggle('active', x===b));
+    $$('nav.side button').forEach(b=> b.addEventListener('click', ()=>{
+      $$('nav.side button').forEach(x=> x.classList.toggle('active', x===b));
       document.querySelectorAll('main section').forEach(s=> s.style.display='none');
       const view = document.getElementById('view-'+b.dataset.view);
-      if(view) { view.style.display = 'block'; localStorage.setItem(LAST_VIEW_KEY, b.dataset.view); restoreViewScroll(b.dataset.view); }
+      if(view) view.style.display = 'block';
     }));
-
     $('#btnNewTx').onclick = ()=> openTxModal(null);
     $('#btnAddTx').onclick = ()=> openTxModal(null);
     $('#fab').onclick = ()=> openTxModal(null);
@@ -1137,7 +999,6 @@
     $('#btnAddFixedTop').onclick = ()=> openFixedModal(null);
     $('#btnAddCategoryTop').onclick = ()=> openCategoryModal(null);
     $('#btnAddBizTop').onclick = ()=> openBusinessModal(null);
-    $('#btnTransferTop').onclick = ()=> openTransferModal(null);
     $('#applyFixed').onclick = ()=> { if(confirm('Aplicar gastos fijos?')) applyMonthlyFixed(); };
     $('#btnApplyFixedTop').onclick = ()=> { if(confirm('Aplicar gastos fijos?')) applyMonthlyFixed(); };
     $('#btnExportCSV').onclick = exportCSV;
@@ -1158,7 +1019,7 @@
     $('#sidebarLogout').onclick = ()=> { if(confirm('Cerrar sesión?')) location.reload(); };
     $('#search').oninput = renderTransactions;
 
-    // accesos rápidos teclado: N -> nueva transacción
+    // keyboard: N -> new tx (didáctico)
     window.addEventListener('keydown', (e)=> { if(e.key.toLowerCase()==='n' && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) openTxModal(null); });
 
     $('#overlay').addEventListener('click', (e)=> { if(e.target.id === 'overlay') closeModal(); });
@@ -1166,13 +1027,9 @@
     feather.replace();
   }
 
-  /* =======================
-     Login simple (local prompt) y arranque
-     - No usamos Firebase Auth: login local para proteger entrada
-     ======================= */
+  // ---------- Login (simple prompt) ----------
   function attachLocalLogin(){
     const tryLogin = ()=> {
-      // prompt simple (puedes reemplazar con modal)
       const u = prompt('Usuario (local):','JHONATAN');
       const p = prompt('Contraseña (local):','JHONATAN');
       if(u === LOCAL_LOGIN.user && p === LOCAL_LOGIN.pass){
@@ -1185,18 +1042,9 @@
   }
 
   async function initApp(){
-    // cargar local, bind UI y render inicial
     loadLocal();
     bindUI();
     renderAll();
-
-    // Restore last view
-    const lastView = localStorage.getItem(LAST_VIEW_KEY) || 'dashboard';
-    // set active nav button
-    const btn = $$('nav.side button').find(b => b.dataset.view === lastView);
-    if(btn){ $$('nav.side button').forEach(x=> x.classList.toggle('active', x===btn)); document.querySelectorAll('main section').forEach(s=> s.style.display='none'); const view = document.getElementById('view-'+lastView); if(view) view.style.display='block'; restoreViewScroll(lastView); }
-
-    // intentar inicializar Firestore automáticamente (modo "Cloud ON" automático)
     try{
       await initFirestore(firebaseConfig);
       startRealtime();
@@ -1217,44 +1065,36 @@
     } finally { $('#syncStatus').textContent='idle'; renderAll(); feather.replace(); }
   }
 
-  /* =======================
-     Seed inicial (categorías) si está vacío
-     ======================= */
+  // initial seed if empty
   loadLocal();
   if(!state.data.categories || state.data.categories.length===0){
-    state.data.categories = [
-      { id: uid('cat'), name:'Alimentos', limitMonthly:1500, createdAt: nowISO() },
-      { id: uid('cat'), name:'Operaciones', limitMonthly:5000, createdAt: nowISO() },
-      { id: uid('cat'), name:'Marketing', limitMonthly:3000, createdAt: nowISO() }
-    ];
+    state.data.categories = [{ id: uid('cat'), name:'Alimentos', limitMonthly:1500, createdAt: nowISO() }, { id: uid('cat'), name:'Operaciones', limitMonthly:5000, createdAt: nowISO() }, { id: uid('cat'), name:'Marketing', limitMonthly:3000, createdAt: nowISO() }];
     persistLocal();
   }
-
-  // iniciar login y app
+  // start login flow
   attachLocalLogin();
 
-  /* =======================
-     Reglas sugeridas Firestore (comentado)
-     - Protege lectura/escritura por orgId o por uid específico
-     =======================
+  // Firestore rules suggestion (comentadas)
+  /*
     rules_version = '2';
     service cloud.firestore {
       match /databases/{database}/documents {
         match /organizations/{orgId}/DATA/DATA {
-          // Permite solo si request.auth tiene claim orgId correspondiente:
+          // Requiere autenticación y claim orgId:
           allow read, write: if request.auth != null && request.auth.token.orgId == orgId;
         }
       }
     }
 
-    // Opción para UID específico (ejemplo):
+    // Para desarrollo rápido o si vas a usar un UID específico:
     allow read, write: if request.auth != null && request.auth.uid == 'x9k6xvQAqGdS4MrIuivaLqPFbHR2';
 
-    // NO recomendado: allow read, write: if true;
-  ======================= */
+    // NO recomendado para producción:
+    allow read, write: if true;
+  */
   </script>
 
-  <!-- Inicializar Feather icons -->
+  <!-- Initialize Feather icons after DOM loads -->
   <script>
     document.addEventListener('DOMContentLoaded', ()=> {
       if(window.feather) feather.replace();
@@ -1262,4 +1102,3 @@
   </script>
 </body>
 </html>
-
