@@ -3,28 +3,26 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>JHONATAN ORELLANA — Suite Empresarial (Didáctica)</title>
+<title>JHONATAN ORELLANA — Suite Empresarial (Transferencias)</title>
 
 <!-- Fuente y librerías -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
-<!-- Feather icons (ligeras y didácticas) -->
+<!-- Feather icons -->
 <script src="https://unpkg.com/feather-icons"></script>
 
 <style>
   /* ===========================
-     Paleta didáctica y profesional
-     - Contraste alto para legibilidad empresarial
-     - Tonos: azul corporativo, verde positivo, naranja acciones, violeta para categorías
-     - Iconografía ligera (feather)
+     Paleta didáctica + fondo "plomizo" (paneles un poco opacos/grisados)
      =========================== */
   :root{
-    --bg: #f2f7fb;
-    --panel: #ffffff;
-    --muted: #6b7280;
+    --bg: #eef4f8;
+    --panel: rgba(248,250,252,0.92); /* un blanco levemente opaco/plomizo */
+    --panel-2: rgba(241,244,247,0.92);
+    --muted: #5b6b76;
     --text: #072033;
-    --accent: #0b6fd1;     /* azul principal */
+    --accent: #0b6fd1;
     --accent-2: #5b8ef0;
     --positive: #10b981;
     --warn: #f59e0b;
@@ -36,11 +34,11 @@
     font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   }
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0;background:linear-gradient(180deg,#eef6ff,#f7fbff);color:var(--text);-webkit-font-smoothing:antialiased}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#fbfdff);color:var(--text);-webkit-font-smoothing:antialiased}
   .app-root{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-  .app{width:100%;max-width:var(--maxw);display:grid;grid-template-columns:320px 1fr;gap:20px;border-radius:14px;padding:18px;background:linear-gradient(180deg,#ffffff,#f7fbff);box-shadow:0 30px 80px rgba(2,6,23,0.06)}
+  .app{width:100%;max-width:var(--maxw);display:grid;grid-template-columns:320px 1fr;gap:20px;border-radius:14px;padding:18px;background:linear-gradient(180deg,var(--panel-2),#fbfeff);box-shadow:0 30px 80px rgba(2,6,23,0.06)}
   /* SIDEBAR */
-  .sidebar{background:linear-gradient(180deg,#ffffff,#f6fbff);border-radius:12px;padding:18px;border:1px solid var(--glass);box-shadow:var(--card-shadow);display:flex;flex-direction:column;gap:14px;min-height:640px}
+  .sidebar{background:var(--panel);border-radius:12px;padding:18px;border:1px solid var(--glass);box-shadow:var(--card-shadow);display:flex;flex-direction:column;gap:14px;min-height:640px}
   .brand{display:flex;gap:12px;align-items:center}
   .brand .logo{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:18px;box-shadow:0 8px 30px rgba(11,118,209,0.12)}
   .brand h1{font-size:15px;margin:0;line-height:1.05}
@@ -56,11 +54,11 @@
   .main{display:flex;flex-direction:column;gap:14px}
   .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px}
   .kpigrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-  .kpi{background:linear-gradient(180deg,#fff,#fbfdff);border-radius:12px;padding:14px;border:1px solid var(--glass);box-shadow:var(--card-shadow);display:flex;flex-direction:column;gap:8px}
+  .kpi{background:var(--panel);border-radius:12px;padding:14px;border:1px solid var(--glass);box-shadow:var(--card-shadow);display:flex;flex-direction:column;gap:8px}
   .kpi .label{font-size:12px;color:var(--muted)}
   .kpi .value{font-weight:900;font-size:20px;color:var(--text)}
   .kpi .trend{font-size:12px;color:var(--muted)}
-  .card{background:linear-gradient(180deg,#ffffff,#fbfeff);border-radius:12px;padding:16px;border:1px solid var(--glass);box-shadow:var(--card-shadow);overflow:auto}
+  .card{background:var(--panel);border-radius:12px;padding:16px;border:1px solid var(--glass);box-shadow:var(--card-shadow);overflow:auto}
   .flex{display:flex;gap:12px;align-items:center}
   .controls{display:flex;gap:10px;align-items:center}
   .btn{padding:8px 12px;border-radius:10px;border:0;cursor:pointer;font-weight:800;display:inline-flex;gap:8px;align-items:center}
@@ -73,13 +71,12 @@
   td.right{text-align:right}
   /* Modal overlay */
   .overlay{position:fixed;inset:0;background:rgba(2,6,23,0.45);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}
-  .modal{width:920px;max-width:100%;background:linear-gradient(180deg,#ffffff,#fbfeff);border-radius:12px;padding:18px;box-shadow:0 30px 80px rgba(2,6,23,0.12);border:1px solid rgba(2,6,23,0.04)}
+  .modal{width:920px;max-width:100%;background:var(--panel);border-radius:12px;padding:18px;box-shadow:0 30px 80px rgba(2,6,23,0.12);border:1px solid rgba(2,6,23,0.04)}
   label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
   input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(11,24,32,0.06);font-size:14px;background:transparent}
   textarea{min-height:90px}
   .small{font-size:12px;color:var(--muted)}
   .fab{position:fixed;right:28px;bottom:28px;background:linear-gradient(135deg,var(--violet),#8b5cf6);color:white;border-radius:18px;padding:14px 18px;font-weight:900;box-shadow:0 20px 50px rgba(107,70,193,0.12);cursor:pointer;z-index:1100;display:flex;gap:10px;align-items:center}
-  /* badges */
   .badge{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:999px;font-weight:700;font-size:12px}
   .badge.pos{background:rgba(16,185,129,0.12);color:var(--positive)}
   .badge.neg{background:rgba(239,68,68,0.08);color:var(--danger)}
@@ -98,14 +95,14 @@
 <body>
   <!-- APP -->
   <div class="app-root">
-    <div class="app" role="application" aria-label="Suite Empresarial Finanzas - Didáctica">
+    <div class="app" role="application" aria-label="Suite Empresarial Finanzas - Transferencias">
       <!-- SIDEBAR -->
       <aside class="sidebar" aria-label="Navegación lateral">
         <div class="brand">
           <div class="logo">JO</div>
           <div>
             <h1>JHONATAN ORELLANA</h1>
-            <p class="small">Control financiero centralizado · UNA DATA</p>
+            <p class="small">Control financiero centralizado • UNA DATA</p>
           </div>
         </div>
 
@@ -136,7 +133,7 @@
       <main class="main">
         <div class="topbar">
           <div>
-            <div style="font-weight:900;font-size:18px">Panel Empresarial — Didáctico</div>
+            <div style="font-weight:900;font-size:18px">Panel Empresarial — Transferencias</div>
             <div class="small" id="currentUser">Usuario: Invitado</div>
           </div>
           <div class="controls">
@@ -170,7 +167,7 @@
           </div>
         </section>
 
-        <!-- DASHBOARD CARD -->
+        <!-- DASHBOARD -->
         <section id="view-dashboard" class="card" style="display:block">
           <div style="display:flex;gap:18px;align-items:flex-start">
             <div style="flex:1;min-width:0">
@@ -223,7 +220,7 @@
           </div>
         </section>
 
-        <!-- TRANSACTIONS VIEW -->
+        <!-- TRANSACTIONS -->
         <section id="view-transactions" class="card" style="display:none;min-height:360px">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div style="font-weight:800">Transacciones</div>
@@ -241,12 +238,13 @@
           </div>
         </section>
 
-        <!-- BANKS -->
+        <!-- BANKS (incluye Transferencias) -->
         <section id="view-banks" class="card" style="display:none;min-height:300px">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div style="font-weight:800">Cuentas Bancarias</div>
             <div style="display:flex;gap:8px">
-              <button id="btnAddBankTop" class="btn primary"><i data-feather="plus"></i> Nueva cuenta</button>
+              <button id="btnAddBankTop" class="btn primary"><i data-feather="plus-circle"></i> Nueva cuenta</button>
+              <button id="btnTransferTop" class="btn warn"><i data-feather="repeat"></i> Transferir</button>
               <button id="btnExportBanks" class="btn ghost"><i data-feather="download"></i> Export</button>
             </div>
           </div>
@@ -355,10 +353,12 @@
   </script>
 
   <!-- ======================
-       Lógica (vanilla ES modules) - mantuve funcionalidad
+       Lógica (vanilla ES modules)
        ====================== -->
   <script type="module">
-  // ---------- Helpers ----------
+  /* ------------------------
+     Helpers & state
+     ------------------------ */
   const $ = (s,r=document)=> r.querySelector(s);
   const $$ = (s,r=document)=> Array.from((r||document).querySelectorAll(s));
   const nowISO = ()=> new Date().toISOString();
@@ -368,14 +368,15 @@
   function toDDMMYYYY(d){ if(!d) return ''; return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear(); }
   function showToast(msg,err=false){ const t=$('#toast'); t.textContent=msg; t.style.display='block'; t.style.background= err ? '#fff1f0' : '#f6fffb'; t.style.color = err ? 'var(--danger)' : 'var(--text)'; clearTimeout(window.__to); window.__to=setTimeout(()=> t.style.display='none', err?7000:3500); }
 
-  // ---------- State ----------
-  const STORAGE_KEY = 'jona_business_single_data_v3';
+  const STORAGE_KEY = 'jona_business_single_data_v4';
   const state = {
     user:null, fsHelpers:null, unsubscribeRealtime:null,
     data: { transactions:[], banks:[], debts:[], fixed:[], categories:[], assets:[], liabilities:[], businesses:[], meta:{ updatedAt:null } }
   };
 
-  // Local load/save
+  /* ------------------------
+     Local persistence
+     ------------------------ */
   function loadLocal(){
     const raw = localStorage.getItem(STORAGE_KEY);
     if(raw) try { state.data = JSON.parse(raw); } catch(e){ console.warn(e); }
@@ -390,7 +391,9 @@
   }
   function persistLocal(){ state.data.meta.updatedAt = nowISO(); localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data)); }
 
-  // Firestore init (v9 modular via CDN import)
+  /* ------------------------
+     Firestore dynamic init (v9 modular via CDN import)
+     ------------------------ */
   async function initFirestore(cfg){
     if(state.fsHelpers) return;
     try{
@@ -418,7 +421,9 @@
     return updatedAt;
   }
 
-  // Realtime listener
+  /* ------------------------
+     Realtime listener (merge remote)
+     ------------------------ */
   function startRealtime(){
     if(!state.fsHelpers) return;
     const { doc, onSnapshot, firestore } = state.fsHelpers;
@@ -438,7 +443,9 @@
     }, err=> console.warn('Realtime err', err));
   }
 
-  // Merge logic
+  /* ------------------------
+     Merge logic
+     ------------------------ */
   function mergeCollections(localArr=[], remoteArr=[], timeField='createdAt'){
     const map = new Map();
     (localArr||[]).forEach(item => { if(!item) return; if(!item.id) item.id = uid('x'); map.set(item.id, item); });
@@ -468,7 +475,9 @@
     };
   }
 
-  // Auto push
+  /* ------------------------
+     Auto push (debounced)
+     ------------------------ */
   let pushTimer=null;
   function schedulePush(delay=900){
     if(!state.fsHelpers) return;
@@ -483,7 +492,9 @@
     }, delay);
   }
 
-  // CRUD operations
+  /* ------------------------
+     CRUD y reglas del negocio
+     ------------------------ */
   function pushAndRender(mut){
     mut(state.data);
     persistLocal();
@@ -511,15 +522,21 @@
     });
   }
 
+  // Añadimos transferencia entre bancos: crea dos transacciones y actualiza saldos
   function transferBetweenBanks(fromId,toId,amount,dateStr,note){
     amount = Number(amount)||0; if(amount<=0) throw new Error('Monto inválido');
+    if(!fromId || !toId) throw new Error('Seleccione ambas cuentas');
+    if(fromId === toId) throw new Error('Las cuentas deben ser diferentes');
     pushAndRender(d=>{
       const from = d.banks.find(b=>b.id===fromId), to = d.banks.find(b=>b.id===toId);
       if(from) from.balance = (Number(from.balance)||0) - amount;
       if(to) to.balance = (Number(to.balance)||0) + amount;
-      const out = { id:uid('t'), type:'Egreso', dateStr, amount, bankId:fromId, description:'Transferencia a ' + (to?to.name:''), createdAt:nowISO(), meta:{transferTo:toId} };
-      const inc = { id:uid('t'), type:'Ingreso', dateStr, amount, bankId:toId, description:'Transferencia desde ' + (from?from.name:''), createdAt:nowISO(), meta:{transferFrom:fromId} };
-      d.transactions.unshift(inc); d.transactions.unshift(out);
+      // registro de salida y entrada, con meta para vinculación
+      const idOut = uid('t'), idIn = uid('t');
+      const out = { id:idOut, type:'Egreso', dateStr, amount, bankId:fromId, description: (note ? note : `Transferencia a ${to?to.name:''}`), createdAt:nowISO(), meta:{ transferTo: toId, transferPair: idIn } };
+      const inc = { id:idIn, type:'Ingreso', dateStr, amount, bankId:toId, description: (note ? note : `Transferencia desde ${from?from.name:''}`), createdAt:nowISO(), meta:{ transferFrom: fromId, transferPair: idOut } };
+      d.transactions.unshift(inc);
+      d.transactions.unshift(out);
     });
   }
 
@@ -527,7 +544,7 @@
     const today = toDDMMYYYY(new Date());
     pushAndRender(d=>{
       d.fixed.forEach(f=>{
-        const tx = { id:uid('t'), type:'Egreso', dateStr:today, amount:Number(f.amount)||0, bankId:f.bankId||null, categoryId:f.categoryId||null, description:'Gasto fijo: '+f.name, createdAt: nowISO(), meta:{fromFixed:f.id} };
+        const tx = { id:uid('t'), type:'Egreso', dateStr:today, amount:Number(f.amount)||0, bankId:f.bankId||null, categoryId:f.categoryId||null, description:'Gasto fijo: '+f.name, createdAt:nowISO(), meta:{fromFixed:f.id} };
         d.transactions.unshift(tx);
         if(f.bankId){ const b = d.banks.find(x=>x.id===f.bankId); if(b) b.balance = (Number(b.balance)||0) - tx.amount; }
       });
@@ -535,7 +552,9 @@
     showToast('Gastos fijos aplicados');
   }
 
-  // Export / Import / PDF
+  /* ------------------------
+     Export/Import/PDF
+     ------------------------ */
   function exportCSV(){
     const rows = state.data.transactions.map(t=>{
       const b = state.data.banks.find(b=>b.id===t.bankId);
@@ -546,6 +565,7 @@
     const csv = ['fecha,cuenta,tipo,categoria,activo,descripcion,monto', ...rows.map(r=> r.map((c,i)=> i===5?`"${c}"`:c).join(',') )].join('\n');
     const blob = new Blob([csv], { type:'text/csv' }); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='transacciones.csv'; a.click(); URL.revokeObjectURL(url);
   }
+
   function exportJSON(){ const blob = new Blob([JSON.stringify(state.data,null,2)], { type:'application/json' }); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='backup.json'; a.click(); URL.revokeObjectURL(url); }
 
   async function importFile(file){
@@ -624,14 +644,16 @@
           </tbody></table>
       </section>
 
-      <div style="margin-top:12px;font-size:9pt;color:#666">Generado por JHONATAN ORELLANA — Suite Didáctica · Títulos 12pt · Subtítulos 11pt · Texto 10pt</div>
+      <div style="margin-top:12px;font-size:9pt;color:#666">Generado por JHONATAN ORELLANA — Suite Empresarial · Títulos 12pt · Subtítulos 11pt · Texto 10pt</div>
     `;
     if(window.html2pdf){
       html2pdf().set({ margin:12, filename:`reporte_financiero_${(new Date()).toISOString().slice(0,10)}.pdf`, image:{type:'jpeg',quality:0.95}, html2canvas:{scale:2,useCORS:true}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(node).save();
     } else alert('html2pdf no disponible');
   }
 
-  // Charts & dashboard
+  /* ------------------------
+     Charts & dashboard
+     ------------------------ */
   let flowsChart = null;
   window.flowsChart = null;
   function renderFlowsChart(){
@@ -706,14 +728,20 @@
     $('#alertsArea').innerHTML = alerts.length ? alerts.join('<br/>') : '<span class="small">Sin alertas</span>';
     $('#todayDate').textContent = 'Hoy: ' + toDDMMYYYY(new Date());
 
-    const last = state.data.transactions.slice(0,6).map(t=> `${t.dateStr} · ${t.type} · ${fmtMoney(t.amount)} · ${(t.description||'')}`).join('<br/>') || '—';
+    // last tx list
+    const last = state.data.transactions.slice(0,6).map(t=>{
+      const meta = t.meta && (t.meta.transferTo || t.meta.transferFrom) ? ' ⚡' : '';
+      return `${t.dateStr} · ${t.type}${meta} · ${fmtMoney(t.amount)} · ${(t.description||'')}`;
+    }).join('<br/>') || '—';
     $('#smallTxList').innerHTML = last;
     $('#kpi-inc-trend').textContent = `Ingresos anuales: ${fmtMoney(incomeTotal)}`;
     $('#kpi-exp-trend').textContent = `Gastos anuales: ${fmtMoney(expenseTotal)}`;
     renderFlowsChart();
   }
 
-  // Render lists (transactions, banks, assets, etc.)
+  /* ------------------------
+     Render tables & lists (incluye botón Transferir)
+     ------------------------ */
   function renderTransactions(){
     const tbody = $('#txTable tbody'); if(!tbody) return; tbody.innerHTML='';
     const q = ($('#search') && $('#search').value || '').trim().toLowerCase();
@@ -723,8 +751,10 @@
       const bank = state.data.banks.find(b=>b.id===t.bankId);
       const cat = state.data.categories.find(c=>c.id===t.categoryId);
       const asset = state.data.assets.find(a=>a.id===t.assetId);
+      const isTransfer = t.meta && (t.meta.transferTo || t.meta.transferFrom);
+      const transferLabel = isTransfer ? `<span class="small">⚡ ${ t.meta.transferTo ? '->' + (state.data.banks.find(x=>x.id===t.meta.transferTo)||{name:'?' }).name : '<-' + (state.data.banks.find(x=>x.id===t.meta.transferFrom)||{name:'?' }).name}</span>` : '';
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${t.dateStr||''}</td><td>${bank?bank.name:'-'}</td><td>${t.type}</td><td>${cat?cat.name:(asset?('ACT:'+asset.name):(t.categoryName||'-'))}</td><td class="right">${fmtMoney(t.amount)}</td><td><button data-id="${t.id}" data-act="edit" class="btn ghost"><i data-feather="edit-2"></i></button> <button data-id="${t.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></td>`;
+      tr.innerHTML = `<td>${t.dateStr||''}</td><td>${bank?bank.name:'-'}</td><td>${t.type}</td><td>${cat?cat.name:(asset?('ACT:'+asset.name):(t.categoryName||'-'))} ${transferLabel}</td><td class="right">${fmtMoney(t.amount)}</td><td><button data-id="${t.id}" data-act="edit" class="btn ghost"><i data-feather="edit-2"></i></button> <button data-id="${t.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></td>`;
       tbody.appendChild(tr);
     });
     $$('#txTable button').forEach(btn=> btn.onclick = ()=>{
@@ -739,12 +769,13 @@
   function renderBanks(){
     const wrap = $('#banksArea'); if(!wrap) return;
     if(state.data.banks.length===0){ wrap.innerHTML = '<div class="small">No hay cuentas registradas</div>'; return; }
-    const rows = state.data.banks.map(b=>`<tr><td><strong>${b.name}</strong><div class="small">${b.type||''}</div></td><td class="right">${fmtMoney(Number(b.balance)||0)}</td><td><button data-id="${b.id}" data-act="edit" class="btn ghost"><i data-feather="edit-2"></i></button> <button data-id="${b.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></td></tr>`).join('');
+    const rows = state.data.banks.map(b=>`<tr><td><strong>${b.name}</strong><div class="small">${b.type||''}</div></td><td class="right">${fmtMoney(Number(b.balance)||0)}</td><td style="white-space:nowrap"><button data-id="${b.id}" data-act="edit" class="btn ghost"><i data-feather="edit-2"></i></button> <button data-id="${b.id}" data-act="transfer" class="btn warn"><i data-feather="repeat"></i> Transferir</button> <button data-id="${b.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></td></tr>`).join('');
     wrap.innerHTML = `<table style="width:100%"><thead><tr><th>Cuenta</th><th class="right">Saldo</th><th>Acc</th></tr></thead><tbody>${rows}</tbody></table>`;
     $$('#banksArea button').forEach(btn=> btn.onclick = ()=>{
       const id = btn.dataset.id, act = btn.dataset.act;
       if(act==='del'){ if(confirm('Eliminar cuenta?')){ state.data.banks = state.data.banks.filter(x=>x.id!==id); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } }
       if(act==='edit'){ const b = state.data.banks.find(x=>x.id===id); openBankModal(b); }
+      if(act==='transfer'){ openTransferModal(id); }
       feather.replace();
     });
     $('#filterAccount').innerHTML = '<option value="">Todas cuentas</option>' + state.data.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
@@ -777,7 +808,9 @@
     $('#orgBadge').textContent = ORG_ID; $('#orgShort').textContent = ORG_ID;
   }
 
-  // ---------- Modales (CRUD) ----------
+  /* ------------------------
+     Modales: CRUD + Transfer modal
+     ------------------------ */
   function showModal(html){
     $('#panelRoot').innerHTML = html;
     $('#overlay').style.display = 'flex';
@@ -839,6 +872,44 @@
       if(!name) return alert('Nombre requerido');
       if(b){ Object.assign(b,{name,type,balance,notes}); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } else addBank({name,type,balance,notes});
       closeModal();
+    };
+  }
+
+  function openTransferModal(fromId){
+    // modal to transfer between accounts
+    const fromOpt = state.data.banks.map(b=>`<option value="${b.id}" ${b.id===fromId?'selected':''}>${b.name} (${fmtMoney(b.balance)})</option>`).join('');
+    const toOpt = state.data.banks.map(b=>`<option value="${b.id}">${b.name} (${fmtMoney(b.balance)})</option>`).join('');
+    const html = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-weight:900">Transferencia entre cuentas</div>
+        <div class="small">Registra la transferencia y actualiza saldos</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label>Desde (origen)</label><select id="trFrom"><option value="">-- seleccionar --</option>${fromOpt}</select></div>
+        <div><label>Hacia (destino)</label><select id="trTo"><option value="">-- seleccionar --</option>${toOpt}</select></div>
+        <div><label>Monto</label><input id="trAmount" type="number" value="0" /></div>
+        <div><label>Fecha (dd/mm/yyyy)</label><input id="trDate" value="${toDDMMYYYY(new Date())}" /></div>
+        <div style="grid-column:1/3"><label>Nota / descripción</label><input id="trNote" placeholder="Ej: Transferencia entre cuentas" /></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px">
+        <button id="trCancel" class="btn ghost"><i data-feather="x"></i> Cancelar</button>
+        <button id="trSave" class="btn warn"><i data-feather="check"></i> Transferir</button>
+      </div>
+    `;
+    showModal(html);
+    setTimeout(()=>{ if(fromId) $('#trFrom').value = fromId; feather.replace(); },40);
+    $('#trCancel').onclick = closeModal;
+    $('#trSave').onclick = ()=> {
+      const from = $('#trFrom').value, to = $('#trTo').value, amount = Number($('#trAmount').value)||0, dateStr = $('#trDate').value.trim(), note = $('#trNote').value.trim();
+      if(!from || !to) return alert('Seleccione ambas cuentas');
+      if(from === to) return alert('Cuentas deben ser diferentes');
+      if(!amount || amount<=0) return alert('Monto inválido');
+      if(!parseDateDDMMYYYY(dateStr)) return alert('Fecha inválida (dd/mm/yyyy)');
+      try{
+        transferBetweenBanks(from,to,amount,dateStr,note);
+        closeModal();
+        showToast('Transferencia registrada');
+      } catch(e){ alert('Error: '+(e.message||e)); }
     };
   }
 
@@ -980,14 +1051,18 @@
     $('#paySave').onclick = async ()=> { const amt=Number($('#payAmount').value)||0; const bankId=$('#payBank').value; const desc=$('#payDesc').value.trim(); if(!amt||amt<=0) return alert('Monto inválido'); await addTransaction({ type:'Egreso', amount:amt, bankId, debtId:debt.id, dateStr: toDDMMYYYY(new Date()), description: desc }); closeModal(); };
   }
 
-  // ---------- UI bindings ----------
+  /* ------------------------
+     UI bindings
+     ------------------------ */
   function bindUI(){
+    // navigation
     $$('nav.side button').forEach(b=> b.addEventListener('click', ()=>{
       $$('nav.side button').forEach(x=> x.classList.toggle('active', x===b));
       document.querySelectorAll('main section').forEach(s=> s.style.display='none');
       const view = document.getElementById('view-'+b.dataset.view);
       if(view) view.style.display = 'block';
     }));
+    // buttons
     $('#btnNewTx').onclick = ()=> openTxModal(null);
     $('#btnAddTx').onclick = ()=> openTxModal(null);
     $('#fab').onclick = ()=> openTxModal(null);
@@ -999,6 +1074,7 @@
     $('#btnAddFixedTop').onclick = ()=> openFixedModal(null);
     $('#btnAddCategoryTop').onclick = ()=> openCategoryModal(null);
     $('#btnAddBizTop').onclick = ()=> openBusinessModal(null);
+    $('#btnTransferTop').onclick = ()=> openTransferModal(null);
     $('#applyFixed').onclick = ()=> { if(confirm('Aplicar gastos fijos?')) applyMonthlyFixed(); };
     $('#btnApplyFixedTop').onclick = ()=> { if(confirm('Aplicar gastos fijos?')) applyMonthlyFixed(); };
     $('#btnExportCSV').onclick = exportCSV;
@@ -1019,7 +1095,7 @@
     $('#sidebarLogout').onclick = ()=> { if(confirm('Cerrar sesión?')) location.reload(); };
     $('#search').oninput = renderTransactions;
 
-    // keyboard: N -> new tx (didáctico)
+    // keyboard: N -> new tx
     window.addEventListener('keydown', (e)=> { if(e.key.toLowerCase()==='n' && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) openTxModal(null); });
 
     $('#overlay').addEventListener('click', (e)=> { if(e.target.id === 'overlay') closeModal(); });
@@ -1027,7 +1103,9 @@
     feather.replace();
   }
 
-  // ---------- Login (simple prompt) ----------
+  /* ------------------------
+     Login (local) & init
+     ------------------------ */
   function attachLocalLogin(){
     const tryLogin = ()=> {
       const u = prompt('Usuario (local):','JHONATAN');
@@ -1062,39 +1140,40 @@
     } catch(e){
       console.warn('Firestore auto failed', e);
       showToast('No se pudo conectar a la nube (modo local)', true);
-    } finally { $('#syncStatus').textContent='idle'; renderAll(); feather.replace(); }
+    } finally { $('#syncStatus').textContent='idle'; renderAll(); }
   }
 
-  // initial seed if empty
+  // seed categories if empty
   loadLocal();
   if(!state.data.categories || state.data.categories.length===0){
     state.data.categories = [{ id: uid('cat'), name:'Alimentos', limitMonthly:1500, createdAt: nowISO() }, { id: uid('cat'), name:'Operaciones', limitMonthly:5000, createdAt: nowISO() }, { id: uid('cat'), name:'Marketing', limitMonthly:3000, createdAt: nowISO() }];
     persistLocal();
   }
+
   // start login flow
   attachLocalLogin();
 
-  // Firestore rules suggestion (comentadas)
-  /*
+  /* ------------------------
+     Firestore rules sugeridas (comentadas)
+     ------------------------
     rules_version = '2';
     service cloud.firestore {
       match /databases/{database}/documents {
         match /organizations/{orgId}/DATA/DATA {
-          // Requiere autenticación y claim orgId:
+          // Requiere autenticación + claim orgId (mejor práctica):
           allow read, write: if request.auth != null && request.auth.token.orgId == orgId;
         }
       }
     }
 
-    // Para desarrollo rápido o si vas a usar un UID específico:
+    // Alternativa (UID específico):
     allow read, write: if request.auth != null && request.auth.uid == 'x9k6xvQAqGdS4MrIuivaLqPFbHR2';
 
-    // NO recomendado para producción:
-    allow read, write: if true;
-  */
+    // Desarrollo (NO recomendado): allow read, write: if true;
+  ------------------------ */
   </script>
 
-  <!-- Initialize Feather icons after DOM loads -->
+  <!-- Initialize Feather icons -->
   <script>
     document.addEventListener('DOMContentLoaded', ()=> {
       if(window.feather) feather.replace();
@@ -1102,4 +1181,3 @@
   </script>
 </body>
 </html>
-
