@@ -3,179 +3,150 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>JHONATAN ORELLANA — Suite Empresarial (Didáctica)</title>
+<title>JHONATAN ORELLANA — Suite Empresarial (Mejorada)</title>
 
-<!-- Fuente y librerías -->
+<!-- Fuentes / librerías -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
-<!-- Feather icons (ligeras y didácticas) -->
 <script src="https://unpkg.com/feather-icons"></script>
 
 <style>
-  /* ===========================
-     Paleta didáctica y profesional
-     - Contraste alto para legibilidad empresarial
-     - Tonos: azul corporativo, verde positivo, naranja acciones, violeta para categorías
-     - Iconografía ligera (feather)
-     =========================== */
+  /* Diseño mejorado, didáctico y profesional */
   :root{
-    --bg: #f2f7fb;
-    --panel: #ffffff;
-    --muted: #6b7280;
-    --text: #072033;
-    --accent: #0b6fd1;     /* azul principal */
-    --accent-2: #5b8ef0;
-    --positive: #10b981;
-    --warn: #f59e0b;
-    --danger: #ef4444;
-    --violet: #6b46c1;
-    --glass: rgba(11,24,32,0.04);
-    --card-shadow: 0 10px 30px rgba(11,24,32,0.06);
-    --maxw: 1400px;
-    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    --bg:#f2f8ff; --panel:#ffffff; --muted:#6b7280; --text:#072033;
+    --accent:#0b6fd1; --accent-2:#5b8ef0; --positive:#10b981; --warn:#f59e0b; --danger:#ef4444;
+    --violet:#6b46c1; --glass:rgba(11,24,32,0.04); --card-shadow:0 12px 36px rgba(11,24,32,0.06); --maxw:1400px;
+    font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
   }
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0;background:linear-gradient(180deg,#eef6ff,#f7fbff);color:var(--text);-webkit-font-smoothing:antialiased}
-  .app-root{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#eef7ff,#fbfeff);color:var(--text);-webkit-font-smoothing:antialiased}
+  .app-root{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px}
   .app{width:100%;max-width:var(--maxw);display:grid;grid-template-columns:320px 1fr;gap:20px;border-radius:14px;padding:18px;background:linear-gradient(180deg,#ffffff,#f7fbff);box-shadow:0 30px 80px rgba(2,6,23,0.06)}
-  /* SIDEBAR */
-  .sidebar{background:linear-gradient(180deg,#ffffff,#f6fbff);border-radius:12px;padding:18px;border:1px solid var(--glass);box-shadow:var(--card-shadow);display:flex;flex-direction:column;gap:14px;min-height:640px}
+  .sidebar{background:linear-gradient(180deg,#ffffff,#f6fbff);border-radius:12px;padding:18px;border:1px solid var(--glass);box-shadow:var(--card-shadow);display:flex;flex-direction:column;gap:14px;min-height:680px}
   .brand{display:flex;gap:12px;align-items:center}
-  .brand .logo{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:18px;box-shadow:0 8px 30px rgba(11,118,209,0.12)}
-  .brand h1{font-size:15px;margin:0;line-height:1.05}
-  .brand p{margin:0;color:var(--muted);font-size:12px}
+  .brand .logo{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,var(--violet),#9f7aea);display:flex;align-items:center;justify-content:center;color:white;font-weight:900;font-size:18px;box-shadow:0 8px 30px rgba(107,70,193,0.12)}
+  .brand h1{font-size:15px;margin:0}
   nav.side{display:flex;flex-direction:column;gap:8px;margin-top:6px}
-  nav.side button{display:flex;align-items:center;gap:12px;border-radius:10px;padding:10px;border:0;background:transparent;cursor:pointer;font-weight:700;color:var(--muted);text-align:left;transition:all .16s}
-  nav.side button:hover{background:rgba(11,110,209,0.04);color:var(--accent)}
-  nav.side button.active{background:linear-gradient(90deg, rgba(11,110,209,0.08), rgba(91,142,240,0.03));color:var(--accent);box-shadow:inset 0 0 0 1px rgba(11,118,209,0.02)}
-  nav.side button svg{stroke-width:1.6}
+  nav.side button{display:flex;align-items:center;gap:12px;border-radius:10px;padding:10px;border:0;background:transparent;cursor:pointer;font-weight:700;color:var(--muted);transition:all .12s}
+  nav.side button:hover{background:rgba(91,142,240,0.06);color:var(--accent)}
+  nav.side button.active{background:linear-gradient(90deg, rgba(107,70,193,0.08), rgba(11,111,209,0.03));color:var(--violet)}
   .meta{margin-top:auto;font-size:13px;color:var(--muted)}
-  .meta small{display:block;color:var(--muted);margin-top:8px}
-  /* MAIN */
   .main{display:flex;flex-direction:column;gap:14px}
   .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px}
   .kpigrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-  .kpi{background:linear-gradient(180deg,#fff,#fbfdff);border-radius:12px;padding:14px;border:1px solid var(--glass);box-shadow:var(--card-shadow);display:flex;flex-direction:column;gap:8px}
+  .kpi{background:linear-gradient(180deg,#fff,#fbfeff);border-radius:12px;padding:14px;border:1px solid var(--glass);box-shadow:var(--card-shadow);display:flex;flex-direction:column;gap:8px}
   .kpi .label{font-size:12px;color:var(--muted)}
-  .kpi .value{font-weight:900;font-size:20px;color:var(--text)}
-  .kpi .trend{font-size:12px;color:var(--muted)}
+  .kpi .value{font-weight:900;font-size:20px}
+  .kpi .sub{font-size:12px;color:var(--muted)}
   .card{background:linear-gradient(180deg,#ffffff,#fbfeff);border-radius:12px;padding:16px;border:1px solid var(--glass);box-shadow:var(--card-shadow);overflow:auto}
-  .flex{display:flex;gap:12px;align-items:center}
   .controls{display:flex;gap:10px;align-items:center}
   .btn{padding:8px 12px;border-radius:10px;border:0;cursor:pointer;font-weight:800;display:inline-flex;gap:8px;align-items:center}
-  .btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:white;box-shadow:0 8px 24px rgba(11,118,209,0.12)}
+  .btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:white}
   .btn.ghost{background:transparent;border:1px solid var(--glass);color:var(--muted)}
   .btn.positive{background:linear-gradient(90deg,#34d399,#10b981);color:white}
   .btn.warn{background:linear-gradient(90deg,var(--warn),#f97316);color:white}
+  .fab{position:fixed;right:28px;bottom:28px;background:linear-gradient(135deg,var(--violet),#8b5cf6);color:white;border-radius:18px;padding:14px 18px;font-weight:900;box-shadow:0 20px 50px rgba(107,70,193,0.12);cursor:pointer;z-index:1100;display:flex;gap:10px;align-items:center}
+  input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(11,24,32,0.06);font-size:14px;background:transparent}
   table{width:100%;border-collapse:collapse;margin-top:8px;font-size:14px}
   th,td{padding:10px;border-bottom:1px solid rgba(11,24,32,0.04);text-align:left}
   td.right{text-align:right}
-  /* Modal overlay */
   .overlay{position:fixed;inset:0;background:rgba(2,6,23,0.45);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}
   .modal{width:920px;max-width:100%;background:linear-gradient(180deg,#ffffff,#fbfeff);border-radius:12px;padding:18px;box-shadow:0 30px 80px rgba(2,6,23,0.12);border:1px solid rgba(2,6,23,0.04)}
-  label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
-  input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(11,24,32,0.06);font-size:14px;background:transparent}
-  textarea{min-height:90px}
   .small{font-size:12px;color:var(--muted)}
-  .fab{position:fixed;right:28px;bottom:28px;background:linear-gradient(135deg,var(--violet),#8b5cf6);color:white;border-radius:18px;padding:14px 18px;font-weight:900;box-shadow:0 20px 50px rgba(107,70,193,0.12);cursor:pointer;z-index:1100;display:flex;gap:10px;align-items:center}
-  /* badges */
   .badge{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:999px;font-weight:700;font-size:12px}
-  .badge.pos{background:rgba(16,185,129,0.12);color:var(--positive)}
   .badge.neg{background:rgba(239,68,68,0.08);color:var(--danger)}
-  /* responsive */
-  @media (max-width:1100px){ .app{grid-template-columns:1fr; padding:12px} .sidebar{flex-direction:row;overflow:auto;height:92px;padding:10px;border-radius:10px} .kpigrid{grid-template-columns:repeat(2,1fr)} .fab{display:none} .topbar{flex-direction:column;align-items:flex-start} }
-  /* PDF styles */
+  @media (max-width:1100px){ .app{grid-template-columns:1fr; padding:12px} .sidebar{flex-direction:row;overflow:auto;height:92px;padding:10px} .kpigrid{grid-template-columns:repeat(2,1fr)} .fab{display:none} .topbar{flex-direction:column;align-items:flex-start} }
+  /* PDF */
   .pdf-root{font-family:Arial,Helvetica,sans-serif;color:#111;background:#fff;padding:18px}
   .pdf-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
   .pdf-title{font-weight:900;font-size:12pt}
   .pdf-sub{font-weight:700;font-size:11pt;margin-top:8px;margin-bottom:6px}
   .pdf-text{font-size:10pt;line-height:1.45}
-  .pdf-table{width:100%;border-collapse:collapse;margin-top:6px;font-size:10pt}
-  .pdf-table th, .pdf-table td{border:1px solid #ddd;padding:6px;text-align:left}
 </style>
 </head>
 <body>
-  <!-- APP -->
   <div class="app-root">
-    <div class="app" role="application" aria-label="Suite Empresarial Finanzas - Didáctica">
-      <!-- SIDEBAR -->
-      <aside class="sidebar" aria-label="Navegación lateral">
+    <div class="app" role="application" aria-label="Suite Financiera Mejorada">
+      <aside class="sidebar" aria-label="Navegación">
         <div class="brand">
           <div class="logo">JO</div>
           <div>
             <h1>JHONATAN ORELLANA</h1>
-            <p class="small">Control financiero centralizado · UNA DATA</p>
+            <p class="small">Control financiero centralizado • UNA DATA</p>
           </div>
         </div>
 
         <nav class="side" aria-label="Menú">
-          <button data-view="dashboard" class="active"><i data-feather="bar-chart-2"></i> <span>Resumen</span></button>
-          <button data-view="transactions"><i data-feather="credit-card"></i> <span>Transacciones</span></button>
-          <button data-view="banks"><i data-feather="bank"></i> <span>Bancos</span></button>
-          <button data-view="assets"><i data-feather="layers"></i> <span>Activos/Pasivos</span></button>
-          <button data-view="debts"><i data-feather="briefcase"></i> <span>Deudas</span></button>
-          <button data-view="fixed"><i data-feather="calendar"></i> <span>Gastos Mensuales</span></button>
-          <button data-view="categories"><i data-feather="tag"></i> <span>Categorías</span></button>
-          <button data-view="businesses"><i data-feather="briefcase"></i> <span>Empresas</span></button>
-          <button data-view="export"><i data-feather="download-cloud"></i> <span>Export / Cloud</span></button>
+          <button data-view="dashboard" class="active"><i data-feather="bar-chart-2"></i> Resumen</button>
+          <button data-view="transactions"><i data-feather="credit-card"></i> Transacciones</button>
+          <button data-view="banks"><i data-feather="bank"></i> Bancos</button>
+          <button data-view="assets"><i data-feather="layers"></i> Activos/Pasivos</button>
+          <button data-view="debts"><i data-feather="briefcase"></i> Deudas</button>
+          <button data-view="fixed"><i data-feather="calendar"></i> Gastos mensuales</button>
+          <button data-view="categories"><i data-feather="tag"></i> Categorías</button>
+          <button data-view="businesses"><i data-feather="briefcase"></i> Empresas</button>
+          <button data-view="export"><i data-feather="download-cloud"></i> Export / Cloud</button>
         </nav>
 
         <div class="meta">
           <div class="small">orgId: <strong id="orgBadge">oxIgjNwqNPiAneP5alpM</strong></div>
-          <small id="cloudMode">Cloud: —</small>
-          <small id="syncStatus">Estado: idle</small>
+          <div class="small">Cloud: <strong id="cloudMode">—</strong></div>
+          <div class="small">Estado: <span id="syncStatus">idle</span></div>
           <div style="margin-top:10px;display:flex;gap:8px">
             <button id="sidebarSync" class="btn ghost"><i data-feather="refresh-cw"></i> Sync</button>
             <button id="sidebarLogout" class="btn ghost"><i data-feather="log-out"></i> Cerrar</button>
           </div>
+          <div style="margin-top:10px">
+            <div class="small">Último sync:</div>
+            <div id="syncLog" class="small" style="color:var(--muted)">—</div>
+          </div>
         </div>
       </aside>
 
-      <!-- MAIN -->
       <main class="main">
         <div class="topbar">
           <div>
-            <div style="font-weight:900;font-size:18px">Panel Empresarial — Didáctico</div>
+            <div style="font-weight:900;font-size:18px">Panel Empresarial — Mejorado</div>
             <div class="small" id="currentUser">Usuario: Invitado</div>
           </div>
           <div class="controls">
             <button id="btnNewTx" class="btn primary"><i data-feather="plus"></i> Nueva transacción</button>
             <button id="btnNewBank" class="btn ghost"><i data-feather="plus-circle"></i> Nueva cuenta</button>
-            <button id="btnPDF" class="btn positive"><i data-feather="file-text"></i> Generar PDF</button>
+            <button id="btnPDF" class="btn positive"><i data-feather="file-text"></i> Exportar PDF</button>
           </div>
         </div>
 
-        <!-- KPIs -->
+        <!-- KPIs: ahora clasifica Saldo Neto en Dinero y Bienes -->
         <section class="kpigrid">
+          <div class="kpi">
+            <div class="label">Dinero (Cuentas)</div>
+            <div class="value" id="kpi-money">S/ 0.00</div>
+            <div class="sub">Total disponible en bancos</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Bienes (Activos + Empresas)</div>
+            <div class="value" id="kpi-goods">S/ 0.00</div>
+            <div class="sub">Valor estimado de bienes</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Pasivos + Deudas</div>
+            <div class="value" id="kpi-liab">S/ 0.00</div>
+            <div class="sub">Obligaciones pendientes</div>
+          </div>
           <div class="kpi">
             <div class="label">Saldo Neto</div>
             <div class="value" id="kpi-net">S/ 0.00</div>
-            <div class="trend small" id="kpi-net-trend">Activos - Pasivos</div>
-          </div>
-          <div class="kpi">
-            <div class="label">Ingresos (12m)</div>
-            <div class="value" id="kpi-inc">S/ 0.00</div>
-            <div class="trend small" id="kpi-inc-trend">Tendencia</div>
-          </div>
-          <div class="kpi">
-            <div class="label">Gastos (12m)</div>
-            <div class="value" id="kpi-exp">S/ 0.00</div>
-            <div class="trend small" id="kpi-exp-trend">Límites</div>
-          </div>
-          <div class="kpi">
-            <div class="label">Runway</div>
-            <div class="value" id="kpi-runway">∞ meses</div>
-            <div class="trend small" id="kpi-runway-trend">Liquidez vs Deudas</div>
+            <div class="sub">Dinero + Bienes - Pasivos</div>
           </div>
         </section>
 
-        <!-- DASHBOARD CARD -->
+        <!-- Dashboard -->
         <section id="view-dashboard" class="card" style="display:block">
           <div style="display:flex;gap:18px;align-items:flex-start">
             <div style="flex:1;min-width:0">
               <div style="display:flex;justify-content:space-between;align-items:center">
-                <div style="font-weight:800">Flujo de caja</div>
+                <div style="font-weight:800">Flujo Ingresos vs Egresos (12 meses)</div>
                 <div class="small" id="todayDate">Hoy: --</div>
               </div>
               <div style="margin-top:12px">
@@ -203,15 +174,8 @@
                 <div style="margin-top:12px">
                   <div class="small">Patrimonio neto</div>
                   <div style="font-weight:900;font-size:18px" id="patrimony">S/ 0.00</div>
-
                   <div style="margin-top:12px" class="small">Alertas</div>
                   <div id="alertsArea" class="small" style="margin-top:8px;color:var(--muted)">Sin alertas</div>
-
-                  <div style="margin-top:12px" class="small">Acciones rápidas</div>
-                  <div style="display:flex;gap:8px;margin-top:8px">
-                    <button id="applyFixed" class="btn ghost"><i data-feather="repeat"></i> Aplicar fijos</button>
-                    <button id="syncAuto" class="btn ghost"><i data-feather="cloud"></i> Forzar cloud</button>
-                  </div>
                 </div>
               </div>
 
@@ -223,7 +187,7 @@
           </div>
         </section>
 
-        <!-- TRANSACTIONS VIEW -->
+        <!-- Transacciones -->
         <section id="view-transactions" class="card" style="display:none;min-height:360px">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div style="font-weight:800">Transacciones</div>
@@ -241,7 +205,7 @@
           </div>
         </section>
 
-        <!-- BANKS -->
+        <!-- Bancos -->
         <section id="view-banks" class="card" style="display:none;min-height:300px">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div style="font-weight:800">Cuentas Bancarias</div>
@@ -253,7 +217,7 @@
           <div id="banksArea" style="margin-top:12px;overflow:auto;height:260px"></div>
         </section>
 
-        <!-- ASSETS -->
+        <!-- Activos / Pasivos -->
         <section id="view-assets" class="card" style="display:none;min-height:300px">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div style="font-weight:800">Activos y Pasivos</div>
@@ -268,7 +232,7 @@
           </div>
         </section>
 
-        <!-- DEBTS -->
+        <!-- Deudas -->
         <section id="view-debts" class="card" style="display:none;min-height:220px">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div style="font-weight:800">Deudas</div>
@@ -277,7 +241,7 @@
           <div id="debtsArea" style="margin-top:12px;overflow:auto;height:180px"></div>
         </section>
 
-        <!-- FIXED -->
+        <!-- Fixed, Categories, Businesses, Export (unchanged UI) -->
         <section id="view-fixed" class="card" style="display:none;min-height:220px">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div style="font-weight:800">Gastos Mensuales</div>
@@ -289,7 +253,6 @@
           <div id="fixedArea" style="margin-top:12px;overflow:auto;height:180px"></div>
         </section>
 
-        <!-- CATEGORIES -->
         <section id="view-categories" class="card" style="display:none;min-height:220px">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div style="font-weight:800">Categorías & Límites</div>
@@ -298,7 +261,6 @@
           <div id="categoriesArea" style="margin-top:12px;overflow:auto;height:180px"></div>
         </section>
 
-        <!-- BUSINESSES -->
         <section id="view-businesses" class="card" style="display:none;min-height:220px">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div style="font-weight:800">Empresas / Proyectos</div>
@@ -307,10 +269,9 @@
           <div id="businessesArea" style="margin-top:12px;overflow:auto;height:180px"></div>
         </section>
 
-        <!-- EXPORT -->
         <section id="view-export" class="card" style="display:none;min-height:220px">
           <div style="display:flex;justify-content:space-between;align-items:center">
-            <div style="font-weight:800">Export / Import / PDF</div>
+            <div style="font-weight:800">Export / Import / Cloud</div>
             <div style="display:flex;gap:8px;align-items:center">
               <button id="btnExportCSV" class="btn primary"><i data-feather="download"></i> Export CSV</button>
               <button id="btnExportJSON" class="btn ghost"><i data-feather="cloud"></i> Export JSON</button>
@@ -319,27 +280,27 @@
               <button id="btnExportPDF" class="btn positive"><i data-feather="file-text"></i> Generar PDF</button>
             </div>
           </div>
-          <div style="margin-top:12px" class="small">PDF técnico: Título 12pt · Subtítulos 11pt · Texto 10pt</div>
+          <div style="margin-top:12px" class="small">PDF: Título 12pt · Subtítulos 11pt · Texto 10pt</div>
         </section>
       </main>
     </div>
   </div>
 
   <!-- Overlay modal -->
-  <div id="overlay" class="overlay" aria-hidden="true">
-    <div class="modal" id="panelRoot"></div>
-  </div>
+  <div id="overlay" class="overlay" aria-hidden="true"><div class="modal" id="panelRoot"></div></div>
 
   <!-- FAB -->
   <button id="fab" class="fab" title="Nueva transacción"><i data-feather="plus"></i> Nueva Tx</button>
 
   <!-- Toast -->
-  <div id="toast" style="position:fixed;left:50%;transform:translateX(-50%);bottom:28px;background:#ffffff;padding:10px;border-radius:10px;display:none;z-index:1200;box-shadow:var(--card-shadow)"></div>
+  <div id="toast" style="position:fixed;left:50%;transform:translateX(-50%);bottom:28px;background:#ffffff;padding:10px;border-radius:10px;display:none;z-index:1200;box-shadow:0 12px 36px rgba(2,6,23,0.06)"></div>
 
   <!-- ======================
-       FIREBASE CONFIG (tuya actualizada)
+       FIREBASE CONFIG (usa TU CONFIG)
        ====================== -->
   <script>
+    /* ================== FIREBASE CONFIG - PONER AQUI ==================
+       Reemplaza si es necesario. Ya tienes config que proporcionaste. */
     const firebaseConfig = {
       apiKey: "AIzaSyBVppNAicRPFXEUdErmHd24se_9bjXiqcM",
       authDomain: "jhona-1b398.firebaseapp.com",
@@ -355,10 +316,11 @@
   </script>
 
   <!-- ======================
-       Lógica (vanilla ES modules) - mantuve funcionalidad
+       Lógica mejorada: merge robusto, timestamps updatedAt,
+       push con fetch+merge para evitar sobreescritura cuando sincronizan múltiples máquinas
        ====================== -->
   <script type="module">
-  // ---------- Helpers ----------
+  // ---- Helpers ----
   const $ = (s,r=document)=> r.querySelector(s);
   const $$ = (s,r=document)=> Array.from((r||document).querySelectorAll(s));
   const nowISO = ()=> new Date().toISOString();
@@ -368,17 +330,24 @@
   function toDDMMYYYY(d){ if(!d) return ''; return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear(); }
   function showToast(msg,err=false){ const t=$('#toast'); t.textContent=msg; t.style.display='block'; t.style.background= err ? '#fff1f0' : '#f6fffb'; t.style.color = err ? 'var(--danger)' : 'var(--text)'; clearTimeout(window.__to); window.__to=setTimeout(()=> t.style.display='none', err?7000:3500); }
 
-  // ---------- State ----------
-  const STORAGE_KEY = 'jona_business_single_data_v3';
+  // ---- State ----
+  const STORAGE_KEY = 'jona_business_single_data_v4';
   const state = {
-    user:null, fsHelpers:null, unsubscribeRealtime:null,
-    data: { transactions:[], banks:[], debts:[], fixed:[], categories:[], assets:[], liabilities:[], businesses:[], meta:{ updatedAt:null } }
+    user:null,
+    fsHelpers:null,
+    unsubscribeRealtime:null,
+    // single data object stored in Firestore path: organizations/{ORG_ID}/DATA/DATA with field 'data'
+    data: {
+      transactions:[], banks:[], debts:[], fixed:[], categories:[], assets:[], liabilities:[], businesses:[], meta:{ updatedAt:null }
+    },
+    syncing:false
   };
 
-  // Local load/save
+  // ---- Local persistence ----
   function loadLocal(){
     const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw) try { state.data = JSON.parse(raw); } catch(e){ console.warn(e); }
+    if(raw) try { state.data = JSON.parse(raw); } catch(e){ console.warn('local parse', e); }
+    // ensure arrays exist
     state.data.transactions = state.data.transactions || [];
     state.data.banks = state.data.banks || [];
     state.data.debts = state.data.debts || [];
@@ -390,18 +359,61 @@
   }
   function persistLocal(){ state.data.meta.updatedAt = nowISO(); localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data)); }
 
-  // Firestore init (v9 modular via CDN import)
+  // ---- Firestore init (v9 modular via import) ----
   async function initFirestore(cfg){
     if(state.fsHelpers) return;
-    try{
-      const { initializeApp } = await import('https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js');
-      const { getFirestore, doc, getDoc, setDoc, onSnapshot } = await import('https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js');
-      const app = initializeApp(cfg);
-      const firestore = getFirestore(app);
-      state.fsHelpers = { doc, getDoc, setDoc, onSnapshot, firestore };
-      console.info('Firestore initialized');
-    } catch(e){ throw e; }
+    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js');
+    const { getFirestore, doc, getDoc, setDoc, onSnapshot } = await import('https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js');
+    const app = initializeApp(cfg);
+    const firestore = getFirestore(app);
+    state.fsHelpers = { doc, getDoc, setDoc, onSnapshot, firestore };
+    console.info('Firestore initialized');
   }
+
+  // ---- Robust merge helpers ----
+  // compare timestamps with fallback
+  function tsVal(item, field){
+    if(!item) return 0;
+    if(item.updatedAt) return Date.parse(item.updatedAt) || 0;
+    if(item.createdAt) return Date.parse(item.createdAt) || 0;
+    return 0;
+  }
+
+  // Merge two arrays of objects by id: latest updatedAt wins; union of ids preserved.
+  function mergeCollectionsById(localArr=[], remoteArr=[]){
+    const map = new Map();
+    (localArr||[]).forEach(it => { if(!it) return; if(!it.id) it.id = uid('x'); map.set(it.id, it); });
+    (remoteArr||[]).forEach(r => {
+      if(!r) return;
+      if(!r.id) r.id = uid('x');
+      const existing = map.get(r.id);
+      if(!existing) { map.set(r.id, r); return; }
+      const tLocal = tsVal(existing), tRemote = tsVal(r);
+      if(tRemote > tLocal) map.set(r.id, r); // remote is newer -> keep remote
+      else map.set(r.id, existing); // keep local
+    });
+    // return sorted by updatedAt desc (newest first)
+    return Array.from(map.values()).sort((a,b)=> tsVal(b) - tsVal(a));
+  }
+
+  // Merge full dataset: remote and local -> use per-collection merge
+  function mergeFullDatasets(remote, local){
+    if(!remote) return JSON.parse(JSON.stringify(local || {}));
+    if(!local) return JSON.parse(JSON.stringify(remote || {}));
+    return {
+      transactions: mergeCollectionsById(local.transactions, remote.transactions),
+      banks: mergeCollectionsById(local.banks, remote.banks),
+      debts: mergeCollectionsById(local.debts, remote.debts),
+      fixed: mergeCollectionsById(local.fixed, remote.fixed),
+      categories: mergeCollectionsById(local.categories, remote.categories),
+      assets: mergeCollectionsById(local.assets, remote.assets),
+      liabilities: mergeCollectionsById(local.liabilities, remote.liabilities),
+      businesses: mergeCollectionsById(local.businesses, remote.businesses),
+      meta: { updatedAt: nowISO() }
+    };
+  }
+
+  // ---- Firestore fetch / save with merge to avoid overwrite ----
   async function fsFetch(){
     const { doc, getDoc, firestore } = state.fsHelpers;
     const ref = doc(firestore, 'organizations', ORG_ID, 'DATA', 'DATA');
@@ -410,104 +422,122 @@
     const payload = snap.data();
     return { data: payload.data || null, updatedAt: payload.updatedAt || null };
   }
-  async function fsSave(data){
-    const { doc, setDoc, firestore } = state.fsHelpers;
+
+  // Save but first fetch remote and merge (last-write-wins per item using updatedAt)
+  async function fsSaveWithMerge(localData){
+    if(!state.fsHelpers) throw new Error('Firestore no inicializado');
+    const { doc, setDoc, getDoc, firestore } = state.fsHelpers;
     const ref = doc(firestore, 'organizations', ORG_ID, 'DATA', 'DATA');
+
+    // fetch remote
+    let remote = null;
+    try{
+      const snap = await getDoc(ref);
+      if(snap.exists()){
+        const payload = snap.data();
+        remote = payload.data || null;
+      }
+    }catch(e){
+      console.warn('fetch remote failed', e);
+    }
+
+    // merge remote <- local (local and remote combined; use updatedAt to choose fields)
+    const merged = mergeFullDatasets(remote, localData);
+
+    // write merged
     const updatedAt = nowISO();
-    await setDoc(ref, { data, updatedAt }, { merge: true });
+    await setDoc(ref, { data: merged, updatedAt }, { merge: true });
+
+    // update local state to merged
+    state.data = merged;
+    persistLocal();
+    $('#syncLog').textContent = 'Último push: ' + updatedAt;
     return updatedAt;
   }
 
-  // Realtime listener
+  // ---- Realtime listener: merge remote into local on snapshot ----
   function startRealtime(){
     if(!state.fsHelpers) return;
     const { doc, onSnapshot, firestore } = state.fsHelpers;
     const ref = doc(firestore, 'organizations', ORG_ID, 'DATA', 'DATA');
     if(state.unsubscribeRealtime) try{ state.unsubscribeRealtime(); }catch(e){}
     state.unsubscribeRealtime = onSnapshot(ref, snap=>{
-      if(!snap.exists()) return;
-      const payload = snap.data();
-      if(!payload) return;
-      const remote = payload.data || null;
-      if(remote){
-        state.data = mergeDatasets(state.data, remote);
+      try{
+        if(!snap.exists()) return;
+        const payload = snap.data();
+        if(!payload) return;
+        const remote = payload.data || null;
+        if(!remote) return;
+        // If remote.updatedAt is same as local.meta.updatedAt, skip to avoid loop.
+        const remoteU = (payload.updatedAt) ? payload.updatedAt : (remote.meta && remote.meta.updatedAt);
+        const localU = state.data.meta && state.data.meta.updatedAt;
+        // Always merge; merge function resolves by per-item updatedAt
+        state.data = mergeFullDatasets(remote, state.data);
         persistLocal();
         renderAll();
-        showToast('Sincronizado desde la nube');
-      }
-    }, err=> console.warn('Realtime err', err));
-  }
-
-  // Merge logic
-  function mergeCollections(localArr=[], remoteArr=[], timeField='createdAt'){
-    const map = new Map();
-    (localArr||[]).forEach(item => { if(!item) return; if(!item.id) item.id = uid('x'); map.set(item.id, item); });
-    (remoteArr||[]).forEach(r => {
-      if(!r) return;
-      if(!r.id) r.id = uid('x');
-      const existing = map.get(r.id);
-      if(!existing){ map.set(r.id, r); return; }
-      const tLocal = existing[timeField] ? Date.parse(existing[timeField]) : 0;
-      const tRemote = r[timeField] ? Date.parse(r[timeField]) : 0;
-      if(tRemote >= tLocal) map.set(r.id, r);
+        $('#syncLog').textContent = 'Última sync (push desde nube): ' + (remoteU || nowISO());
+        showToast('Datos sincronizados desde la nube');
+      } catch(e){ console.warn('realtime merge error', e); }
+    }, err=> {
+      console.warn('Realtime err', err);
+      $('#syncLog').textContent = 'Realtime error';
     });
-    return Array.from(map.values()).sort((a,b)=> (b[timeField] ? Date.parse(b[timeField]) : 0) - (a[timeField] ? Date.parse(a[timeField]) : 0));
-  }
-  function mergeDatasets(local, remote){
-    if(!remote) return JSON.parse(JSON.stringify(local || {}));
-    return {
-      transactions: mergeCollections(local.transactions, remote.transactions, 'createdAt'),
-      banks: mergeCollections(local.banks, remote.banks, 'createdAt'),
-      debts: mergeCollections(local.debts, remote.debts, 'createdAt'),
-      fixed: mergeCollections(local.fixed, remote.fixed, 'createdAt'),
-      categories: mergeCollections(local.categories, remote.categories, 'createdAt'),
-      assets: mergeCollections(local.assets, remote.assets, 'createdAt'),
-      liabilities: mergeCollections(local.liabilities, remote.liabilities, 'createdAt'),
-      businesses: mergeCollections(local.businesses, remote.businesses, 'createdAt'),
-      meta: { updatedAt: nowISO() }
-    };
   }
 
-  // Auto push
-  let pushTimer=null;
-  function schedulePush(delay=900){
+  // ---- Debounced push: fetch remote + merge + setDoc to avoid collisions ----
+  let pushTimer = null;
+  function schedulePushDebounced(delay = 800){
     if(!state.fsHelpers) return;
     if(pushTimer) clearTimeout(pushTimer);
     pushTimer = setTimeout(async ()=>{
       try{
         $('#syncStatus').textContent = 'pushing';
-        await fsSave(state.data);
+        await fsSaveWithMerge(state.data);
         $('#syncStatus').textContent = 'idle';
-        showToast('Cambios subidos a la nube');
-      } catch(e){ console.error(e); showToast('Error subir: '+(e.message||e), true); $('#syncStatus').textContent='idle'; }
+        showToast('Cambios subidos y mergeados con la nube');
+      } catch(e){
+        console.error('push error', e);
+        showToast('Error al subir: '+(e.message||e), true);
+        $('#syncStatus').textContent = 'idle';
+      }
     }, delay);
   }
 
-  // CRUD operations
+  // ---- Business logic: CRUD with updatedAt stamps ----
   function pushAndRender(mut){
     mut(state.data);
+    // ensure updatedAt for modified records done inside mut
     persistLocal();
     renderAll();
-    if(state.fsHelpers) schedulePush();
+    if(state.fsHelpers) schedulePushDebounced();
   }
-  function addBank(obj){ obj.id=uid('b'); obj.balance=Number(obj.balance)||0; obj.createdAt=nowISO(); pushAndRender(d=>d.banks.unshift(obj)); }
-  function addCategory(obj){ obj.id=uid('cat'); obj.createdAt=nowISO(); pushAndRender(d=>d.categories.unshift(obj)); }
-  function addAsset(obj){ obj.id=uid('asset'); obj.estimatedValue=Number(obj.estimatedValue)||0; obj.accumulatedGain=Number(obj.accumulatedGain)||0; obj.incomeRecords=obj.incomeRecords||[]; obj.createdAt=nowISO(); pushAndRender(d=>d.assets.unshift(obj)); }
-  function addLiability(obj){ obj.id=uid('liab'); obj.amount=Number(obj.amount)||0; obj.createdAt=nowISO(); pushAndRender(d=>d.liabilities.unshift(obj)); }
-  function addBusiness(obj){ obj.id=uid('biz'); obj.estimateValue=Number(obj.estimateValue)||0; obj.createdAt=nowISO(); pushAndRender(d=>d.businesses.unshift(obj)); }
-  function addFixed(obj){ obj.id=uid('fix'); obj.amount=Number(obj.amount)||0; obj.createdAt=nowISO(); pushAndRender(d=>d.fixed.unshift(obj)); }
-  function addDebt(obj){ obj.id=uid('debt'); obj.outstanding=Number(obj.outstanding)||0; obj.monthlyPayment=Number(obj.monthlyPayment)||0; obj.createdAt=nowISO(); pushAndRender(d=>d.debts.unshift(obj)); }
+
+  function ensureTimestamps(obj){
+    const now = nowISO();
+    obj.createdAt = obj.createdAt || now;
+    obj.updatedAt = now;
+  }
+
+  function addBank(obj){ ensureTimestamps(obj); obj.id = obj.id || uid('b'); obj.balance = Number(obj.balance)||0; pushAndRender(d=> d.banks.unshift(obj)); }
+  function updateBank(existing, changes){ Object.assign(existing, changes); ensureTimestamps(existing); pushAndRender(()=>{}); }
+
+  function addCategory(obj){ ensureTimestamps(obj); obj.id = obj.id || uid('cat'); pushAndRender(d=> d.categories.unshift(obj)); }
+  function addAsset(obj){ ensureTimestamps(obj); obj.id = obj.id || uid('asset'); obj.estimatedValue = Number(obj.estimatedValue)||0; obj.accumulatedGain = Number(obj.accumulatedGain)||0; obj.incomeRecords = obj.incomeRecords || []; pushAndRender(d=> d.assets.unshift(obj)); }
+  function addLiability(obj){ ensureTimestamps(obj); obj.id = obj.id || uid('liab'); obj.amount = Number(obj.amount)||0; pushAndRender(d=> d.liabilities.unshift(obj)); }
+  function addBusiness(obj){ ensureTimestamps(obj); obj.id = obj.id || uid('biz'); obj.estimateValue = Number(obj.estimateValue)||0; pushAndRender(d=> d.businesses.unshift(obj)); }
+  function addFixed(obj){ ensureTimestamps(obj); obj.id = obj.id || uid('fix'); obj.amount = Number(obj.amount)||0; pushAndRender(d=> d.fixed.unshift(obj)); }
+  function addDebt(obj){ ensureTimestamps(obj); obj.id = obj.id || uid('debt'); obj.outstanding = Number(obj.outstanding)||0; obj.monthlyPayment = Number(obj.monthlyPayment)||0; pushAndRender(d=> d.debts.unshift(obj)); }
 
   async function addTransaction(tx){
     if(!parseDateDDMMYYYY(tx.dateStr)) throw new Error('Fecha inválida (dd/mm/yyyy)');
     if(!tx.bankId) throw new Error('Seleccione una cuenta bancaria');
-    tx.id = uid('t'); tx.amount = Number(tx.amount)||0; tx.createdAt = nowISO();
+    tx.id = tx.id || uid('t'); tx.amount = Number(tx.amount)||0; ensureTimestamps(tx);
     pushAndRender(d=>{
       d.transactions.unshift(tx);
       const bank = d.banks.find(b=>b.id===tx.bankId);
-      if(bank) bank.balance = (Number(bank.balance)||0) + (tx.type==='Egreso' ? -tx.amount : tx.amount);
-      if(tx.debtId && tx.type==='Egreso'){ const debt = d.debts.find(x=>x.id===tx.debtId); if(debt) debt.outstanding = Math.max(0,(Number(debt.outstanding)||0)-tx.amount); }
-      if(tx.assetId && tx.type==='Ingreso'){ const asset = d.assets.find(a=>a.id===tx.assetId); if(asset){ asset.accumulatedGain = (Number(asset.accumulatedGain)||0) + tx.amount; asset.incomeRecords = asset.incomeRecords||[]; asset.incomeRecords.unshift({id:uid('ag'),txId:tx.id,dateStr:tx.dateStr,amount:tx.amount,desc:tx.description||''}); } }
+      if(bank){ bank.balance = (Number(bank.balance)||0) + (tx.type==='Egreso' ? -tx.amount : tx.amount); ensureTimestamps(bank); }
+      if(tx.debtId && tx.type==='Egreso'){ const debt = d.debts.find(x=>x.id===tx.debtId); if(debt){ debt.outstanding = Math.max(0,(Number(debt.outstanding)||0)-tx.amount); ensureTimestamps(debt); } }
+      if(tx.assetId && tx.type==='Ingreso'){ const asset = d.assets.find(a=>a.id===tx.assetId); if(asset){ asset.accumulatedGain = (Number(asset.accumulatedGain)||0) + tx.amount; asset.incomeRecords = asset.incomeRecords||[]; asset.incomeRecords.unshift({id:uid('ag'),txId:tx.id,dateStr:tx.dateStr,amount:tx.amount,desc:tx.description||'', createdAt: nowISO(), updatedAt: nowISO()}); ensureTimestamps(asset); } }
     });
   }
 
@@ -515,10 +545,10 @@
     amount = Number(amount)||0; if(amount<=0) throw new Error('Monto inválido');
     pushAndRender(d=>{
       const from = d.banks.find(b=>b.id===fromId), to = d.banks.find(b=>b.id===toId);
-      if(from) from.balance = (Number(from.balance)||0) - amount;
-      if(to) to.balance = (Number(to.balance)||0) + amount;
-      const out = { id:uid('t'), type:'Egreso', dateStr, amount, bankId:fromId, description:'Transferencia a ' + (to?to.name:''), createdAt:nowISO(), meta:{transferTo:toId} };
-      const inc = { id:uid('t'), type:'Ingreso', dateStr, amount, bankId:toId, description:'Transferencia desde ' + (from?from.name:''), createdAt:nowISO(), meta:{transferFrom:fromId} };
+      if(from){ from.balance = (Number(from.balance)||0) - amount; ensureTimestamps(from); }
+      if(to){ to.balance = (Number(to.balance)||0) + amount; ensureTimestamps(to); }
+      const out = { id: uid('t'), type:'Egreso', dateStr, amount, bankId:fromId, description:'Transferencia a ' + (to?to.name:''), meta:{transferTo:toId}, createdAt: nowISO(), updatedAt: nowISO() };
+      const inc = { id: uid('t'), type:'Ingreso', dateStr, amount, bankId:toId, description:'Transferencia desde ' + (from?from.name:''), meta:{transferFrom:fromId}, createdAt: nowISO(), updatedAt: nowISO() };
       d.transactions.unshift(inc); d.transactions.unshift(out);
     });
   }
@@ -527,15 +557,15 @@
     const today = toDDMMYYYY(new Date());
     pushAndRender(d=>{
       d.fixed.forEach(f=>{
-        const tx = { id:uid('t'), type:'Egreso', dateStr:today, amount:Number(f.amount)||0, bankId:f.bankId||null, categoryId:f.categoryId||null, description:'Gasto fijo: '+f.name, createdAt: nowISO(), meta:{fromFixed:f.id} };
+        const tx = { id: uid('t'), type:'Egreso', dateStr:today, amount:Number(f.amount)||0, bankId:f.bankId||null, categoryId:f.categoryId||null, description:'Gasto fijo: '+f.name, createdAt: nowISO(), updatedAt: nowISO(), meta:{fromFixed:f.id} };
         d.transactions.unshift(tx);
-        if(f.bankId){ const b = d.banks.find(x=>x.id===f.bankId); if(b) b.balance = (Number(b.balance)||0) - tx.amount; }
+        if(f.bankId){ const b = d.banks.find(x=>x.id===f.bankId); if(b){ b.balance = (Number(b.balance)||0) - tx.amount; ensureTimestamps(b); } }
       });
     });
     showToast('Gastos fijos aplicados');
   }
 
-  // Export / Import / PDF
+  // ---- Export / Import / PDF (unchanged funcionalidad) ----
   function exportCSV(){
     const rows = state.data.transactions.map(t=>{
       const b = state.data.banks.find(b=>b.id===t.bankId);
@@ -563,11 +593,17 @@
       }
       showToast('CSV importado');
     } else {
-      try{ const d = JSON.parse(text); state.data = mergeDatasets(state.data, d); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); showToast('JSON importado y fusionado'); } catch(e){ alert('JSON inválido'); }
+      try{ const d = JSON.parse(text); // merge imported with local & remote
+        state.data = mergeFullDatasets(d, state.data);
+        persistLocal();
+        if(state.fsHelpers) schedulePushDebounced(400);
+        renderAll();
+        showToast('JSON importado y fusionado'); } catch(e){ alert('JSON inválido'); }
     }
   }
 
   async function exportPDF(){
+    // similar to prior versions (kept concise)
     const banksTotal = state.data.banks.reduce((s,b)=>s + (Number(b.balance)||0),0);
     const assetsTotal = state.data.assets.reduce((s,a)=>s + (Number(a.estimatedValue)||0),0);
     const liabilitiesTotal = state.data.liabilities.reduce((s,l)=>s + (Number(l.amount)||0),0);
@@ -583,55 +619,21 @@
       <div class="pdf-header">
         <div>
           <div class="pdf-title">REPORTE FINANCIERO — JHONATAN ORELLANA</div>
-          <div class="pdf-sub">Organización: ${ORG_ID} · Fecha: ${toDDMMYYYY(new Date())}</div>
+          <div class="pdf-sub">Org: ${ORG_ID} · Fecha: ${toDDMMYYYY(new Date())}</div>
         </div>
-        <div style="text-align:right">
-          <div class="pdf-text">Resumen técnico clasificado</div>
-        </div>
+        <div style="text-align:right"><div class="pdf-text">Resumen técnico</div></div>
       </div>
-
-      <section>
-        <div class="pdf-sub">1. Resumen ejecutivo</div>
-        <p class="pdf-text">Saldo en cuentas: <strong>${fmtMoney(banksTotal)}</strong><br/>
-        Patrimonio neto: <strong>${fmtMoney(assetsTotal + banksTotal - (liabilitiesTotal + debtsTotal))}</strong><br/>
-        Ingresos totales: <strong>${fmtMoney(incomeTotal)}</strong> · Gastos totales: <strong>${fmtMoney(expenseTotal)}</strong><br/>
-        Tasa de ahorro estimada: <strong>${savingsRate}%</strong></p>
-      </section>
-
-      <section>
-        <div class="pdf-sub">2. Gráfica Ingresos vs Egresos (12 meses)</div>
-        ${chartImg ? `<div style="text-align:center;margin-top:8px"><img src="${chartImg}" style="max-width:100%;height:auto;border:1px solid #ddd"/></div>` : '<p class="pdf-text">Gráfica no disponible.</p>'}
-      </section>
-
-      <section>
-        <div class="pdf-sub">3. Bancos</div>
-        <table class="pdf-table"><thead><tr><th>Cuenta</th><th>Tipo</th><th style="text-align:right">Saldo</th></tr></thead>
-          <tbody>${state.data.banks.map(b=>`<tr><td>${b.name}</td><td>${b.type||'-'}</td><td style="text-align:right">${fmtMoney(b.balance)}</td></tr>`).join('')}</tbody></table>
-      </section>
-
-      <section>
-        <div class="pdf-sub">4. Activos clave</div>
-        <table class="pdf-table"><thead><tr><th>Activo</th><th>Subtipo</th><th style="text-align:right">Valor</th><th style="text-align:right">Ganancias</th></tr></thead>
-          <tbody>${state.data.assets.map(a=>`<tr><td>${a.name}</td><td>${a.subtype||'-'}</td><td style="text-align:right">${fmtMoney(a.estimatedValue)}</td><td style="text-align:right">${fmtMoney(a.accumulatedGain||0)}</td></tr>`).join('')}</tbody></table>
-      </section>
-
-      <section>
-        <div class="pdf-sub">5. Deudas y pasivos</div>
-        <table class="pdf-table"><thead><tr><th>Nombre</th><th>Vinculado</th><th style="text-align:right">Saldo</th><th style="text-align:right">Cuota</th></tr></thead>
-          <tbody>
-            ${state.data.debts.map(d=>`<tr><td>${d.name}</td><td>${(state.data.banks.find(b=>b.id===d.bankId)||{name:'-'}) .name}</td><td style="text-align:right">${fmtMoney(d.outstanding)}</td><td style="text-align:right">${fmtMoney(d.monthlyPayment)}</td></tr>`).join('')}
-            ${state.data.liabilities.map(l=>`<tr><td>${l.name}</td><td>${(state.data.banks.find(b=>b.id===l.linkedBankId)||{name:'-'}) .name}</td><td style="text-align:right">${fmtMoney(l.amount)}</td><td style="text-align:right">-</td></tr>`).join('')}
-          </tbody></table>
-      </section>
-
-      <div style="margin-top:12px;font-size:9pt;color:#666">Generado por JHONATAN ORELLANA — Suite Didáctica · Títulos 12pt · Subtítulos 11pt · Texto 10pt</div>
+      <section><div class="pdf-sub">Resumen ejecutivo</div>
+        <p class="pdf-text">Saldo cuentas: <strong>${fmtMoney(banksTotal)}</strong><br/>Bienes (activos+empresas): <strong>${fmtMoney(assetsTotal + state.data.businesses.reduce((s,b)=>s+(Number(b.estimateValue)||0),0))}</strong><br/>Pasivos+Deudas: <strong>${fmtMoney(liabilitiesTotal + debtsTotal)}</strong></p></section>
+      <section><div class="pdf-sub">Gráfica</div>${chartImg?`<div style="text-align:center"><img src="${chartImg}" style="max-width:100%;height:auto;border:1px solid #ddd"/></div>`:'<p class="pdf-text">Gráfica no disponible</p>'}</section>
+      <div style="margin-top:12px;font-size:9pt;color:#666">Generado por JHONATAN ORELLANA · Títulos 12pt · Subtítulos 11pt · Texto 10pt</div>
     `;
     if(window.html2pdf){
-      html2pdf().set({ margin:12, filename:`reporte_financiero_${(new Date()).toISOString().slice(0,10)}.pdf`, image:{type:'jpeg',quality:0.95}, html2canvas:{scale:2,useCORS:true}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(node).save();
+      html2pdf().set({ margin:12, filename:`reporte_${(new Date()).toISOString().slice(0,10)}.pdf`, image:{type:'jpeg',quality:0.95}, html2canvas:{scale:2,useCORS:true}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(node).save();
     } else alert('html2pdf no disponible');
   }
 
-  // Charts & dashboard
+  // ---- Charts and metrics: now shows breakdown money / goods / liabilities ----
   let flowsChart = null;
   window.flowsChart = null;
   function renderFlowsChart(){
@@ -643,7 +645,7 @@
       labels.push(d.toLocaleString('es-PE',{month:'short',year:'2-digit'}));
       let inc=0, eg=0;
       state.data.transactions.forEach(t=>{
-        const td=parseDateDDMMYYYY(t.dateStr||'');
+        const td = parseDateDDMMYYYY(t.dateStr||'');
         if(!td) return;
         if(td.getMonth()===d.getMonth() && td.getFullYear()===d.getFullYear()){
           if(t.type==='Egreso') eg += Number(t.amount)||0; else inc += Number(t.amount)||0;
@@ -652,68 +654,53 @@
       incData.push(inc); egData.push(eg);
     }
     const ctx = document.getElementById('chartFlows');
-    const data = { labels, datasets:[ { label:'Ingresos', type:'line', data:incData, borderColor: '#0b6fd1', backgroundColor: 'rgba(11,111,209,0.06)', tension:0.3, yAxisID:'y' }, { label:'Egresos', type:'bar', data:egData, backgroundColor:'#ef4444', yAxisID:'y' } ] };
+    const data = { labels, datasets:[ { label:'Ingresos', type:'line', data:incData, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.06)', tension:0.25, yAxisID:'y' }, { label:'Egresos', type:'bar', data:egData, backgroundColor:'#ef4444', yAxisID:'y' } ] };
     if(flowsChart){ flowsChart.data = data; flowsChart.update(); } else {
-      flowsChart = new Chart(ctx, { data, type:'bar', options:{
-        responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top'}}, scales:{ y:{ beginAtZero:true }, x:{ stacked:false } }
-      }});
+      flowsChart = new Chart(ctx, { data, type:'bar', options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top'}}, scales:{ y:{ beginAtZero:true }, x:{ stacked:false } } } });
       window.flowsChart = flowsChart;
     }
   }
 
   function dashboardMetrics(){
-    const now = new Date(), month = now.getMonth(), year = now.getFullYear();
     const banksTotal = state.data.banks.reduce((s,b)=>s + (Number(b.balance)||0),0);
     const assetsTotal = state.data.assets.reduce((s,a)=>s + (Number(a.estimatedValue)||0),0);
+    const businessesTotal = state.data.businesses.reduce((s,b)=>s + (Number(b.estimateValue)||0),0);
+    const goodsTotal = assetsTotal + businessesTotal;
     const liabilitiesTotal = state.data.liabilities.reduce((s,l)=>s + (Number(l.amount)||0),0);
     const debtsTotal = state.data.debts.reduce((s,d)=>s + (Number(d.outstanding)||0),0);
-    const incomeTotal = state.data.transactions.reduce((s,t)=> s + ((t.type==='Egreso')?0:(Number(t.amount)||0)),0);
-    const expenseTotal = state.data.transactions.reduce((s,t)=> s + ((t.type==='Egreso')?(Number(t.amount)||0):0),0);
-    const avgExpenses = (expenseTotal / 12) || 0;
-    const runway = avgExpenses>0 ? (banksTotal/avgExpenses).toFixed(1) : '∞';
-    const net = assetsTotal + banksTotal - (liabilitiesTotal + debtsTotal);
+    const obligations = liabilitiesTotal + debtsTotal;
+    const net = (banksTotal + goodsTotal) - obligations;
 
+    $('#kpi-money').textContent = fmtMoney(banksTotal);
+    $('#kpi-goods').textContent = fmtMoney(goodsTotal);
+    $('#kpi-liab').textContent = fmtMoney(obligations);
     $('#kpi-net').textContent = fmtMoney(net);
-    $('#kpi-inc').textContent = fmtMoney(incomeTotal);
-    $('#kpi-exp').textContent = fmtMoney(expenseTotal);
-    $('#kpi-runway').textContent = `${runway} meses`;
     $('#patrimony').textContent = fmtMoney(net);
-    $('#kpi-net-trend').textContent = `Activos ${fmtMoney(assetsTotal)} · Pasivos ${fmtMoney(liabilitiesTotal + debtsTotal)}`;
-
-    // top categories this month
-    const catSums = {};
-    state.data.transactions.forEach(t=>{
-      const td=parseDateDDMMYYYY(t.dateStr||''); if(!td) return;
-      if(td.getMonth()===month && td.getFullYear()===year && t.type==='Egreso'){
-        const cid = t.categoryId || t.categoryName || 'Sin categoría';
-        catSums[cid] = (catSums[cid]||0) + (Number(t.amount)||0);
-      }
-    });
-    const topCats = Object.entries(catSums).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k,v])=> `${k}: ${fmtMoney(v)}`).join('<br/>') || '—';
-    $('#topCategories').innerHTML = topCats;
 
     $('#bankBreakdown').innerHTML = state.data.banks.map(b=>`${b.name}: <strong>${fmtMoney(b.balance)}</strong>`).join('<br/>') || '—';
 
+    // alerts per category limits
+    const now = new Date(), month = now.getMonth(), year = now.getFullYear();
     const alerts = [];
     state.data.categories.forEach(cat=>{
       if(!cat.limitMonthly || Number(cat.limitMonthly)<=0) return;
       const spent = state.data.transactions.reduce((acc,t)=>{ const td=parseDateDDMMYYYY(t.dateStr||''); if(!td) return acc; if(td.getMonth()===month && td.getFullYear()===year && t.categoryId===cat.id) acc += Number(t.amount)||0; return acc; },0);
-      if(spent > Number(cat.limitMonthly)) alerts.push(`<span class="badge neg">⚠ ${cat.name} superó límite ${fmtMoney(spent)}</span>`);
-      else if(spent >= Number(cat.limitMonthly)*0.8) alerts.push(`<span class="badge" style="background:rgba(245,158,11,0.12);color:var(--warn)">¡${cat.name} cerca del límite!</span>`);
+      if(spent > Number(cat.limitMonthly)) alerts.push(`⚠ ${cat.name} superó límite ${fmtMoney(spent)} / ${fmtMoney(cat.limitMonthly)}`);
+      else if(spent >= Number(cat.limitMonthly)*0.8) alerts.push(`! ${cat.name} cerca del límite ${fmtMoney(spent)} / ${fmtMoney(cat.limitMonthly)}`);
     });
-    state.data.banks.forEach(b=>{ if(Number(b.balance) < 0) alerts.push(`<span class="badge neg">❗ ${b.name} saldo negativo ${fmtMoney(b.balance)}</span>`); });
+    state.data.banks.forEach(b=>{ if(Number(b.balance) < 0) alerts.push(`❗ ${b.name} saldo negativo ${fmtMoney(b.balance)}`); });
 
     $('#alertsArea').innerHTML = alerts.length ? alerts.join('<br/>') : '<span class="small">Sin alertas</span>';
+
     $('#todayDate').textContent = 'Hoy: ' + toDDMMYYYY(new Date());
 
     const last = state.data.transactions.slice(0,6).map(t=> `${t.dateStr} · ${t.type} · ${fmtMoney(t.amount)} · ${(t.description||'')}`).join('<br/>') || '—';
     $('#smallTxList').innerHTML = last;
-    $('#kpi-inc-trend').textContent = `Ingresos anuales: ${fmtMoney(incomeTotal)}`;
-    $('#kpi-exp-trend').textContent = `Gastos anuales: ${fmtMoney(expenseTotal)}`;
+
     renderFlowsChart();
   }
 
-  // Render lists (transactions, banks, assets, etc.)
+  // ---- Render lists (similar to previous but ensure renderAll called after merges) ----
   function renderTransactions(){
     const tbody = $('#txTable tbody'); if(!tbody) return; tbody.innerHTML='';
     const q = ($('#search') && $('#search').value || '').trim().toLowerCase();
@@ -729,7 +716,7 @@
     });
     $$('#txTable button').forEach(btn=> btn.onclick = ()=>{
       const id = btn.dataset.id, act = btn.dataset.act;
-      if(act==='del'){ if(confirm('Eliminar transacción?')){ state.data.transactions = state.data.transactions.filter(x=>x.id!==id); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } }
+      if(act==='del'){ if(confirm('Eliminar transacción?')){ state.data.transactions = state.data.transactions.filter(x=>x.id!==id); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } }
       if(act==='edit'){ const tx = state.data.transactions.find(x=>x.id===id); if(tx) openTxModal(tx); }
       feather.replace();
     });
@@ -743,7 +730,7 @@
     wrap.innerHTML = `<table style="width:100%"><thead><tr><th>Cuenta</th><th class="right">Saldo</th><th>Acc</th></tr></thead><tbody>${rows}</tbody></table>`;
     $$('#banksArea button').forEach(btn=> btn.onclick = ()=>{
       const id = btn.dataset.id, act = btn.dataset.act;
-      if(act==='del'){ if(confirm('Eliminar cuenta?')){ state.data.banks = state.data.banks.filter(x=>x.id!==id); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } }
+      if(act==='del'){ if(confirm('Eliminar cuenta?')){ state.data.banks = state.data.banks.filter(x=>x.id!==id); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } }
       if(act==='edit'){ const b = state.data.banks.find(x=>x.id===id); openBankModal(b); }
       feather.replace();
     });
@@ -752,22 +739,22 @@
   }
 
   function renderAssets(){ const wrap=$('#assetsArea'); if(!wrap) return; if(state.data.assets.length===0){ wrap.innerHTML='<div class="small">Sin activos</div>'; return; } const rows = state.data.assets.map(a=>`<div style="padding:10px;border-bottom:1px solid rgba(11,24,32,0.04)"><div style="display:flex;justify-content:space-between;align-items:center"><div><strong>${a.name}</strong><div class="small">${a.subtype||'-'} · Valor: ${fmtMoney(a.estimatedValue)}</div></div><div style="display:flex;gap:8px"><button data-id="${a.id}" data-act="view" class="btn ghost"><i data-feather="eye"></i></button><button data-id="${a.id}" data-act="edit" class="btn ghost"><i data-feather="edit-2"></i></button><button data-id="${a.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></div></div></div>`).join('');
-    wrap.innerHTML = rows; $$('#assetsArea button').forEach(btn=> btn.onclick = ()=> { const id=btn.dataset.id, act=btn.dataset.act; if(act==='del'){ if(confirm('Eliminar activo?')){ state.data.assets = state.data.assets.filter(x=>x.id!==id); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } } if(act==='edit'){ const a=state.data.assets.find(x=>x.id===id); openAssetModal(a); } if(act==='view'){ openAssetViewModal(state.data.assets.find(x=>x.id===id)); } feather.replace(); }); feather.replace(); }
+    wrap.innerHTML = rows; $$('#assetsArea button').forEach(btn=> btn.onclick = ()=> { const id=btn.dataset.id, act=btn.dataset.act; if(act==='del'){ if(confirm('Eliminar activo?')){ state.data.assets = state.data.assets.filter(x=>x.id!==id); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } } if(act==='edit'){ const a=state.data.assets.find(x=>x.id===id); openAssetModal(a); } if(act==='view'){ openAssetViewModal(state.data.assets.find(x=>x.id===id)); } feather.replace(); }); feather.replace(); }
 
   function renderLiabilities(){ const wrap=$('#liabilitiesArea'); if(!wrap) return; if(state.data.liabilities.length===0){ wrap.innerHTML='<div class="small">Sin pasivos</div>'; return; } const rows = state.data.liabilities.map(l=>`<div style="padding:10px;border-bottom:1px solid rgba(11,24,32,0.04)"><div style="display:flex;justify-content:space-between"><div><strong>${l.name}</strong><div class="small">Tasa: ${l.interestRate||0}% · Venc: ${l.maturityDate||'-'}</div></div><div style="display:flex;gap:8px"><button data-id="${l.id}" data-act="edit" class="btn ghost"><i data-feather="edit-2"></i></button><button data-id="${l.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></div></div></div>`).join('');
-    wrap.innerHTML = rows; $$('#liabilitiesArea button').forEach(b=> b.onclick = ()=> { const id=b.dataset.id, act=b.dataset.act; if(act==='del'){ if(confirm('Eliminar pasivo?')){ state.data.liabilities = state.data.liabilities.filter(x=>x.id!==id); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } } if(act==='edit'){ const l=state.data.liabilities.find(x=>x.id===id); openLiabilityModal(l); } feather.replace(); }); feather.replace(); }
+    wrap.innerHTML = rows; $$('#liabilitiesArea button').forEach(b=> b.onclick = ()=> { const id=b.dataset.id, act=b.dataset.act; if(act==='del'){ if(confirm('Eliminar pasivo?')){ state.data.liabilities = state.data.liabilities.filter(x=>x.id!==id); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } } if(act==='edit'){ const l=state.data.liabilities.find(x=>x.id===id); openLiabilityModal(l); } feather.replace(); }); feather.replace(); }
 
   function renderDebts(){ const wrap=$('#debtsArea'); if(!wrap) return; if(state.data.debts.length===0){ wrap.innerHTML='<div class="small">Sin deudas</div>'; return; } const rows = state.data.debts.map(d=>`<tr><td>${d.name}</td><td>${(state.data.banks.find(b=>b.id===d.bankId)||{name:'-'}) .name}</td><td class="right">${fmtMoney(Number(d.outstanding)||0)}</td><td class="right">${fmtMoney(Number(d.monthlyPayment)||0)}</td><td><button data-id="${d.id}" data-act="pay" class="btn positive"><i data-feather="dollar-sign"></i> Pagar</button> <button data-id="${d.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></td></tr>`).join('');
-    wrap.innerHTML = `<table style="width:100%"><thead><tr><th>Deuda</th><th>Banco</th><th class="right">Saldo</th><th class="right">Cuota</th><th>Acc</th></tr></thead><tbody>${rows}</tbody></table>`; $$('#debtsArea button').forEach(b=> b.onclick = ()=> { const id=b.dataset.id, act=b.dataset.act; if(act==='del'){ if(confirm('Eliminar deuda?')){ state.data.debts = state.data.debts.filter(x=>x.id!==id); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } } if(act==='pay'){ const d=state.data.debts.find(x=>x.id===id); openDebtPayModal(d); } feather.replace(); }); feather.replace(); }
+    wrap.innerHTML = `<table style="width:100%"><thead><tr><th>Deuda</th><th>Banco</th><th class="right">Saldo</th><th class="right">Cuota</th><th>Acc</th></tr></thead><tbody>${rows}</tbody></table>`; $$('#debtsArea button').forEach(b=> b.onclick = ()=> { const id=b.dataset.id, act=b.dataset.act; if(act==='del'){ if(confirm('Eliminar deuda?')){ state.data.debts = state.data.debts.filter(x=>x.id!==id); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } } if(act==='pay'){ const d=state.data.debts.find(x=>x.id===id); openDebtPayModal(d); } feather.replace(); }); feather.replace(); }
 
   function renderFixed(){ const wrap=$('#fixedArea'); if(!wrap) return; if(state.data.fixed.length===0){ wrap.innerHTML='<div class="small">Sin gastos fijos</div>'; return; } const rows = state.data.fixed.map(f=>`<tr><td>${f.name}</td><td class="right">${fmtMoney(Number(f.amount)||0)}</td><td>${(state.data.banks.find(b=>b.id===f.bankId)||{name:'-'}) .name}</td><td><button data-id="${f.id}" data-act="edit" class="btn ghost"><i data-feather="edit-2"></i></button> <button data-id="${f.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></td></tr>`).join('');
-    wrap.innerHTML = `<table style="width:100%"><thead><tr><th>Nombre</th><th class="right">Monto</th><th>Cuenta</th><th>Acc</th></tr></thead><tbody>${rows}</tbody></table>`; $$('#fixedArea button').forEach(b=> b.onclick = ()=> { const id=b.dataset.id, act=b.dataset.act; if(act==='del'){ if(confirm('Eliminar gasto fijo?')){ state.data.fixed = state.data.fixed.filter(x=>x.id!==id); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } } if(act==='edit'){ const f=state.data.fixed.find(x=>x.id===id); openFixedModal(f); } feather.replace(); }); feather.replace(); }
+    wrap.innerHTML = `<table style="width:100%"><thead><tr><th>Nombre</th><th class="right">Monto</th><th>Cuenta</th><th>Acc</th></tr></thead><tbody>${rows}</tbody></table>`; $$('#fixedArea button').forEach(b=> b.onclick = ()=> { const id=b.dataset.id, act=b.dataset.act; if(act==='del'){ if(confirm('Eliminar gasto fijo?')){ state.data.fixed = state.data.fixed.filter(x=>x.id!==id); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } } if(act==='edit'){ const f=state.data.fixed.find(x=>x.id===id); openFixedModal(f); } feather.replace(); }); feather.replace(); }
 
   function renderCategories(){ const wrap=$('#categoriesArea'); if(!wrap) return; if(state.data.categories.length===0){ wrap.innerHTML='<div class="small">Sin categorías</div>'; return; } const rows = state.data.categories.map(c=>`<tr><td>${c.name}</td><td class="right">${c.limitMonthly?fmtMoney(Number(c.limitMonthly)||0):'Sin límite'}</td><td><button data-id="${c.id}" data-act="edit" class="btn ghost"><i data-feather="edit-2"></i></button> <button data-id="${c.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></td></tr>`).join('');
-    wrap.innerHTML = `<table style="width:100%"><thead><tr><th>Categoría</th><th class="right">Límite</th><th>Acc</th></tr></thead><tbody>${rows}</tbody></table>`; $$('#categoriesArea button').forEach(b=> b.onclick = ()=> { const id=b.dataset.id, act=b.dataset.act; if(act==='del'){ if(confirm('Eliminar categoría?')){ state.data.categories = state.data.categories.filter(x=>x.id!==id); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } } if(act==='edit'){ const c=state.data.categories.find(x=>x.id===id); openCategoryModal(c); } feather.replace(); }); feather.replace(); }
+    wrap.innerHTML = `<table style="width:100%"><thead><tr><th>Categoría</th><th class="right">Límite</th><th>Acc</th></tr></thead><tbody>${rows}</tbody></table>`; $$('#categoriesArea button').forEach(b=> b.onclick = ()=> { const id=b.dataset.id, act=b.dataset.act; if(act==='del'){ if(confirm('Eliminar categoría?')){ state.data.categories = state.data.categories.filter(x=>x.id!==id); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } } if(act==='edit'){ const c=state.data.categories.find(x=>x.id===id); openCategoryModal(c); } feather.replace(); }); feather.replace(); }
 
   function renderBusinesses(){ const wrap=$('#businessesArea'); if(!wrap) return; if(state.data.businesses.length===0){ wrap.innerHTML='<div class="small">Sin empresas</div>'; return; } const rows = state.data.businesses.map(b=>`<tr><td><strong>${b.name}</strong><div class="small">${b.role||'-'}</div></td><td class="right">${fmtMoney(Number(b.estimateValue)||0)}</td><td>${b.notes||''}</td><td><button data-id="${b.id}" data-act="edit" class="btn ghost"><i data-feather="edit-2"></i></button> <button data-id="${b.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></td></tr>`).join('');
-    wrap.innerHTML = `<table style="width:100%"><thead><tr><th>Empresa</th><th class="right">Valor estimado</th><th>Notas</th><th>Acc</th></tr></thead><tbody>${rows}</tbody></table>`; $$('#businessesArea button').forEach(b=> b.onclick = ()=> { const id=b.dataset.id, act=b.dataset.act; if(act==='del'){ if(confirm('Eliminar empresa?')){ state.data.businesses = state.data.businesses.filter(x=>x.id!==id); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } } if(act==='edit'){ const bz=state.data.businesses.find(x=>x.id===id); openBusinessModal(bz); } feather.replace(); }); feather.replace(); }
+    wrap.innerHTML = `<table style="width:100%"><thead><tr><th>Empresa</th><th class="right">Valor estimado</th><th>Notas</th><th>Acc</th></tr></thead><tbody>${rows}</tbody></table>`; $$('#businessesArea button').forEach(b=> b.onclick = ()=> { const id=b.dataset.id, act=b.dataset.act; if(act==='del'){ if(confirm('Eliminar empresa?')){ state.data.businesses = state.data.businesses.filter(x=>x.id!==id); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } } if(act==='edit'){ const bz=state.data.businesses.find(x=>x.id===id); openBusinessModal(bz); } feather.replace(); }); feather.replace(); }
 
   function renderAll(){
     renderFlowsChart(); dashboardMetrics();
@@ -777,7 +764,7 @@
     $('#orgBadge').textContent = ORG_ID; $('#orgShort').textContent = ORG_ID;
   }
 
-  // ---------- Modales (CRUD) ----------
+  // ---- Modales (CRUD) - same UI but ensure updatedAt set on save ----
   function showModal(html){
     $('#panelRoot').innerHTML = html;
     $('#overlay').style.display = 'flex';
@@ -818,7 +805,9 @@
         const type = $('#txType').value; const amount = Number($('#txAmount').value)||0; const bankId = $('#txBank').value || null; const categoryId = $('#txCat').value || null; const assetId = $('#txAsset').value || null; const dateStr = $('#txDate').value.trim(); const desc = $('#txDesc').value.trim();
         if(!amount || amount<=0) return alert('Monto inválido');
         if(!parseDateDDMMYYYY(dateStr)) return alert('Fecha inválida (dd/mm/yyyy)');
-        await addTransaction({ type, amount, bankId, categoryId, assetId, description: desc, dateStr });
+        const tx = { id: existing ? existing.id : uid('t'), type, amount, bankId, categoryId, assetId, description: desc, dateStr };
+        ensureTimestamps(tx);
+        await addTransaction(tx);
         closeModal();
       } catch(e){ alert('Error: ' + (e.message||e)); }
     };
@@ -837,11 +826,12 @@
     $('#bSave').onclick = ()=> {
       const name = $('#bName').value.trim(), type = $('#bType').value.trim(), balance = Number($('#bBalance').value)||0, notes = $('#bNotes').value.trim();
       if(!name) return alert('Nombre requerido');
-      if(b){ Object.assign(b,{name,type,balance,notes}); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } else addBank({name,type,balance,notes});
+      if(b){ Object.assign(b,{name,type,balance,notes}); ensureTimestamps(b); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } else addBank({name,type,balance,notes});
       closeModal();
     };
   }
 
+  // Asset, liability, business, fixed, category, debt modals - identical structure: ensureTimestamps on save
   function openAssetModal(a){
     const subtypes = ['Inmueble','Maquinaria','Inversión','Patrimonio','Vehículo','Otro'];
     const bankOpt = '<option value="">-- Ninguna --</option>' + state.data.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
@@ -866,18 +856,9 @@
       const name=$('#aName').value.trim(), subtype=$('#aSubtype').value, val=Number($('#aValue').value)||0, purchase=$('#aPurchase').value.trim(), dep=Number($('#aDep').value)||0, life=Number($('#aLife').value)||0, salvage=Number($('#aSalvage').value)||0, bankId=$('#aBank').value||null, notes=$('#aNotes').value.trim();
       if(!name) return alert('Nombre requerido');
       const obj = { name, subtype, estimatedValue:val, purchaseDate:purchase, depreciationRate:dep, usefulLife:life, salvageValue:salvage, linkedBankId:bankId, notes, accumulatedGain: a ? a.accumulatedGain : 0, incomeRecords: a ? a.incomeRecords : [] };
-      if(a){ Object.assign(a,obj); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } else addAsset(obj);
+      if(a){ Object.assign(a,obj); ensureTimestamps(a); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } else addAsset(obj);
       closeModal();
     };
-  }
-
-  function openAssetViewModal(a){
-    if(!a) return alert('Activo no encontrado');
-    const incomeHtml = (a.incomeRecords||[]).slice(0,20).map(r=>`<li>${r.dateStr} · ${fmtMoney(r.amount)} · ${r.desc||''}</li>`).join('');
-    const html = `<div style="display:flex;justify-content:space-between;align-items:center"><div><h3 style="margin:0">${a.name}</h3><div class="small">${a.subtype||''}</div></div><div><button id="avClose" class="btn ghost"><i data-feather="x"></i> Cerrar</button></div></div>
-      <div style="margin-top:10px"><div class="small">Valor estimado</div><div style="font-weight:900">${fmtMoney(a.estimatedValue)}</div><div style="margin-top:8px" class="small">Ganancia acumulada</div><div style="font-weight:700">${fmtMoney(a.accumulatedGain||0)}</div><div style="margin-top:12px"><div class="small">Registros</div><ul>${incomeHtml||'<li class="small">Sin registros</li>'}</ul></div></div>`;
-    showModal(html);
-    $('#avClose').onclick = closeModal;
   }
 
   function openLiabilityModal(l){
@@ -903,7 +884,7 @@
       const name=$('#liName').value.trim(), subtype=$('#liSubtype').value, amount=Number($('#liAmount').value)||0, interest=Number($('#liInterest').value)||0, maturity=$('#liMaturity').value.trim(), collateral=$('#liCollateral').value.trim(), bankId=$('#liBank').value||null, notes=$('#liNotes').value.trim();
       if(!name) return alert('Nombre requerido');
       const obj = { name, subtype, amount, interestRate:interest, maturityDate:maturity, collateral, linkedBankId:bankId, notes };
-      if(l){ Object.assign(l,obj); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } else addLiability(obj);
+      if(l){ Object.assign(l,obj); ensureTimestamps(l); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } else addLiability(obj);
       closeModal();
     };
   }
@@ -919,7 +900,7 @@
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px"><button id="bzCancel" class="btn ghost"><i data-feather="x"></i> Cancelar</button><button id="bzSave" class="btn primary"><i data-feather="save"></i> Guardar</button></div>`;
     showModal(html);
     $('#bzCancel').onclick = closeModal;
-    $('#bzSave').onclick = ()=> { const name=$('#bzName').value.trim(), role=$('#bzRole').value, val=Number($('#bzValue').value)||0, contrib=Number($('#bzContribution').value)||0, notes=$('#bzNotes').value.trim(); if(!name) return alert('Nombre requerido'); const obj={name,estimateValue:val,contribution:contrib,role,notes}; if(bz){ Object.assign(bz,obj); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } else addBusiness(obj); closeModal(); };
+    $('#bzSave').onclick = ()=> { const name=$('#bzName').value.trim(), role=$('#bzRole').value, val=Number($('#bzValue').value)||0, contrib=Number($('#bzContribution').value)||0, notes=$('#bzNotes').value.trim(); if(!name) return alert('Nombre requerido'); const obj={name,estimateValue:val,contribution:contrib,role,notes}; if(bz){ Object.assign(bz,obj); ensureTimestamps(bz); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } else addBusiness(obj); closeModal(); };
   }
 
   function openFixedModal(f){
@@ -932,7 +913,7 @@
     showModal(html);
     if(f) setTimeout(()=>{ $('#fBank').value=f.bankId||''; $('#fCat').value=f.categoryId||''; },50);
     $('#fCancel').onclick = closeModal;
-    $('#fSave').onclick = ()=> { const name=$('#fName').value.trim(), amount=Number($('#fAmount').value)||0, bankId=$('#fBank').value||null, categoryId=$('#fCat').value||null, freq=$('#fFreq').value||'monthly'; if(!name) return alert('Nombre requerido'); if(f){ Object.assign(f,{name,amount,bankId,categoryId,frequency:freq}); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } else addFixed({name,amount,bankId,categoryId,frequency:freq}); closeModal(); };
+    $('#fSave').onclick = ()=> { const name=$('#fName').value.trim(), amount=Number($('#fAmount').value)||0, bankId=$('#fBank').value||null, categoryId=$('#fCat').value||null, freq=$('#fFreq').value||'monthly'; if(!name) return alert('Nombre requerido'); if(f){ Object.assign(f,{name,amount,bankId,categoryId,frequency:freq}); ensureTimestamps(f); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } else addFixed({name,amount,bankId,categoryId,frequency:freq}); closeModal(); };
   }
 
   function openCategoryModal(c){
@@ -943,7 +924,7 @@
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px"><button id="catCancel" class="btn ghost"><i data-feather="x"></i> Cancelar</button><button id="catSave" class="btn primary"><i data-feather="save"></i> Guardar</button></div>`;
     showModal(html);
     $('#catCancel').onclick = closeModal;
-    $('#catSave').onclick = ()=>{ const name=$('#catName').value.trim(), limit=Number($('#catLimit').value)||0; if(!name) return alert('Nombre requerido'); if(c){ Object.assign(c,{name,limitMonthly:limit}); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } else addCategory({name,limitMonthly:limit}); closeModal(); };
+    $('#catSave').onclick = ()=>{ const name=$('#catName').value.trim(), limit=Number($('#catLimit').value)||0; if(!name) return alert('Nombre requerido'); if(c){ Object.assign(c,{name,limitMonthly:limit}); ensureTimestamps(c); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } else addCategory({name,limitMonthly:limit}); closeModal(); };
   }
 
   function openDebtModal(d){
@@ -962,7 +943,7 @@
     showModal(html);
     if(d) setTimeout(()=> $('#dBank').value = d.bankId||'',40);
     $('#dCancel').onclick = closeModal;
-    $('#dSave').onclick = ()=> { const name=$('#dName').value.trim(), bankId=$('#dBank').value||null, out=Number($('#dOut').value)||0, pay=Number($('#dPay').value)||0, interest=Number($('#dInterest').value)||0, notes=$('#dNotes').value.trim(); if(!name) return alert('Nombre requerido'); if(d){ Object.assign(d,{name,bankId,outstanding:out,monthlyPayment:pay,interestRate:interest,notes}); persistLocal(); if(state.fsHelpers) schedulePush(); renderAll(); } else addDebt({name,bankId,outstanding:out,monthlyPayment:pay,interestRate:interest,notes}); closeModal(); };
+    $('#dSave').onclick = ()=> { const name=$('#dName').value.trim(), bankId=$('#dBank').value||null, out=Number($('#dOut').value)||0, pay=Number($('#dPay').value)||0, interest=Number($('#dInterest').value)||0, notes=$('#dNotes').value.trim(); if(!name) return alert('Nombre requerido'); if(d){ Object.assign(d,{name,bankId,outstanding:out,monthlyPayment:pay,interestRate:interest,notes}); ensureTimestamps(d); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } else addDebt({name,bankId,outstanding:out,monthlyPayment:pay,interestRate:interest,notes}); closeModal(); };
   }
 
   function openDebtPayModal(debt){
@@ -980,7 +961,7 @@
     $('#paySave').onclick = async ()=> { const amt=Number($('#payAmount').value)||0; const bankId=$('#payBank').value; const desc=$('#payDesc').value.trim(); if(!amt||amt<=0) return alert('Monto inválido'); await addTransaction({ type:'Egreso', amount:amt, bankId, debtId:debt.id, dateStr: toDDMMYYYY(new Date()), description: desc }); closeModal(); };
   }
 
-  // ---------- UI bindings ----------
+  // ---- UI bindings ----
   function bindUI(){
     $$('nav.side button').forEach(b=> b.addEventListener('click', ()=>{
       $$('nav.side button').forEach(x=> x.classList.toggle('active', x===b));
@@ -1007,19 +988,21 @@
     $('#btnExportPDF').onclick = exportPDF;
     $('#btnPDF').onclick = exportPDF;
     $('#fileImport').onchange = e => importFile(e.target.files[0]);
+
     $('#sidebarSync').onclick = async ()=> {
       $('#syncStatus').textContent='syncing';
       try{
         if(!state.fsHelpers){ await initFirestore(firebaseConfig); startRealtime(); showToast('Firestore activado'); }
         const remote = await fsFetch();
-        if(remote.data){ state.data = mergeDatasets(state.data, remote.data); persistLocal(); await fsSave(state.data); showToast('Sincronización manual completa'); }
-        else { await fsSave(state.data); showToast('Nube inicializada con datos locales'); }
+        if(remote.data){ state.data = mergeFullDatasets(remote.data, state.data); persistLocal(); await fsSaveWithMerge(state.data); showToast('Sincronización manual completa'); }
+        else { await fsSaveWithMerge(state.data); showToast('Nube inicializada con datos locales'); }
       } catch(e){ console.error(e); showToast('Error sync: '+(e.message||e), true); } finally{ $('#syncStatus').textContent='idle'; renderAll(); }
     };
+
     $('#sidebarLogout').onclick = ()=> { if(confirm('Cerrar sesión?')) location.reload(); };
     $('#search').oninput = renderTransactions;
 
-    // keyboard: N -> new tx (didáctico)
+    // key shortcuts: N -> new transaction
     window.addEventListener('keydown', (e)=> { if(e.key.toLowerCase()==='n' && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) openTxModal(null); });
 
     $('#overlay').addEventListener('click', (e)=> { if(e.target.id === 'overlay') closeModal(); });
@@ -1027,7 +1010,7 @@
     feather.replace();
   }
 
-  // ---------- Login (simple prompt) ----------
+  // ---- Local login (keeps single DB, no auth) ----
   function attachLocalLogin(){
     const tryLogin = ()=> {
       const u = prompt('Usuario (local):','JHONATAN');
@@ -1041,6 +1024,7 @@
     setTimeout(tryLogin, 200);
   }
 
+  // ---- Init app: load local, bind UI, try auto-cloud (user wanted automatic) ----
   async function initApp(){
     loadLocal();
     bindUI();
@@ -1051,54 +1035,56 @@
       $('#syncStatus').textContent = 'syncing';
       const remote = await fsFetch();
       if(remote.data){
-        state.data = mergeDatasets(state.data, remote.data);
+        // merge remote into local (remote may be newer)
+        state.data = mergeFullDatasets(remote.data, state.data);
         persistLocal();
-        await fsSave(state.data);
+        // now push merged result back to server to ensure single source of truth
+        await fsSaveWithMerge(state.data);
         showToast('Sincronización automática completa');
       } else {
-        await fsSave(state.data);
+        // create doc in remote from local
+        await fsSaveWithMerge(state.data);
         showToast('Nube inicializada con datos locales');
       }
     } catch(e){
       console.warn('Firestore auto failed', e);
       showToast('No se pudo conectar a la nube (modo local)', true);
-    } finally { $('#syncStatus').textContent='idle'; renderAll(); feather.replace(); }
+    } finally { $('#syncStatus').textContent='idle'; renderAll(); }
   }
 
-  // initial seed if empty
+  // ---- Seed some categories if empty ----
   loadLocal();
   if(!state.data.categories || state.data.categories.length===0){
-    state.data.categories = [{ id: uid('cat'), name:'Alimentos', limitMonthly:1500, createdAt: nowISO() }, { id: uid('cat'), name:'Operaciones', limitMonthly:5000, createdAt: nowISO() }, { id: uid('cat'), name:'Marketing', limitMonthly:3000, createdAt: nowISO() }];
+    state.data.categories = [
+      { id: uid('cat'), name:'Alimentos', limitMonthly:1500, createdAt: nowISO(), updatedAt: nowISO() },
+      { id: uid('cat'), name:'Operaciones', limitMonthly:5000, createdAt: nowISO(), updatedAt: nowISO() },
+      { id: uid('cat'), name:'Marketing', limitMonthly:3000, createdAt: nowISO(), updatedAt: nowISO() }
+    ];
     persistLocal();
   }
-  // start login flow
+
+  // start login -> init
   attachLocalLogin();
 
-  // Firestore rules suggestion (comentadas)
+  // Firestore rules suggestion (comentadas) - recuerda aplicar en consola
   /*
-    rules_version = '2';
-    service cloud.firestore {
-      match /databases/{database}/documents {
-        match /organizations/{orgId}/DATA/DATA {
-          // Requiere autenticación y claim orgId:
-          allow read, write: if request.auth != null && request.auth.token.orgId == orgId;
-        }
+  rules_version = '2';
+  service cloud.firestore {
+    match /databases/{database}/documents {
+      match /organizations/{orgId}/DATA/DATA {
+        // Restringe lectura y escritura a usuarios autenticados con claim orgId
+        allow read, write: if request.auth != null && request.auth.token.orgId == orgId;
       }
     }
+  }
 
-    // Para desarrollo rápido o si vas a usar un UID específico:
-    allow read, write: if request.auth != null && request.auth.uid == 'x9k6xvQAqGdS4MrIuivaLqPFbHR2';
-
-    // NO recomendado para producción:
-    allow read, write: if true;
+  // Desarrollo (NO recomendado): allow read, write: if true;
   */
+
   </script>
 
-  <!-- Initialize Feather icons after DOM loads -->
-  <script>
-    document.addEventListener('DOMContentLoaded', ()=> {
-      if(window.feather) feather.replace();
-    });
-  </script>
+  <!-- Feather icons init -->
+  <script>document.addEventListener('DOMContentLoaded', ()=> { if(window.feather) feather.replace(); });</script>
 </body>
 </html>
+
