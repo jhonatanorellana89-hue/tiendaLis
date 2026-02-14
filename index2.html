@@ -20,6 +20,14 @@
     #video-wrap { position: relative; }
     #overlay-canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
     .small-muted { color: #6b7280; }
+    .glass-panel { background: rgba(255,255,255,0.82); backdrop-filter: blur(12px); }
+    .kpi-card { background: linear-gradient(135deg, #111827, #1d4ed8); color: #fff; }
+    .kpi-card.alt { background: linear-gradient(135deg, #0f766e, #14b8a6); }
+    .kpi-card.warn { background: linear-gradient(135deg, #9a3412, #f97316); }
+    .stock-badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+    .stock-ok { background: #dcfce7; color: #166534; }
+    .stock-mid { background: #fef3c7; color: #92400e; }
+    .stock-low { background: #fee2e2; color: #991b1b; }
     /* Styles for preview inside modal */
     .report-preview-box { font-family: Arial, Helvetica, sans-serif; font-size: 13px; color: #111; }
     .report-preview-box h2 { margin:0; }
@@ -27,10 +35,10 @@
     .report-table td { padding:8px; border-bottom:1px solid #ddd; vertical-align:top; }
   </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen">
-  <div class="max-w-6xl mx-auto p-4">
+<body class="bg-gradient-to-br from-slate-100 via-sky-50 to-indigo-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 min-h-screen">
+  <div class="max-w-7xl mx-auto p-4 space-y-4">
     <!-- Header -->
-    <header class="flex items-start justify-between mb-4 gap-4">
+    <header class="glass-panel rounded-2xl border border-white/70 shadow-xl p-4 flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4">
       <div class="flex items-center gap-3">
         <div class="w-12 h-12 bg-gradient-to-r from-green-400 to-blue-500 rounded-lg flex items-center justify-center shadow-lg">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-white" viewBox="0 0 20 20" fill="currentColor"><path d="M3 3h2l.4 2M7 13h10l-1.2 6H6L5 13z"/></svg>
@@ -41,8 +49,8 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-3">
-        <div class="flex flex-col items-end text-right mr-2">
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="flex flex-col text-right mr-2">
           <label class="text-xs small-muted">Encargado (fecha)</label>
           <div class="flex gap-2">
             <input id="responsible-date" type="date" class="px-2 py-1 rounded border bg-white dark:bg-gray-800">
@@ -52,6 +60,10 @@
         </div>
 
         <input id="search" type="search" placeholder="Buscar por nombre o código..." class="px-3 py-2 rounded border bg-white dark:bg-gray-800">
+        <select id="stock-filter" class="px-3 py-2 rounded border bg-white dark:bg-gray-800 text-sm">
+          <option value="all">Todo el stock</option>
+          <option value="low">Solo bajo stock</option>
+        </select>
         <button id="btn-dark" class="px-3 py-2 rounded bg-gray-200 dark:bg-gray-700">Modo</button>
 
         <div class="flex gap-2">
@@ -62,12 +74,34 @@
       </div>
     </header>
 
+    <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+      <article class="kpi-card rounded-xl p-4 shadow">
+        <p class="text-xs uppercase tracking-wide text-white/80">Productos activos</p>
+        <p id="kpi-products" class="text-3xl font-bold mt-1">0</p>
+      </article>
+      <article class="kpi-card alt rounded-xl p-4 shadow">
+        <p class="text-xs uppercase tracking-wide text-white/80">Unidades en stock</p>
+        <p id="kpi-stock" class="text-3xl font-bold mt-1">0</p>
+      </article>
+      <article class="kpi-card rounded-xl p-4 shadow">
+        <p class="text-xs uppercase tracking-wide text-white/80">Ventas hoy</p>
+        <p id="kpi-sales-today" class="text-3xl font-bold mt-1">S/ 0.00</p>
+      </article>
+      <article class="kpi-card warn rounded-xl p-4 shadow">
+        <p class="text-xs uppercase tracking-wide text-white/80">Alertas de reposición</p>
+        <p id="kpi-low-stock" class="text-3xl font-bold mt-1">0</p>
+      </article>
+    </section>
+
     <!-- Main grid -->
     <main class="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <!-- Inventory + actions -->
-      <section class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
+      <section class="lg:col-span-2 glass-panel rounded-xl p-4 shadow border border-white/60">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="text-lg font-medium">Inventario</h2>
+          <div>
+            <h2 class="text-lg font-medium">Inventario</h2>
+            <p class="text-xs text-gray-500">Tip: usa <kbd class="px-1 rounded border">Ctrl+K</kbd> para buscar y <kbd class="px-1 rounded border">Ctrl+N</kbd> para producto nuevo.</p>
+          </div>
           <div class="flex gap-2">
             <button id="btn-import" class="px-3 py-1 border rounded">Importar JSON</button>
             <button id="btn-export" class="px-3 py-1 border rounded">Exportar JSON</button>
@@ -82,7 +116,7 @@
                 <th class="w-3/12">Nombre</th>
                 <th class="w-2/12">Categoría</th>
                 <th class="w-2/12">Código</th>
-                <th class="w-1/12">Stock</th>
+                <th class="w-2/12">Stock</th>
                 <th class="w-1/12">Precio</th>
                 <th class="w-2/12">Acciones</th>
               </tr>
@@ -93,7 +127,7 @@
       </section>
 
       <!-- Panel derecho: reportes + movimientos -->
-      <aside class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
+      <aside class="glass-panel rounded-xl p-4 shadow border border-white/60">
         <h3 class="text-lg font-medium mb-2">Reportes rápidos</h3>
         <div class="space-y-4">
           <div><canvas id="chart-sales" height="150"></canvas></div>
@@ -102,8 +136,9 @@
             <button id="open-income" class="flex-1 px-3 py-2 bg-blue-600 text-white rounded">+ Ingreso</button>
             <button id="open-sale" class="flex-1 px-3 py-2 bg-red-600 text-white rounded">+ Venta</button>
           </div>
-          <div class="flex gap-2">
+          <div class="grid grid-cols-1 gap-2">
             <button id="open-report-modal" class="w-full px-3 py-2 bg-gray-800 text-white rounded">Imprimir ventas por fechas</button>
+            <button id="focus-search" class="w-full px-3 py-2 border rounded">Ir a búsqueda rápida</button>
           </div>
         </div>
       </aside>
@@ -315,34 +350,43 @@
     function remove(name, key){ return new Promise((res,rej)=>{ const rq = store(name,'readwrite').delete(key); rq.onsuccess=()=>res(); rq.onerror=e=>rej(e); }); }
 
     /* ----------------------------- App state & render ---------------------------- */
-    const state = { products: [], sales: [] };
+    const state = { products: [], sales: [], view: { search: '', lowStockOnly: false } };
     async function refreshAll(){
       state.products = await all('products');
       state.sales = await all('sales');
       renderInventory();
       renderIncomeSelects();
       renderQuickSelect();
+      updateKPIs();
       updateCharts();
     }
 
     /* ----------------------------- Inventory (render + delegation) ---------------------------- */
     const inventoryBody = $('#inventory-body');
-    function renderInventory(filter=''){
-      const q = (filter||'').trim().toLowerCase();
-      inventoryBody.innerHTML = '';
-      state.products.forEach((p,i)=>{
+    function renderInventory(filter=state.view.search){
+      if (typeof filter === 'string') state.view.search = filter;
+      const q = (state.view.search||'').trim().toLowerCase();
+      const filtered = state.products.filter(p=>{
         const codeNorm = (p.barcode||'').replace(/\D/g,'');
-        if (q && !(p.name.toLowerCase().includes(q) || (p.barcode||'').includes(q) || codeNorm.includes(q.replace(/\D/g,'')))) return;
+        const matchesSearch = !q || p.name.toLowerCase().includes(q) || (p.barcode||'').includes(q) || codeNorm.includes(q.replace(/\D/g,''));
+        const matchesStockFilter = !state.view.lowStockOnly || Number(p.stock||0) <= 5;
+        return matchesSearch && matchesStockFilter;
+      });
+      inventoryBody.innerHTML = '';
+      filtered.forEach((p,i)=>{
+        const stock = Number(p.stock||0);
+        const stockClass = stock <= 2 ? 'stock-low' : stock <= 5 ? 'stock-mid' : 'stock-ok';
+        const stockLabel = stock <= 2 ? 'Crítico' : stock <= 5 ? 'Bajo' : 'OK';
         const tr = document.createElement('tr'); tr.dataset.id = p.id;
         tr.innerHTML = `
           <td class="py-2">${i+1}</td>
-          <td class="py-2">${p.name}</td>
+          <td class="py-2 font-medium">${p.name}</td>
           <td class="py-2">${p.category||''}</td>
           <td class="py-2">${p.barcode||''}</td>
-          <td class="py-2">${p.stock||0}</td>
+          <td class="py-2"><div class="flex items-center gap-2"><span>${stock}</span><span class="stock-badge ${stockClass}">${stockLabel}</span></div></td>
           <td class="py-2">${money(p.price)}</td>
           <td class="py-2">
-            <div class="flex gap-1">
+            <div class="flex gap-1 flex-wrap">
               <button data-action="edit" class="px-2 py-1 border rounded">Editar</button>
               <button data-action="income" class="px-2 py-1 border rounded">+Stock</button>
               <button data-action="sale" class="px-2 py-1 border rounded">Vender</button>
@@ -353,6 +397,18 @@
         `;
         inventoryBody.appendChild(tr);
       });
+    }
+
+    function updateKPIs(){
+      const today = localYMDFromISO(new Date().toISOString());
+      const totalProducts = state.products.length;
+      const stockUnits = state.products.reduce((sum,p)=>sum + Number(p.stock||0),0);
+      const lowStock = state.products.filter(p=>Number(p.stock||0)<=5).length;
+      const salesToday = state.sales.filter(s=>localYMDFromISO(s.date)===today).reduce((sum,s)=>sum + Number(s.total||0),0);
+      $('#kpi-products').textContent = totalProducts;
+      $('#kpi-stock').textContent = stockUnits;
+      $('#kpi-low-stock').textContent = lowStock;
+      $('#kpi-sales-today').textContent = `S/ ${money(salesToday)}`;
     }
 
     inventoryBody.addEventListener('click', async (e)=>{
@@ -622,7 +678,14 @@
 
     /* ----------------------------- Search & misc UI ---------------------------- */
     $('#search').oninput = e => renderInventory(e.target.value);
+    $('#stock-filter').onchange = e => { state.view.lowStockOnly = e.target.value === 'low'; renderInventory(); };
+    $('#focus-search').onclick = ()=> { $('#search').focus(); $('#search').select(); };
     $('#btn-dark').onclick = ()=> document.documentElement.classList.toggle('dark');
+
+    document.addEventListener('keydown', (e)=>{
+      if (e.ctrlKey && e.key.toLowerCase()==='k'){ e.preventDefault(); $('#search').focus(); $('#search').select(); }
+      if (e.ctrlKey && e.key.toLowerCase()==='n'){ e.preventDefault(); openProductModal(); }
+    });
 
     /* ----------------------------- Responsible (encargado) ---------------------------- */
     $('#save-responsible').onclick = async ()=>{
