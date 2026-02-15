@@ -62,6 +62,13 @@ body,html{margin:0;min-height:100%;background:radial-gradient(120% 120% at 12% 1
 table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{padding:10px 6px;border-bottom:1px solid rgba(255,255,255,0.05);text-align:left}
 td.right{text-align:right}
+.habits-table input{max-width:80px;text-align:center}
+.habits-area{font-weight:700}
+.habits-table td{vertical-align:middle}
+.habits-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12)}
+.habits-range{font-weight:700;color:var(--muted)}
+.progress-wrap{height:6px;border-radius:999px;background:rgba(255,255,255,0.08);overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));width:0%}
 
 .small{font-size:12px;color:var(--muted)}
 .scroll-y{max-height:360px;overflow:auto;padding-right:4px}
@@ -112,6 +119,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
         <button class="nav-btn" data-view="fixed"><i data-feather="calendar"></i>Mensuales</button>
         <button class="nav-btn" data-view="categories"><i data-feather="tag"></i>Categorías</button>
         <button class="nav-btn" data-view="businesses"><i data-feather="briefcase"></i>Empresas</button>
+        <button class="nav-btn" data-view="habits"><i data-feather="check-square"></i>Hábitos</button>
         <button class="nav-btn" data-view="export"><i data-feather="download-cloud"></i>Export</button>
       </div>
 
@@ -216,6 +224,36 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
         <div id="businessesArea" class="scroll-y"></div>
       </section>
 
+      <section id="view-habits" class="card" style="display:none">
+        <div class="section-title" style="flex-wrap:wrap;gap:8px">
+          <div>Hábitos diarios</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input id="habitsDate" type="date" style="max-width:160px" />
+            <span id="habitsBadge" class="badge green">0%</span>
+            <button id="btnHabitsReset" class="btn ghost"><i data-feather="refresh-cw"></i> Reset día</button>
+            <button id="btnHabitsExport" class="btn primary"><i data-feather="download"></i> Export JSON</button>
+          </div>
+        </div>
+
+        <div class="kpigrid" style="margin-top:10px">
+          <div class="kpi"><div class="label">Puntaje logrado</div><div class="value" id="habitsScore">0/0</div><div class="sub">Suma del día</div></div>
+          <div class="kpi"><div class="label">Porcentaje del día</div><div class="value" id="habitsPct">0%</div><div class="sub">Meta diaria</div></div>
+          <div class="kpi"><div class="label">Racha</div><div class="value" id="habitsStreak">0</div><div class="sub">Días seguidos ≥ 70%</div></div>
+        </div>
+
+        <div class="scroll-y" style="margin-top:12px">
+          <table id="habitsTable" class="habits-table">
+            <thead><tr><th>Área</th><th>Hábito</th><th class="right">Rango</th><th class="right">Hoy</th><th class="right">%</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="card" style="margin-top:12px;background:rgba(255,255,255,0.02)">
+          <div class="section-title"><div>Historial últimos 14 días</div></div>
+          <div id="habitsHistory" class="small" style="margin-top:6px;color:var(--muted)">—</div>
+        </div>
+      </section>
+
       <section id="view-export" class="card" style="display:none">
         <div class="section-title">
           <div>Export / Import / Cloud</div>
@@ -259,6 +297,50 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   const DEVICE_ID_KEY = 'suite_device_id';
   const DEVICE_ID = localStorage.getItem(DEVICE_ID_KEY) || (()=>{ const v='dev_'+Math.random().toString(36).slice(2,10); localStorage.setItem(DEVICE_ID_KEY,v); return v; })();
   const STORAGE_KEY = 'jona_business_single_data_v5';
+  const HABITS_CFG = [
+    { area:'DESARROLLO PROFESIONAL', items:[
+      { key:'work', label:'WORK (bloques profundos)', max:8 },
+      { key:'trabajo_extra', label:'TRABAJO EXTRA', max:6 },
+      { key:'planificacion_diaria', label:'PLANIFICACIÓN DIARIA', max:4 },
+      { key:'valor_economico', label:'GENERÉ VALOR ECONÓMICO HOY', max:8 },
+      { key:'capacitacion', label:'CAPACITACIÓN', max:6 },
+      { key:'ver_tutoriales', label:'VER TUTORIALES', max:4 },
+      { key:'leer_1_hora', label:'LEER 1 HORA', max:4 }
+    ]},
+    { area:'SALUD Y ENERGÍA', items:[
+      { key:'desayuno', label:'DESAYUNO', max:2 },
+      { key:'almuerzo', label:'ALMUERZO', max:2 },
+      { key:'cena', label:'CENA', max:2 },
+      { key:'descansar_8_horas', label:'DORMIR 8 HORAS', max:6 },
+      { key:'tomar_2_litros', label:'TOMAR 2 LITROS DE AGUA', max:3 },
+      { key:'extracto_verduras', label:'EXTRACTO DE VERDURAS', max:2 },
+      { key:'ejercicios', label:'EJERCICIOS', max:6 },
+      { key:'azucar_control', label:'AZÚCAR CONTROLADO', max:1 }
+    ]},
+    { area:'ASEO Y ORDEN', items:[
+      { key:'cepillarse', label:'CEPILLARSE LOS DIENTES', max:3 },
+      { key:'afeitarse', label:'AFEITARSE', max:1 },
+      { key:'banarse', label:'BAÑARSE (2 VECES)', max:3 },
+      { key:'ordenar_cuarto', label:'ORDENAR CUARTO', max:3 },
+      { key:'ropa_sucia', label:'ROPA SUCIA (≤ 5 PRENDAS)', max:2 }
+    ]},
+    { area:'CUIDADO PERSONAL', items:[
+      { key:'minioxidil', label:'MINIOXIDIL', max:1 },
+      { key:'cera_ve', label:'CERA VE', max:1 },
+      { key:'movilidad', label:'MOVILIDAD / ESTIRAMIENTOS', max:2 },
+      { key:'skincare', label:'CUIDADO PIEL', max:2 }
+    ]},
+    { area:'DISCIPLINA Y MENTAL', items:[
+      { key:'no_mt', label:'NO MT', max:2 },
+      { key:'sin_distracciones', label:'SIN DISTRACCIONES DIGITALES', max:5 },
+      { key:'gratitud_llamar', label:'GRATITUD / LLAMAR A FAMILIA', max:3 }
+    ]},
+    { area:'GESTIÓN', items:[
+      { key:'revision_finanzas', label:'REVISIÓN FINANCIERA DIARIA', max:4 },
+      { key:'orden_digital', label:'ORDEN DIGITAL (CORREO/ARCHIVOS)', max:4 }
+    ]}
+  ];
+  let habitsSelectedDate = null;
 
   function uid(pref){ return `${pref}_${Date.now()}_${Math.floor(Math.random()*90000)}`; }
   function fmtMoney(v){ v = Number(v)||0; return 'S/ ' + v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
@@ -271,11 +353,11 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   $('#themeToggle').onclick = ()=> applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light');
 
   const state = { user:null, fsHelpers:null, unsubscribeRealtime:null,
-    data:{transactions:[],banks:[],debts:[],fixed:[],categories:[],assets:[],liabilities:[],businesses:[],meta:{updatedAt:null}},
+    data:{transactions:[],banks:[],debts:[],fixed:[],categories:[],assets:[],liabilities:[],businesses:[],habitsByDate:{},meta:{updatedAt:null}},
     pendingOps:[], syncing:false };
 
   function clone(obj){ return (typeof structuredClone === 'function') ? structuredClone(obj) : JSON.parse(JSON.stringify(obj)); }
-  function loadLocal(){ const raw=localStorage.getItem(STORAGE_KEY); if(raw) try{ state.data=JSON.parse(raw); }catch{}; ['transactions','banks','debts','fixed','categories','assets','liabilities','businesses'].forEach(k=> state.data[k] ||= []); state.data = normalizeData(state.data); }
+  function loadLocal(){ const raw=localStorage.getItem(STORAGE_KEY); if(raw) try{ state.data=JSON.parse(raw); }catch{}; ['transactions','banks','debts','fixed','categories','assets','liabilities','businesses'].forEach(k=> state.data[k] ||= []); state.data.habitsByDate ||= {}; state.data = normalizeData(state.data); }
   function persistLocal(){ state.data.meta.updatedAt = nowISO(); localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data)); }
 
   const isDeleted = it => !!(it && it.deletedAt);
@@ -316,6 +398,15 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     data.assets = ensureIds(data.assets,'asset');
     data.liabilities = ensureIds(data.liabilities,'liab');
     data.businesses = ensureIds(data.businesses,'biz');
+    data.habitsByDate = data.habitsByDate || {};
+    Object.keys(data.habitsByDate).forEach(k=>{
+      const rec = data.habitsByDate[k];
+      if(!rec || typeof rec !== 'object'){ delete data.habitsByDate[k]; return; }
+      if(!rec.updatedAt) rec.updatedAt = nowISO();
+      if(rec.deletedAt && Date.parse(rec.deletedAt) > Date.parse(rec.updatedAt||0)) rec.updatedAt = rec.deletedAt;
+      if(!rec.deviceId) rec.deviceId = DEVICE_ID;
+      HABITS_CFG.forEach(g=> g.items.forEach(it=> { if(rec[it.key]==null || rec[it.key]==='') rec[it.key]=0; }));
+    });
 
     const dedup = (arr,keyFn)=>{
       const m=new Map();
@@ -349,6 +440,16 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     });
     return Array.from(map.values()).sort((a,b)=> tsVal(b)-tsVal(a));
   }
+  function mergeHabitsByDate(localObj={}, remoteObj={}){
+    const out = {};
+    const keys = new Set([...(localObj?Object.keys(localObj):[]), ...(remoteObj?Object.keys(remoteObj):[])]);
+    keys.forEach(k=>{
+      const a = localObj ? localObj[k] : null;
+      const b = remoteObj ? remoteObj[k] : null;
+      out[k] = pickPreferred(a, b);
+    });
+    return out;
+  }
   function mergeFullDatasets(remote, local){
     if(!remote) return clone(local||{});
     if(!local) return clone(remote||{});
@@ -361,6 +462,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       assets: mergeCollectionsById(local.assets, remote.assets),
       liabilities: mergeCollectionsById(local.liabilities, remote.liabilities),
       businesses: mergeCollectionsById(local.businesses, remote.businesses),
+      habitsByDate: mergeHabitsByDate(local.habitsByDate, remote.habitsByDate),
       meta:{updatedAt:nowISO()}
     });
   }
@@ -583,6 +685,131 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     } else alert('html2pdf no disponible');
   }
 
+  function toLocalISODate(d){
+    const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
+  }
+  function ensureHabitsStore(){ state.data.habitsByDate ||= {}; }
+  function ensureHabitsDay(dateKey, create=false){
+    ensureHabitsStore();
+    let rec = state.data.habitsByDate[dateKey];
+    if(!rec && create){
+      rec = { updatedAt: nowISO(), deviceId: DEVICE_ID };
+      HABITS_CFG.forEach(g=> g.items.forEach(it=> { rec[it.key]=0; }));
+      state.data.habitsByDate[dateKey] = rec;
+    }
+    if(rec){
+      HABITS_CFG.forEach(g=> g.items.forEach(it=> { if(rec[it.key]==null || rec[it.key]==='') rec[it.key]=0; }));
+      if(!rec.updatedAt) rec.updatedAt = nowISO();
+      if(!rec.deviceId) rec.deviceId = DEVICE_ID;
+    }
+    return rec;
+  }
+  function calcHabitsDay(dateKey){
+    ensureHabitsStore();
+    const rec = state.data.habitsByDate[dateKey] || {};
+    let possible = 0; let earned = 0;
+    HABITS_CFG.forEach(g=> g.items.forEach(it=>{
+      possible += it.max;
+      const raw = Number(rec[it.key])||0;
+      const v = Math.max(0, Math.min(it.max, Math.round(raw)));
+      earned += v;
+    }));
+    const pct = possible ? Math.round((earned/possible)*100) : 0;
+    return { earned, possible, pct };
+  }
+  function calcStreak(){
+    const today = new Date();
+    let streak = 0;
+    for(let i=0;i<3650;i++){
+      const d = new Date(today); d.setDate(today.getDate()-i);
+      const key = toLocalISODate(d);
+      if(!state.data.habitsByDate || !state.data.habitsByDate[key]) break;
+      const { pct } = calcHabitsDay(key);
+      if(pct >= 70) streak++; else break;
+    }
+    return streak;
+  }
+  function renderHabits(){
+    const section = $('#view-habits'); if(!section) return;
+    ensureHabitsStore();
+    if(!habitsSelectedDate) habitsSelectedDate = toLocalISODate(new Date());
+    const dateInput = $('#habitsDate'); if(dateInput && dateInput.value !== habitsSelectedDate) dateInput.value = habitsSelectedDate;
+    const { earned, possible, pct } = calcHabitsDay(habitsSelectedDate);
+    $('#habitsScore').textContent = `${earned}/${possible}`;
+    $('#habitsPct').textContent = `${pct}%`;
+    $('#habitsStreak').textContent = String(calcStreak());
+    const badge = $('#habitsBadge');
+    if(badge){
+      badge.textContent = `${pct}%`;
+      badge.className = 'badge ' + (pct>=80?'green':(pct>=55?'amber':'red'));
+    }
+    const tbody = $('#habitsTable tbody');
+    if(tbody){
+      tbody.innerHTML = '';
+      const rec = state.data.habitsByDate[habitsSelectedDate] || {};
+      HABITS_CFG.forEach(group=>{
+        group.items.forEach(it=>{
+          const raw = Number(rec[it.key])||0;
+          const val = Math.max(0, Math.min(it.max, Math.round(raw)));
+          const rowPct = it.max ? Math.round((val/it.max)*100) : 0;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td><span class="habits-pill">${group.area}</span></td><td>${it.label}</td><td class="right habits-range">0–${it.max}</td><td class="right"><input type="number" min="0" max="${it.max}" data-key="${it.key}" value="${val}"/></td><td class="right"><strong>${rowPct}%</strong></td>`;
+          tbody.appendChild(tr);
+        });
+      });
+    }
+    $$('#habitsTable input').forEach(inp=>{
+      inp.oninput = ()=>{
+        const key = inp.dataset.key;
+        const max = Number(inp.max)||0;
+        let v = Math.round(Number(inp.value)||0);
+        if(v < 0) v = 0;
+        if(v > max) v = max;
+        inp.value = v;
+        pushAndRender(d=>{
+          ensureHabitsStore();
+          const rec = ensureHabitsDay(habitsSelectedDate, true);
+          rec[key] = v;
+          rec.updatedAt = nowISO();
+          rec.deviceId = DEVICE_ID;
+        });
+      };
+    });
+    const hist = $('#habitsHistory');
+    if(hist){
+      const lines = [];
+      for(let i=0;i<14;i++){
+        const d = new Date(); d.setDate(d.getDate()-i);
+        const key = toLocalISODate(d);
+        const has = !!state.data.habitsByDate[key];
+        const { pct: p } = calcHabitsDay(key);
+        lines.push(`<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><div style="min-width:92px">${key}</div><div class="progress-wrap" style="flex:1"><div class="progress-fill" style="width:${has?p:0}%"></div></div><div style="min-width:44px;text-align:right"><strong>${has ? (p+'%') : '—'}</strong></div></div>`);
+      }
+      hist.innerHTML = lines.join('') || '—';
+    }
+    feather.replace();
+  }
+  function resetHabitsDay(dateKey){
+    const key = dateKey || toLocalISODate(new Date());
+    pushAndRender(d=>{
+      ensureHabitsStore();
+      const rec = ensureHabitsDay(key, true);
+      HABITS_CFG.forEach(g=> g.items.forEach(it=> { rec[it.key]=0; }));
+      rec.updatedAt = nowISO();
+      rec.deviceId = DEVICE_ID;
+    });
+  }
+  function exportHabitsJSON(){
+    ensureHabitsStore();
+    const date = toLocalISODate(new Date());
+    const blob = new Blob([JSON.stringify(state.data.habitsByDate, null, 2)], { type:'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `habits_${date}.json`; a.click();
+    URL.revokeObjectURL(url);
+  }
+
   let flowsChart=null; window.flowsChart=null;
   function renderFlowsChart(){
     const el=document.getElementById('chartFlows'); if(!el) return;
@@ -718,7 +945,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
 
   function renderAll(){
     renderFlowsChart(); dashboardMetrics();
-    renderTransactions(); renderBanks(); renderAssets(); renderLiabilities(); renderDebts(); renderFixed(); renderCategories(); renderBusinesses();
+    renderTransactions(); renderBanks(); renderAssets(); renderLiabilities(); renderDebts(); renderFixed(); renderCategories(); renderBusinesses(); renderHabits();
     $('#orgBadge').textContent=ORG_ID; $('#orgShort').textContent=ORG_ID;
   }
 
@@ -959,6 +1186,14 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     $('#btnExportPDF').onclick=exportPDF;
     $('#btnPDF').onclick=exportPDF;
     $('#btnSyncNow').onclick=manualSync;
+    const habitsDate = $('#habitsDate');
+    if(habitsDate){
+      habitsDate.onchange = ()=>{ habitsSelectedDate = habitsDate.value || toLocalISODate(new Date()); renderHabits(); };
+    }
+    const btnHabitsReset = $('#btnHabitsReset');
+    if(btnHabitsReset){ btnHabitsReset.onclick = ()=>{ if(confirm('Reset día?')) resetHabitsDay(habitsSelectedDate); }; }
+    const btnHabitsExport = $('#btnHabitsExport');
+    if(btnHabitsExport){ btnHabitsExport.onclick = exportHabitsJSON; }
     $('#fileImport').onchange=e=> importFile(e.target.files[0]);
     $('#search').oninput=renderTransactions;
     window.addEventListener('keydown', (e)=>{ if(e.key.toLowerCase()==='n' && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) openTxModal(null); if(e.ctrlKey && e.key.toLowerCase()==='s'){ e.preventDefault(); manualSync(); }});
@@ -1012,3 +1247,4 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   <script>document.addEventListener('DOMContentLoaded', ()=> { if(window.feather) feather.replace(); });</script>
 </body>
 </html>
+
