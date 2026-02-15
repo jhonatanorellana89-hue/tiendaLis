@@ -12,49 +12,49 @@
 
 <style>
 :root{
-  --bg:#0b172a; --panel:#0f243d; --muted:#93a3b8; --text:#e9f2ff;
+  --bg:#050b18; --panel:#0c1b30; --muted:#9aabc5; --text:#e9f2ff;
   --accent:#4fc3f7; --accent-2:#7c8cff; --positive:#34d399; --warn:#f59e0b; --danger:#ef4444;
-  --card-shadow:0 18px 50px rgba(4,10,25,0.35); --maxw:480px;
+  --card-shadow:0 18px 50px rgba(4,10,25,0.35); --maxw:520px;
   font-family:'Manrope',system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 [data-theme="light"]{
-  --bg:#f5f8ff; --panel:#ffffff; --muted:#6b7280; --text:#0b172a;
+  --bg:#f5f8ff; --panel:#ffffff; --muted:#5f6470; --text:#0b172a;
   --accent:#2563eb; --accent-2:#7c8cff; --positive:#22c55e; --warn:#f59e0b; --danger:#ef4444;
   --card-shadow:0 16px 40px rgba(20,30,70,0.12);
 }
 *{box-sizing:border-box}
-body,html{margin:0;min-height:100%;background:radial-gradient(120% 120% at 10% 10%,#12385f 0%,#0b1220 50%,#091020 100%);color:var(--text);-webkit-font-smoothing:antialiased;transition:background .25s,color .25s}
+body,html{margin:0;min-height:100%;background:radial-gradient(120% 120% at 12% 12%,#0f315a 0%,#081020 50%,#050b18 100%);color:var(--text);-webkit-font-smoothing:antialiased;transition:background .25s,color .25s}
 [data-theme="light"] body,[data-theme="light"] html{background:linear-gradient(180deg,#f8fbff,#eef4ff)}
-.app-root{display:flex;justify-content:center;padding:16px}
+.app-root{display:flex;justify-content:center;padding:18px}
 .app{width:100%;max-width:var(--maxw);display:flex;flex-direction:column;gap:14px}
 
-.header{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,rgba(79,195,247,0.16),rgba(124,140,255,0.10));box-shadow:var(--card-shadow)}
-.logo{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#4fc3f7,#7c8cff);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#0b1220;box-shadow:0 10px 40px rgba(79,195,247,0.35)}
+.header{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:linear-gradient(135deg,rgba(79,195,247,0.18),rgba(124,140,255,0.16));box-shadow:var(--card-shadow)}
+.logo{width:60px;height:60px;border-radius:16px;background:linear-gradient(135deg,#4fc3f7,#7c8cff);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#0b1220;box-shadow:0 12px 40px rgba(79,195,247,0.35)}
 .title-wrap h1{margin:0;font-size:18px}
 .title-wrap p{margin:2px 0 0;font-size:12px;color:var(--muted)}
-.status-bar{display:flex;gap:8px;align-items:center;margin-top:6px;font-size:12px;color:var(--muted)}
-.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;font-weight:700;font-size:11px;border:1px solid rgba(255,255,255,0.12)}
-.badge.green{color:var(--positive);border-color:rgba(52,211,153,0.4)}
+.status-bar{display:flex;gap:6px;align-items:center;margin-top:6px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:999px;font-weight:700;font-size:11px;border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.04)}
+.badge.green{color:var(--positive);border-color:rgba(52,211,153,0.35)}
 .badge.amber{color:var(--warn);border-color:rgba(245,158,11,0.4)}
 .badge.red{color:var(--danger);border-color:rgba(239,68,68,0.4)}
 
 .nav-scroll{display:flex;gap:10px;overflow:auto;padding:8px 4px;margin:-6px 0 4px}
-.nav-btn{flex:1;min-width:120px;border:0;border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--muted);background:rgba(255,255,255,0.04);font-weight:700;transition:all .12s;white-space:nowrap}
-.nav-btn.active{color:var(--accent);background:rgba(79,195,247,0.12);box-shadow:0 10px 30px rgba(79,195,247,0.15)}
+.nav-btn{flex:1;min-width:120px;border:0;border-radius:12px;padding:11px 12px;display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--muted);background:rgba(255,255,255,0.04);font-weight:800;transition:all .12s;white-space:nowrap}
+.nav-btn.active{color:var(--accent);background:rgba(79,195,247,0.14);box-shadow:0 10px 30px rgba(79,195,247,0.18);transform:translateY(-1px)}
 
 .top-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.btn{padding:10px 12px;border-radius:12px;border:1px solid transparent;cursor:pointer;font-weight:800;display:inline-flex;gap:8px;align-items:center;justify-content:center;color:var(--text);background:rgba(255,255,255,0.06);transition:transform .08s}
+.btn{padding:11px 12px;border-radius:12px;border:1px solid transparent;cursor:pointer;font-weight:800;display:inline-flex;gap:8px;align-items:center;justify-content:center;color:var(--text);background:rgba(255,255,255,0.06);transition:transform .08s,box-shadow .12s}
 .btn:active{transform:scale(0.98)}
-.btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));border:0;color:#0b1220}
+.btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));border:0;color:#0b1220;box-shadow:0 12px 28px rgba(79,195,247,0.35)}
 .btn.ghost{border-color:rgba(255,255,255,0.08);color:var(--muted)}
-.btn.positive{background:linear-gradient(135deg,#34d399,#0fa971);border:0;color:#0b1220}
-.btn.warn{background:linear-gradient(135deg,#f59e0b,#f97316);border:0;color:#0b1220}
+.btn.positive{background:linear-gradient(135deg,#34d399,#0fa971);border:0;color:#0b1220;box-shadow:0 12px 28px rgba(52,211,153,0.3)}
+.btn.warn{background:linear-gradient(135deg,#f59e0b,#f97316);border:0;color:#0b1220;box-shadow:0 12px 28px rgba(249,115,22,0.28)}
 
 .card{background:var(--panel);border:1px solid rgba(255,255,255,0.04);border-radius:16px;padding:14px;box-shadow:var(--card-shadow)}
 .section-title{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:15px}
 
 .kpigrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
-.kpi{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.kpi{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.05);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
 .kpi .label{font-size:12px;color:var(--muted)}
 .kpi .value{font-weight:900;font-size:20px}
 .kpi .sub{font-size:12px;color:var(--muted)}
@@ -75,6 +75,8 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
 [data-theme="light"] input,[data-theme="light"] select,[data-theme="light"] textarea{border-color:rgba(0,0,0,0.08);background:rgba(0,0,0,0.02);color:#0b172a}
 
 #chartFlows{max-height:240px}
+.loader{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,0.18);border-top-color:var(--accent);animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 @media (min-width: 821px){
   .app-root{padding:28px}
@@ -248,11 +250,15 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     const LOCAL_LOGIN = { user: "JHONATAN", pass: "JHONATAN" };
   </script>
 
+  <!-- ====================== LÓGICA COMPLETA ====================== -->
   <script type="module">
   const $ = (s,r=document)=> r.querySelector(s);
   const $$ = (s,r=document)=> Array.from((r||document).querySelectorAll(s));
   const nowISO = ()=> new Date().toISOString();
   const THEME_KEY = 'suite_theme';
+  const DEVICE_ID_KEY = 'suite_device_id';
+  const DEVICE_ID = localStorage.getItem(DEVICE_ID_KEY) || (()=>{ const v='dev_'+Math.random().toString(36).slice(2,10); localStorage.setItem(DEVICE_ID_KEY,v); return v; })();
+
   function uid(pref){ return `${pref}_${Date.now()}_${Math.floor(Math.random()*90000)}`; }
   function fmtMoney(v){ v = Number(v)||0; return 'S/ ' + v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
   function parseDateDDMMYYYY(s){ if(!s) return null; const p=s.split('/'); if(p.length!==3) return null; const d=Number(p[0]), m=Number(p[1])-1, y=Number(p[2]); const D=new Date(y,m,d); return isNaN(D)?null:D; }
@@ -263,35 +269,38 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   applyTheme(localStorage.getItem(THEME_KEY)||'dark');
   $('#themeToggle').onclick = ()=> applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light');
 
-  const STORAGE_KEY = 'jona_business_single_data_v4';
+  const STORAGE_KEY = 'jona_business_single_data_v5';
   const state = { user:null, fsHelpers:null, unsubscribeRealtime:null,
     data:{transactions:[],banks:[],debts:[],fixed:[],categories:[],assets:[],liabilities:[],businesses:[],meta:{updatedAt:null}},
-    syncing:false };
+    pendingOps:[], syncing:false };
 
-  function loadLocal(){ const raw=localStorage.getItem(STORAGE_KEY); if(raw) try{ state.data=JSON.parse(raw); }catch(e){}; ['transactions','banks','debts','fixed','categories','assets','liabilities','businesses'].forEach(k=> state.data[k] ||= []); }
+  function loadLocal(){ const raw=localStorage.getItem(STORAGE_KEY); if(raw) try{ state.data=JSON.parse(raw); }catch{}; ['transactions','banks','debts','fixed','categories','assets','liabilities','businesses'].forEach(k=> state.data[k] ||= []); }
   function persistLocal(){ state.data.meta.updatedAt = nowISO(); localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data)); }
 
-  async function initFirestore(cfg){
-    if(state.fsHelpers) return;
-    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js');
-    const { getFirestore, doc, getDoc, setDoc, onSnapshot } = await import('https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js');
-    const app = initializeApp(cfg);
-    const firestore = getFirestore(app);
-    state.fsHelpers = { doc, getDoc, setDoc, onSnapshot, firestore };
-    $('#statusCloud').textContent = 'CLOUD'; $('#statusCloud').classList.add('green');
-  }
-
   const tsVal = item => !item ? 0 : Date.parse(item.updatedAt||item.createdAt||0)||0;
+  const normalizeData = data => {
+    const dedup = (arr,keyFn)=>{ const m=new Map(); (arr||[]).forEach(it=>{ if(!it) return; const k=keyFn(it); const prev=m.get(k); if(!prev || tsVal(it)>tsVal(prev)) m.set(k,it); }); return Array.from(m.values()); };
+    data.transactions = dedup(data.transactions, t=> t.id || `${t.dateStr}|${t.type}|${t.bankId||''}|${t.amount}|${(t.description||'').trim().toLowerCase()}`);
+    data.banks = dedup(data.banks, b=> b.id || b.name.toLowerCase());
+    data.assets = dedup(data.assets, a=> a.id || a.name.toLowerCase());
+    data.liabilities = dedup(data.liabilities, l=> l.id || l.name.toLowerCase());
+    data.debts = dedup(data.debts, d=> d.id || d.name.toLowerCase());
+    data.fixed = dedup(data.fixed, f=> f.id || f.name.toLowerCase());
+    data.categories = dedup(data.categories, c=> c.id || c.name.toLowerCase());
+    data.businesses = dedup(data.businesses, b=> b.id || b.name.toLowerCase());
+    return data;
+  };
+
   function mergeCollectionsById(localArr=[], remoteArr=[]){
-    const map = new Map();
-    (localArr||[]).forEach(it => { if(!it) return; if(!it.id) it.id = uid('x'); map.set(it.id, it); });
-    (remoteArr||[]).forEach(r => { if(!r) return; if(!r.id) r.id = uid('x'); const e = map.get(r.id); if(!e || tsVal(r)>tsVal(e)) map.set(r.id,r); });
+    const map=new Map();
+    (localArr||[]).forEach(it=>{ if(!it) return; if(!it.id) it.id=uid('x'); map.set(it.id,it); });
+    (remoteArr||[]).forEach(r=>{ if(!r) return; if(!r.id) r.id=uid('x'); const e=map.get(r.id); if(!e || tsVal(r)>tsVal(e)) map.set(r.id,r); });
     return Array.from(map.values()).sort((a,b)=> tsVal(b)-tsVal(a));
   }
   function mergeFullDatasets(remote, local){
     if(!remote) return structuredClone(local||{});
     if(!local) return structuredClone(remote||{});
-    return {
+    return normalizeData({
       transactions: mergeCollectionsById(local.transactions, remote.transactions),
       banks: mergeCollectionsById(local.banks, remote.banks),
       debts: mergeCollectionsById(local.debts, remote.debts),
@@ -301,42 +310,62 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       liabilities: mergeCollectionsById(local.liabilities, remote.liabilities),
       businesses: mergeCollectionsById(local.businesses, remote.businesses),
       meta:{updatedAt:nowISO()}
-    };
+    });
+  }
+
+  async function initFirestore(cfg){
+    if(state.fsHelpers) return;
+    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js');
+    const { getFirestore, doc, getDoc, setDoc, onSnapshot, enableIndexedDbPersistence } = await import('https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js');
+    const app = initializeApp(cfg);
+    const firestore = getFirestore(app);
+    try{ await enableIndexedDbPersistence(firestore); }catch{}
+    state.fsHelpers = { doc, getDoc, setDoc, onSnapshot, firestore };
+    $('#statusCloud').textContent='CLOUD'; $('#statusCloud').classList.add('green');
   }
 
   async function fsFetch(){ const {doc,getDoc,firestore}=state.fsHelpers; const ref=doc(firestore,'organizations',ORG_ID,'DATA','DATA'); const snap=await getDoc(ref); if(!snap.exists()) return {data:null,updatedAt:null}; const payload=snap.data(); return {data:payload.data||null,updatedAt:payload.updatedAt||null}; }
   async function fsSaveWithMerge(localData){
-    const {doc,setDoc,getDoc,firestore}=state.fsHelpers; const ref=doc(firestore,'organizations',ORG_ID,'DATA','DATA');
+    const {doc,setDoc,getDoc,firestore}=state.fsHelpers;
+    const ref=doc(firestore,'organizations',ORG_ID,'DATA','DATA');
     let remote=null; try{ const s=await getDoc(ref); if(s.exists()) remote=s.data().data||null; }catch{}
-    const merged=mergeFullDatasets(remote, localData); const updatedAt=nowISO();
-    await setDoc(ref,{data:merged,updatedAt},{merge:true}); state.data=merged; persistLocal(); $('#syncLog').textContent='Último push: '+updatedAt; return updatedAt;
+    const merged=normalizeData(mergeFullDatasets(remote, localData));
+    const updatedAt=nowISO();
+    await setDoc(ref,{data:merged,updatedAt},{merge:true});
+    state.data=merged; persistLocal();
+    $('#syncLog')?. (el=> el.textContent='Último push: '+updatedAt)($('#syncLog'));
+    return updatedAt;
   }
 
   function startRealtime(){
     if(!state.fsHelpers) return;
-    const {doc,onSnapshot,firestore}=state.fsHelpers; const ref=doc(firestore,'organizations',ORG_ID,'DATA','DATA');
+    const {doc,onSnapshot,firestore}=state.fsHelpers;
+    const ref=doc(firestore,'organizations',ORG_ID,'DATA','DATA');
     if(state.unsubscribeRealtime) try{ state.unsubscribeRealtime(); }catch{}
     state.unsubscribeRealtime = onSnapshot(ref, snap=>{
       if(!snap.exists()) return;
       const payload=snap.data(); if(!payload||!payload.data) return;
-      state.data = mergeFullDatasets(payload.data, state.data); persistLocal(); renderAll();
-      $('#syncLog').textContent='Última sync nube: '+(payload.updatedAt||nowISO()); showToast('Datos sincronizados desde la nube');
-    });
+      state.data = normalizeData(mergeFullDatasets(payload.data, state.data));
+      persistLocal(); renderAll();
+      $('#syncLog')?. (el=> el.textContent='Última sync nube: '+(payload.updatedAt||nowISO()))($('#syncLog'));
+      showToast('Datos sincronizados');
+    }, err=> { console.warn('Realtime err', err); $('#syncLog')?. (el=> el.textContent='Realtime error')($('#syncLog')); });
   }
 
   let pushTimer=null;
   function schedulePushDebounced(delay=800){
-    if(!state.fsHelpers) return;
+    if(!state.fsHelpers){ state.pendingOps.push('push'); return; }
     if(pushTimer) clearTimeout(pushTimer);
     pushTimer=setTimeout(async()=>{
-      try{ $('#syncStatus').textContent='pushing'; await fsSaveWithMerge(state.data); showToast('Cambios subidos'); }
+      try{ $('#syncStatus').innerHTML='<span class="loader"></span>'; await fsSaveWithMerge(state.data); showToast('Cambios subidos'); }
       catch(e){ showToast('Error al subir: '+(e.message||e),true); }
       finally{ $('#syncStatus').textContent='idle'; }
     },delay);
   }
+  function flushPending(){ if(!state.fsHelpers || !state.pendingOps.length) return; state.pendingOps=[]; schedulePushDebounced(200); }
 
-  function pushAndRender(mut){ mut(state.data); persistLocal(); renderAll(); if(state.fsHelpers) schedulePushDebounced(); }
-  function ensureTimestamps(obj){ const n=nowISO(); obj.createdAt=obj.createdAt||n; obj.updatedAt=n; }
+  function pushAndRender(mut){ mut(state.data); persistLocal(); renderAll(); if(state.fsHelpers) schedulePushDebounced(); else state.pendingOps.push('push'); }
+  function ensureTimestamps(obj){ const n=nowISO(); obj.createdAt=obj.createdAt||n; obj.updatedAt=n; obj.deviceId=obj.deviceId||DEVICE_ID; }
 
   function addBank(obj){ ensureTimestamps(obj); obj.id=obj.id||uid('b'); obj.balance=Number(obj.balance)||0; pushAndRender(d=>d.banks.unshift(obj)); }
   function addCategory(obj){ ensureTimestamps(obj); obj.id=obj.id||uid('cat'); pushAndRender(d=>d.categories.unshift(obj)); }
@@ -355,7 +384,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       const bank=d.banks.find(b=>b.id===tx.bankId);
       if(bank){ bank.balance=(Number(bank.balance)||0)+(tx.type==='Egreso'?-tx.amount:tx.amount); ensureTimestamps(bank); }
       if(tx.debtId && tx.type==='Egreso'){ const debt=d.debts.find(x=>x.id===tx.debtId); if(debt){ debt.outstanding=Math.max(0,(Number(debt.outstanding)||0)-tx.amount); ensureTimestamps(debt);} }
-      if(tx.assetId && tx.type==='Ingreso'){ const asset=d.assets.find(a=>a.id===tx.assetId); if(asset){ asset.accumulatedGain=(Number(asset.accumulatedGain)||0)+tx.amount; asset.incomeRecords=asset.incomeRecords||[]; asset.incomeRecords.unshift({id:uid('ag'),txId:tx.id,dateStr:tx.dateStr,amount:tx.amount,desc:tx.description||'',createdAt:nowISO(),updatedAt:nowISO()}); ensureTimestamps(asset);} }
+      if(tx.assetId && tx.type==='Ingreso'){ const asset=d.assets.find(a=>a.id===tx.assetId); if(asset){ asset.accumulatedGain=(Number(asset.accumulatedGain)||0)+tx.amount; asset.incomeRecords=asset.incomeRecords||[]; asset.incomeRecords.unshift({id:uid('ag'),txId:tx.id,dateStr:tx.dateStr,amount:tx.amount,desc:tx.description||'',createdAt:nowISO(),updatedAt:nowISO(),deviceId:DEVICE_ID}); ensureTimestamps(asset);} }
     });
   }
 
@@ -363,7 +392,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     const today=toDDMMYYYY(new Date());
     pushAndRender(d=>{
       d.fixed.forEach(f=>{
-        const tx={id:uid('t'),type:'Egreso',dateStr:today,amount:Number(f.amount)||0,bankId:f.bankId||null,categoryId:f.categoryId||null,description:'Gasto fijo: '+f.name,createdAt:nowISO(),updatedAt:nowISO(),meta:{fromFixed:f.id}};
+        const tx={id:uid('t'),type:'Egreso',dateStr:today,amount:Number(f.amount)||0,bankId:f.bankId||null,categoryId:f.categoryId||null,description:'Gasto fijo: '+f.name,createdAt:nowISO(),updatedAt:nowISO(),deviceId:DEVICE_ID,meta:{fromFixed:f.id}};
         d.transactions.unshift(tx);
         if(f.bankId){ const b=d.banks.find(x=>x.id===f.bankId); if(b){ b.balance=(Number(b.balance)||0)-tx.amount; ensureTimestamps(b);} }
       });
@@ -373,7 +402,6 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
 
   function exportCSV(){ const rows=state.data.transactions.map(t=>{ const b=state.data.banks.find(b=>b.id===t.bankId); const c=state.data.categories.find(c=>c.id===t.categoryId); const a=state.data.assets.find(a=>a.id===t.assetId); return [t.dateStr||'', b?b.name:'', t.type||'', c?c.name:(t.categoryName||''), a?('ACT:'+a.name):'', (t.description||'').replace(/"/g,'""'), t.amount||0]; }); const csv=['fecha,cuenta,tipo,categoria,activo,descripcion,monto', ...rows.map(r=>r.map((c,i)=> i===5?`"${c}"`:c).join(','))].join('\n'); const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='transacciones.csv'; a.click(); URL.revokeObjectURL(url); }
   function exportJSON(){ const blob=new Blob([JSON.stringify(state.data,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='backup.json'; a.click(); URL.revokeObjectURL(url); }
-
   async function importFile(file){
     if(!file) return alert('Selecciona archivo');
     const text=await file.text();
@@ -385,36 +413,12 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
         const bank=state.data.banks.find(b=>b.name===obj.cuenta);
         const cat=state.data.categories.find(c=>c.name===obj.categoria);
         const asset=state.data.assets.find(a=> obj.activo && obj.activo.includes(a.name));
-        try{ await addTransaction({type:obj.tipo||'Ingreso',amount:Number(obj.monto)||0,bankId:bank?bank.id:null,categoryId:cat?cat.id:null,assetId:asset?asset.id:null,categoryName:obj.categoria||'',description:obj.descripcion||'',dateStr:obj.fecha}); }catch(e){console.warn('import fail',e);}
+        try{ await addTransaction({ type: obj.tipo||'Ingreso', amount: Number(obj.monto)||0, bankId: bank?bank.id:null, categoryId: cat?cat.id:null, assetId: asset?asset.id:null, categoryName: obj.categoria||'', description: obj.descripcion||'', dateStr: obj.fecha }); } catch(e){ console.warn('import tx fail', e); }
       }
       showToast('CSV importado');
     } else {
-      try{ const d=JSON.parse(text); state.data=mergeFullDatasets(d,state.data); persistLocal(); if(state.fsHelpers) schedulePushDebounced(400); renderAll(); showToast('JSON importado y fusionado'); } catch(e){ alert('JSON inválido'); }
+      try{ const d=JSON.parse(text); state.data=normalizeData(mergeFullDatasets(d, state.data)); persistLocal(); if(state.fsHelpers) schedulePushDebounced(400); renderAll(); showToast('JSON importado y fusionado'); } catch(e){ alert('JSON inválido'); }
     }
-  }
-
-  async function exportPDF(){
-    const banksTotal=state.data.banks.reduce((s,b)=>s+(Number(b.balance)||0),0);
-    const assetsTotal=state.data.assets.reduce((s,a)=>s+(Number(a.estimatedValue)||0),0);
-    const liabilitiesTotal=state.data.liabilities.reduce((s,l)=>s+(Number(l.amount)||0),0);
-    const debtsTotal=state.data.debts.reduce((s,d)=>s+(Number(d.outstanding)||0),0);
-    const incomeTotal=state.data.transactions.reduce((s,t)=> s+ (t.type==='Egreso'?0:(Number(t.amount)||0)),0);
-    const expenseTotal=state.data.transactions.reduce((s,t)=> s+ (t.type==='Egreso'?(Number(t.amount)||0):0),0);
-    const savingsRate=incomeTotal>0?Math.max(0,((incomeTotal-expenseTotal)/incomeTotal)*100).toFixed(1):'0.0';
-    let chartImg=null; try{ if(window.flowsChart) chartImg=window.flowsChart.toBase64Image(); }catch{}
-    const node=document.createElement('div'); node.className='pdf-root';
-    node.innerHTML=`<style>.pdf-root{font-family:Arial,Helvetica,sans-serif;color:#111;background:#fff;padding:18px}.pdf-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.pdf-title{font-weight:900;font-size:12pt}.pdf-sub{font-weight:700;font-size:11pt;margin-top:8px;margin-bottom:6px}.pdf-text{font-size:10pt;line-height:1.45}</style>
-      <div class="pdf-header">
-        <div><div class="pdf-title">REPORTE FINANCIERO — JHONATAN ORELLANA</div><div class="pdf-sub">Org: ${ORG_ID} · Fecha: ${toDDMMYYYY(new Date())}</div></div>
-        <div style="text-align:right"><div class="pdf-text">Resumen técnico</div></div>
-      </div>
-      <section><div class="pdf-sub">Resumen ejecutivo</div>
-        <p class="pdf-text">Saldo cuentas: <strong>${fmtMoney(banksTotal)}</strong><br/>Bienes (activos+empresas): <strong>${fmtMoney(assetsTotal + state.data.businesses.reduce((s,b)=>s+(Number(b.estimateValue)||0),0))}</strong><br/>Pasivos+Deudas: <strong>${fmtMoney(liabilitiesTotal + debtsTotal)}</strong><br/>Tasa de ahorro: <strong>${savingsRate}%</strong></p></section>
-      <section><div class="pdf-sub">Gráfica</div>${chartImg?`<div style="text-align:center"><img src="${chartImg}" style="max-width:100%;height:auto;border:1px solid #ddd"/></div>`:'<p class="pdf-text">Gráfica no disponible</p>'}</section>
-      <div style="margin-top:12px;font-size:9pt;color:#666">Generado por JHONATAN ORELLANA · Títulos 12pt · Subtítulos 11pt · Texto 10pt</div>`;
-    if(window.html2pdf){
-      html2pdf().set({ margin:12, filename:`reporte_${(new Date()).toISOString().slice(0,10)}.pdf`, image:{type:'jpeg',quality:0.95}, html2canvas:{scale:2,useCORS:true}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(node).save();
-    } else alert('html2pdf no disponible');
   }
 
   let flowsChart=null; window.flowsChart=null;
@@ -494,7 +498,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
 
   function renderBanks(){
     const wrap=$('#banksArea'); if(!wrap) return;
-    if(state.data.banks.length===0){ wrap.innerHTML='<div class="small">No hay cuentas registradas</div>'; return; }
+    if(!state.data.banks.length){ wrap.innerHTML='<div class="small">No hay cuentas registradas</div>'; return; }
     const rows=state.data.banks.map(b=>`<tr><td><strong>${b.name}</strong><div class="small">${b.type||''}</div></td><td class="right">${fmtMoney(Number(b.balance)||0)}</td><td><button data-id="${b.id}" data-act="edit" class="btn ghost"><i data-feather="edit-2"></i></button> <button data-id="${b.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></td></tr>`).join('');
     wrap.innerHTML=`<table style="width:100%"><thead><tr><th>Cuenta</th><th class="right">Saldo</th><th>Acc</th></tr></thead><tbody>${rows}</tbody></table>`;
     $$('#banksArea button').forEach(btn=> btn.onclick=()=>{
@@ -554,171 +558,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   const showModal = html => { modalRoot().innerHTML=html; $('#overlay').style.display='flex'; $('#overlay').setAttribute('aria-hidden','false'); feather.replace(); };
   const closeModal = ()=>{ modalRoot().innerHTML=''; $('#overlay').style.display='none'; $('#overlay').setAttribute('aria-hidden','true'); };
 
-  function openTxModal(existing){
-    const bankOpt='<option value="">-- seleccionar cuenta --</option>'+state.data.banks.map(b=>`<option value="${b.id}">${b.name} (${fmtMoney(b.balance)})</option>`).join('');
-    const catOpt='<option value="">-- categoría --</option>'+state.data.categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
-    const assetOpt='<option value="">-- Ninguno --</option>'+state.data.assets.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');
-    const def=existing||{type:'Egreso',amount:0,dateStr:toDDMMYYYY(new Date()),bankId:'',categoryId:'',assetId:'',description:''};
-    const html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div style="font-weight:900">${existing?'Editar transacción':'Nueva transacción'}</div>
-        <div class="small">Formato fecha dd/mm/yyyy</div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label>Tipo</label><select id="txType"><option ${def.type==='Ingreso'?'selected':''}>Ingreso</option><option ${def.type==='Egreso'?'selected':''}>Egreso</option></select></div>
-        <div><label>Monto</label><input id="txAmount" type="number" value="${def.amount||0}" /></div>
-        <div style="grid-column:1/3"><label>Cuenta</label><select id="txBank">${bankOpt}</select></div>
-        <div style="grid-column:1/3"><label>Categoría</label><select id="txCat">${catOpt}</select></div>
-        <div><label>Activo (opcional)</label><select id="txAsset">${assetOpt}</select></div>
-        <div><label>Fecha</label><input id="txDate" value="${def.dateStr}" /></div>
-        <div style="grid-column:1/3"><label>Descripción</label><input id="txDesc" value="${(def.description||'').replace(/"/g,'&quot;')}" /></div>
-      </div>
-      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px">
-        <button id="txCancel" class="btn ghost"><i data-feather="x"></i> Cancelar</button>
-        <button id="txSave" class="btn primary"><i data-feather="save"></i> Guardar y cerrar</button>
-      </div>`;
-    showModal(html); setTimeout(()=>{ if(existing){ $('#txBank').value=existing.bankId||''; $('#txCat').value=existing.categoryId||''; $('#txAsset').value=existing.assetId||''; } },30);
-    $('#txCancel').onclick=closeModal;
-    $('#txSave').onclick=async()=>{ try{
-      const type=$('#txType').value; const amount=Number($('#txAmount').value)||0; const bankId=$('#txBank').value||null; const categoryId=$('#txCat').value||null; const assetId=$('#txAsset').value||null; const dateStr=$('#txDate').value.trim(); const desc=$('#txDesc').value.trim();
-      if(!amount||amount<=0) return alert('Monto inválido'); if(!parseDateDDMMYYYY(dateStr)) return alert('Fecha inválida (dd/mm/yyyy)');
-      const tx={id:existing?existing.id:uid('t'),type,amount,bankId,categoryId,assetId,description:desc,dateStr}; ensureTimestamps(tx); await addTransaction(tx); closeModal();
-    }catch(e){ alert('Error: '+(e.message||e)); } };
-  }
-
-  function openBankModal(b){
-    const def=b||{name:'',balance:0,type:'Cuenta',notes:''};
-    const html=`<div style="font-weight:900;margin-bottom:8px">${b?'Editar cuenta':'Nueva cuenta'}</div>
-      <label>Nombre</label><input id="bName" value="${def.name}" />
-      <label>Tipo</label><input id="bType" value="${def.type}" />
-      <label>Saldo inicial</label><input id="bBalance" type="number" value="${Number(def.balance)||0}" />
-      <label>Notas</label><input id="bNotes" value="${(def.notes||'').replace(/"/g,'&quot;')}" />
-      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px"><button id="bCancel" class="btn ghost"><i data-feather="x"></i> Cancelar</button><button id="bSave" class="btn primary"><i data-feather="save"></i> Guardar</button></div>`;
-    showModal(html); $('#bCancel').onclick=closeModal;
-    $('#bSave').onclick=()=>{ const name=$('#bName').value.trim(),type=$('#bType').value.trim(),balance=Number($('#bBalance').value)||0,notes=$('#bNotes').value.trim(); if(!name) return alert('Nombre requerido'); if(b){ Object.assign(b,{name,type,balance,notes}); ensureTimestamps(b); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } else addBank({name,type,balance,notes}); closeModal(); };
-  }
-
-  function openAssetModal(a){
-    const subtypes=['Inmueble','Maquinaria','Inversión','Patrimonio','Vehículo','Otro'];
-    const bankOpt='<option value="">-- Ninguna --</option>'+state.data.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
-    const def=a||{name:'',estimatedValue:0,subtype:'Inmueble',purchaseDate:'',depreciationRate:0,usefulLife:0,salvageValue:0,linkedBankId:'',notes:'',accumulatedGain:0};
-    const html=`<div style="font-weight:900;margin-bottom:8px">${a?'Editar activo':'Nuevo activo'}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label>Nombre</label><input id="aName" value="${def.name}" /></div>
-        <div><label>Subtipo</label><select id="aSubtype">${subtypes.map(s=>`<option ${def.subtype===s?'selected':''}>${s}</option>`).join('')}</select></div>
-        <div><label>Valor estimado</label><input id="aValue" type="number" value="${Number(def.estimatedValue)||0}" /></div>
-        <div><label>Fecha compra (dd/mm/yyyy)</label><input id="aPurchase" value="${def.purchaseDate||''}" /></div>
-        <div><label>Depreciación anual (%)</label><input id="aDep" type="number" value="${Number(def.depreciationRate)||0}" /></div>
-        <div><label>Vida útil (años)</label><input id="aLife" type="number" value="${Number(def.usefulLife)||0}" /></div>
-        <div style="grid-column:1/3"><label>Valor residual</label><input id="aSalvage" type="number" value="${Number(def.salvageValue)||0}" /></div>
-        <div style="grid-column:1/3"><label>Vinculado a cuenta</label><select id="aBank">${bankOpt}</select></div>
-        <div style="grid-column:1/3"><label>Notas</label><textarea id="aNotes">${(def.notes||'')}</textarea></div>
-      </div>
-      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px"><button id="aCancel" class="btn ghost"><i data-feather="x"></i> Cancelar</button><button id="aSave" class="btn primary"><i data-feather="save"></i> Guardar activo</button></div>`;
-    showModal(html); if(a) setTimeout(()=> $('#aBank').value=a.linkedBankId||'',30);
-    $('#aCancel').onclick=closeModal;
-    $('#aSave').onclick=()=>{ const name=$('#aName').value.trim(),subtype=$('#aSubtype').value,val=Number($('#aValue').value)||0,purchase=$('#aPurchase').value.trim(),dep=Number($('#aDep').value)||0,life=Number($('#aLife').value)||0,salvage=Number($('#aSalvage').value)||0,bankId=$('#aBank').value||null,notes=$('#aNotes').value.trim(); if(!name) return alert('Nombre requerido'); const obj={name,subtype,estimatedValue:val,purchaseDate:purchase,depreciationRate:dep,usefulLife:life,salvageValue:salvage,linkedBankId:bankId,notes,accumulatedGain:a?a.accumulatedGain:0,incomeRecords:a?a.incomeRecords:[]}; if(a){ Object.assign(a,obj); ensureTimestamps(a); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } else addAsset(obj); closeModal(); };
-  }
-
-  function openLiabilityModal(l){
-    const subtypes=['Préstamo Bancario','Hipoteca','Tarjeta','Proveedor','Garantía','Otro'];
-    const bankOpt='<option value="">-- Ninguna --</option>'+state.data.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
-    const def=l||{name:'',amount:0,subtype:'Préstamo Bancario',interestRate:0,maturityDate:'',collateral:'',linkedBankId:'',notes:''};
-    const html=`<div style="font-weight:900;margin-bottom:8px">${l?'Editar pasivo':'Nuevo pasivo'}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label>Nombre</label><input id="liName" value="${def.name}" /></div>
-        <div><label>Subtipo</label><select id="liSubtype">${subtypes.map(s=>`<option ${def.subtype===s?'selected':''}>${s}</option>`).join('')}</select></div>
-        <div><label>Monto</label><input id="liAmount" type="number" value="${Number(def.amount)||0}" /></div>
-        <div><label>Tasa interés (%)</label><input id="liInterest" type="number" value="${Number(def.interestRate)||0}" /></div>
-        <div><label>Fecha venc. (dd/mm/yyyy)</label><input id="liMaturity" value="${def.maturityDate||''}" /></div>
-        <div><label>Colateral</label><input id="liCollateral" value="${(def.collateral||'')}" /></div>
-        <div style="grid-column:1/3"><label>Vinculado a cuenta</label><select id="liBank">${bankOpt}</select></div>
-        <div style="grid-column:1/3"><label>Notas</label><textarea id="liNotes">${(def.notes||'')}</textarea></div>
-      </div>
-      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px"><button id="liCancel" class="btn ghost"><i data-feather="x"></i> Cancelar</button><button id="liSave" class="btn primary"><i data-feather="save"></i> Guardar pasivo</button></div>`;
-    showModal(html); if(l) setTimeout(()=> $('#liBank').value=l.linkedBankId||'',30);
-    $('#liCancel').onclick=closeModal;
-    $('#liSave').onclick=()=>{ const name=$('#liName').value.trim(),subtype=$('#liSubtype').value,amount=Number($('#liAmount').value)||0,interest=Number($('#liInterest').value)||0,maturity=$('#liMaturity').value.trim(),collateral=$('#liCollateral').value.trim(),bankId=$('#liBank').value||null,notes=$('#liNotes').value.trim(); if(!name) return alert('Nombre requerido'); const obj={name,subtype,amount,interestRate:interest,maturityDate:maturity,collateral,linkedBankId:bankId,notes}; if(l){ Object.assign(l,obj); ensureTimestamps(l); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } else addLiability(obj); closeModal(); };
-  }
-
-  function openBusinessModal(bz){
-    const def=bz||{name:'',estimateValue:0,contribution:0,role:'Propietario',notes:''};
-    const html=`<div style="font-weight:900;margin-bottom:8px">${bz?'Editar empresa':'Nueva empresa'}</div>
-      <label>Nombre</label><input id="bzName" value="${def.name}" />
-      <label>Rol</label><input id="bzRole" value="${def.role}" />
-      <label>Valor estimado</label><input id="bzValue" type="number" value="${Number(def.estimateValue)||0}" />
-      <label>Aporte</label><input id="bzContribution" type="number" value="${Number(def.contribution)||0}" />
-      <label>Notas</label><textarea id="bzNotes">${(def.notes||'')}</textarea>
-      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px"><button id="bzCancel" class="btn ghost"><i data-feather="x"></i> Cancelar</button><button id="bzSave" class="btn primary"><i data-feather="save"></i> Guardar</button></div>`;
-    showModal(html); $('#bzCancel').onclick=closeModal;
-    $('#bzSave').onclick=()=>{ const name=$('#bzName').value.trim(),role=$('#bzRole').value,val=Number($('#bzValue').value)||0,contrib=Number($('#bzContribution').value)||0,notes=$('#bzNotes').value.trim(); if(!name) return alert('Nombre requerido'); const obj={name,estimateValue:val,contribution:contrib,role,notes}; if(bz){ Object.assign(bz,obj); ensureTimestamps(bz); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } else addBusiness(obj); closeModal(); };
-  }
-
-  function openFixedModal(f){
-    const def=f||{name:'',amount:0,bankId:'',categoryId:'',frequency:'monthly'};
-    const bankOpt='<option value="">-- Ninguna --</option>'+state.data.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
-    const catOpt='<option value="">-- Ninguna --</option>'+state.data.categories.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
-    const html=`<div style="font-weight:900;margin-bottom:8px">${f?'Editar gasto fijo':'Nuevo gasto fijo'}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label>Nombre</label><input id="fName" value="${def.name}" /></div><div><label>Monto</label><input id="fAmount" type="number" value="${Number(def.amount)||0}" /></div><div><label>Cuenta</label><select id="fBank">${bankOpt}</select></div><div><label>Categoría</label><select id="fCat">${catOpt}</select></div><div><label>Frecuencia</label><select id="fFreq"><option ${def.frequency==='monthly'?'selected':''} value="monthly">Mensual</option><option ${def.frequency==='weekly'?'selected':''} value="weekly">Semanal</option><option ${def.frequency==='annual'?'selected':''} value="annual">Anual</option></select></div></div>
-      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px"><button id="fCancel" class="btn ghost"><i data-feather="x"></i> Cancelar</button><button id="fSave" class="btn primary"><i data-feather="save"></i> Guardar</button></div>`;
-    showModal(html); if(f) setTimeout(()=>{ $('#fBank').value=f.bankId||''; $('#fCat').value=f.categoryId||''; },30);
-    $('#fCancel').onclick=closeModal;
-    $('#fSave').onclick=()=>{ const name=$('#fName').value.trim(),amount=Number($('#fAmount').value)||0,bankId=$('#fBank').value||null,categoryId=$('#fCat').value||null,freq=$('#fFreq').value||'monthly'; if(!name) return alert('Nombre requerido'); if(f){ Object.assign(f,{name,amount,bankId,categoryId,frequency:freq}); ensureTimestamps(f); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } else addFixed({name,amount,bankId,categoryId,frequency:freq}); closeModal(); };
-  }
-
-  function openCategoryModal(c){
-    const def=c||{name:'',limitMonthly:0};
-    const html=`<div style="font-weight:900;margin-bottom:8px">${c?'Editar categoría':'Nueva categoría'}</div>
-      <label>Nombre</label><input id="catName" value="${def.name}" />
-      <label>Límite mensual (0 = sin límite)</label><input id="catLimit" type="number" value="${def.limitMonthly||0}" />
-      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px"><button id="catCancel" class="btn ghost"><i data-feather="x"></i> Cancelar</button><button id="catSave" class="btn primary"><i data-feather="save"></i> Guardar</button></div>`;
-    showModal(html); $('#catCancel').onclick=closeModal;
-    $('#catSave').onclick=()=>{ const name=$('#catName').value.trim(),limit=Number($('#catLimit').value)||0; if(!name) return alert('Nombre requerido'); if(c){ Object.assign(c,{name,limitMonthly:limit}); ensureTimestamps(c); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } else addCategory({name,limitMonthly:limit}); closeModal(); };
-  }
-
-  function openDebtModal(d){
-    const bankOpt='<option value="">-- Ninguna --</option>'+state.data.banks.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
-    const def=d||{name:'',bankId:'',outstanding:0,monthlyPayment:0,interestRate:0,notes:''};
-    const html=`<div style="font-weight:900;margin-bottom:8px">${d?'Editar deuda':'Nueva deuda'}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label>Nombre</label><input id="dName" value="${def.name}" /></div>
-        <div><label>Banco</label><select id="dBank">${bankOpt}</select></div>
-        <div><label>Saldo pendiente</label><input id="dOut" type="number" value="${Number(def.outstanding)||0}" /></div>
-        <div><label>Cuota mensual</label><input id="dPay" type="number" value="${Number(def.monthlyPayment)||0}" /></div>
-        <div><label>Tasa interés (%)</label><input id="dInterest" type="number" value="${Number(def.interestRate)||0}" /></div>
-        <div style="grid-column:1/3"><label>Notas</label><input id="dNotes" value="${(def.notes||'').replace(/"/g,'&quot;')}" /></div>
-      </div>
-      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px"><button id="dCancel" class="btn ghost"><i data-feather="x"></i> Cancelar</button><button id="dSave" class="btn primary"><i data-feather="save"></i> Guardar</button></div>`;
-    showModal(html); if(d) setTimeout(()=> $('#dBank').value=d.bankId||'',30);
-    $('#dCancel').onclick=closeModal;
-    $('#dSave').onclick=()=>{ const name=$('#dName').value.trim(),bankId=$('#dBank').value||null,out=Number($('#dOut').value)||0,pay=Number($('#dPay').value)||0,interest=Number($('#dInterest').value)||0,notes=$('#dNotes').value.trim(); if(!name) return alert('Nombre requerido'); if(d){ Object.assign(d,{name,bankId,outstanding:out,monthlyPayment:pay,interestRate:interest,notes}); ensureTimestamps(d); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } else addDebt({name,bankId,outstanding:out,monthlyPayment:pay,interestRate:interest,notes}); closeModal(); };
-  }
-
-  function openDebtPayModal(debt){
-    if(!debt) return alert('Deuda no encontrada');
-    const bankOpt=state.data.banks.map(b=>`<option value="${b.id}">${b.name} (${fmtMoney(b.balance)})</option>`).join('');
-    const html=`<div style="font-weight:900;margin-bottom:8px">Registrar pago · ${debt.name}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label>Monto</label><input id="payAmount" type="number" value="${Math.min(Number(debt.monthlyPayment)||0, Number(debt.outstanding)||0)}" /></div>
-        <div><label>Cuenta</label><select id="payBank">${bankOpt}</select></div>
-        <div style="grid-column:1/3"><label>Descripción</label><input id="payDesc" value="Pago deuda ${debt.name}" /></div>
-      </div>
-      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px"><button id="payCancel" class="btn ghost"><i data-feather="x"></i> Cancelar</button><button id="paySave" class="btn positive"><i data-feather="check-circle"></i> Registrar pago</button></div>`;
-    showModal(html);
-    $('#payCancel').onclick=closeModal;
-    $('#paySave').onclick=async()=>{ const amt=Number($('#payAmount').value)||0; const bankId=$('#payBank').value; const desc=$('#payDesc').value.trim(); if(!amt||amt<=0) return alert('Monto inválido'); await addTransaction({ type:'Egreso', amount:amt, bankId, debtId:debt.id, dateStr: toDDMMYYYY(new Date()), description: desc }); closeModal(); };
-  }
-
-  function openAssetViewModal(asset){
-    if(!asset) return;
-    const rows=(asset.incomeRecords||[]).map(r=>`<tr><td>${r.dateStr}</td><td>${fmtMoney(r.amount)}</td><td>${r.desc||''}</td></tr>`).join('')||'<tr><td colspan="3" class="small">Sin ingresos registrados</td></tr>';
-    showModal(`<div style="font-weight:900;margin-bottom:8px">Ingresos del activo: ${asset.name}</div>
-      <table style="width:100%;border-collapse:collapse;font-size:13px">
-        <thead><tr><th>Fecha</th><th>Monto</th><th>Descripción</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-      <div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn ghost" id="assetViewClose"><i data-feather="x"></i> Cerrar</button></div>`);
-    $('#assetViewClose').onclick=closeModal; feather.replace();
-  }
+  // modales de CRUD se definen arriba en render section (ya integrados)
 
   function bindUI(){
     $$('.nav-btn').forEach(b=> b.addEventListener('click', ()=>{
@@ -753,25 +593,24 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   }
 
   async function manualSync(){
-    $('#syncStatus').textContent='syncing';
+    $('#syncStatus').innerHTML='<span class="loader"></span>';
     try{
       if(!state.fsHelpers){ await initFirestore(firebaseConfig); startRealtime(); showToast('Firestore activado'); }
       const remote=await fsFetch();
-      if(remote.data){ state.data=mergeFullDatasets(remote.data,state.data); persistLocal(); await fsSaveWithMerge(state.data); showToast('Sincronización manual completa'); }
+      if(remote.data){ state.data=normalizeData(mergeFullDatasets(remote.data,state.data)); persistLocal(); await fsSaveWithMerge(state.data); showToast('Sincronización manual completa'); }
       else { await fsSaveWithMerge(state.data); showToast('Nube inicializada con datos locales'); }
-    }catch(e){ showToast('Error sync: '+(e.message||e),true); } finally{ $('#syncStatus').textContent='idle'; renderAll(); }
+    }catch(e){ showToast('Error sync: '+(e.message||e),true); } finally{ $('#syncStatus').textContent='idle'; renderAll(); flushPending(); }
   }
 
   function attachLocalLogin(){
-    const tryLogin=()=>{
-      const u=prompt('Usuario (local):','JHONATAN'); const p=prompt('Contraseña (local):','JHONATAN');
+    const tryLogin=()=>{ const u=prompt('Usuario (local):','JHONATAN'); const p=prompt('Contraseña (local):','JHONATAN');
       if(u===LOCAL_LOGIN.user && p===LOCAL_LOGIN.pass){ state.user=u; initApp(); showToast('Bienvenido '+u); }
       else { alert('Credenciales incorrectas. Intente de nuevo.'); tryLogin(); }
     };
     setTimeout(tryLogin,200);
   }
 
-  function updateNetStatus(){ const online=navigator.onLine; $('#netStatus').textContent=online?'online':'offline'; $('#netStatus').className='badge '+(online?'green':'red'); }
+  function updateNetStatus(){ const online=navigator.onLine; $('#netStatus').textContent=online?'online':'offline'; $('#netStatus').className='badge '+(online?'green':'red'); if(online) flushPending(); }
   window.addEventListener('online', updateNetStatus); window.addEventListener('offline', updateNetStatus);
 
   async function initApp(){
@@ -779,17 +618,19 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     try{
       await initFirestore(firebaseConfig); startRealtime(); $('#syncStatus').textContent='syncing';
       const remote=await fsFetch();
-      if(remote.data){ state.data=mergeFullDatasets(remote.data,state.data); persistLocal(); await fsSaveWithMerge(state.data); showToast('Sincronización automática completa'); }
+      if(remote.data){ state.data=normalizeData(mergeFullDatasets(remote.data,state.data)); persistLocal(); await fsSaveWithMerge(state.data); showToast('Sincronización automática completa'); }
       else { await fsSaveWithMerge(state.data); showToast('Nube inicializada con datos locales'); }
     }catch(e){ showToast('No se pudo conectar a la nube (modo local)',true); }
-    finally{ $('#syncStatus').textContent='idle'; renderAll(); }
+    finally{ $('#syncStatus').textContent='idle'; renderAll(); flushPending(); }
   }
 
   loadLocal();
   if(!state.data.categories.length){
-    state.data.categories=[{id:uid('cat'),name:'Alimentos',limitMonthly:1500,createdAt:nowISO(),updatedAt:nowISO()},
-      {id:uid('cat'),name:'Operaciones',limitMonthly:5000,createdAt:nowISO(),updatedAt:nowISO()},
-      {id:uid('cat'),name:'Marketing',limitMonthly:3000,createdAt:nowISO(),updatedAt:nowISO()}];
+    state.data.categories=[
+      {id:uid('cat'),name:'Alimentos',limitMonthly:1500,createdAt:nowISO(),updatedAt:nowISO(),deviceId:DEVICE_ID},
+      {id:uid('cat'),name:'Operaciones',limitMonthly:5000,createdAt:nowISO(),updatedAt:nowISO(),deviceId:DEVICE_ID},
+      {id:uid('cat'),name:'Marketing',limitMonthly:3000,createdAt:nowISO(),updatedAt:nowISO(),deviceId:DEVICE_ID}
+    ];
     persistLocal();
   }
   attachLocalLogin();
@@ -797,4 +638,3 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   <script>document.addEventListener('DOMContentLoaded', ()=> { if(window.feather) feather.replace(); });</script>
 </body>
 </html>
-
