@@ -72,12 +72,31 @@ td.right{text-align:right}
 input.habits-input{min-width:84px;height:42px;font-size:16px;font-weight:800;border-radius:12px}
 .habits-table th,.habits-table td{padding:12px 8px}
 .habits-table thead th{position:sticky;top:0;background:var(--panel);z-index:2}
+.habit-check{display:flex;align-items:center;justify-content:center;width:48px;height:42px;border-radius:12px;border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.04);color:var(--muted);font-weight:900;cursor:pointer;user-select:none}
+.habit-check.active{background:linear-gradient(135deg,var(--positive),#0fa971);color:#0b1220;border-color:transparent;box-shadow:0 8px 20px rgba(52,211,153,0.25)}
+.habit-stepper{display:flex;align-items:center;justify-content:flex-end;gap:6px}
+.step-btn{width:40px;height:40px;border-radius:12px;border:1px solid rgba(255,255,255,0.16);background:rgba(255,255,255,0.06);color:var(--text);font-weight:900;cursor:pointer}
+.step-val{min-width:34px;text-align:center;font-weight:900}
+.habits-cards{display:none}
+.habit-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.habit-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.habit-title{font-weight:900}
+.habit-sub{font-size:12px;color:var(--muted)}
+.area-row{display:flex;align-items:center;gap:8px;margin:6px 0}
+.area-name{min-width:120px;font-weight:800}
+.area-pct{min-width:44px;text-align:right;font-weight:800}
 
 @media (max-width: 520px){
   .habits-table{font-size:12px}
   input.habits-input{min-width:96px;height:48px;font-size:18px}
+  .habit-check{width:56px;height:48px;font-size:18px}
   .habits-pill{font-size:10px}
   .habits-table th,.habits-table td{padding:12px 6px}
+  .habits-table thead th:nth-child(3), .habits-table td:nth-child(3){display:none}
+  #habitsTable{display:none}
+  .habits-cards{display:flex;flex-direction:column;gap:10px}
+  .step-btn{width:48px;height:48px;font-size:18px}
+  .step-val{min-width:40px;font-size:16px}
 }
 
 .small{font-size:12px;color:var(--muted)}
@@ -234,7 +253,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
         <div id="businessesArea" class="scroll-y"></div>
       </section>
 
-      <section id="view-habits" class="card" style="display:none">
+  <section id="view-habits" class="card" style="display:none">
         <div class="section-title" style="flex-wrap:wrap;gap:8px">
           <div>Hábitos diarios</div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -250,6 +269,13 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
           <div class="kpi"><div class="label">Porcentaje del día</div><div class="value" id="habitsPct">0%</div><div class="sub">Meta diaria</div></div>
           <div class="kpi"><div class="label">Racha</div><div class="value" id="habitsStreak">0</div><div class="sub">Días seguidos ≥ 70%</div></div>
         </div>
+
+        <div class="card" style="margin-top:12px;background:rgba(255,255,255,0.02)">
+          <div class="section-title"><div>Resumen por área</div></div>
+          <div id="habitsAreaSummary" class="small" style="margin-top:6px;color:var(--muted)">—</div>
+        </div>
+
+        <div id="habitsCards" class="habits-cards" style="margin-top:12px"></div>
 
         <div class="scroll-y" style="margin-top:12px">
           <table id="habitsTable" class="habits-table">
@@ -309,45 +335,45 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   const STORAGE_KEY = 'jona_business_single_data_v5';
   const HABITS_CFG = [
     { area:'DESARROLLO PROFESIONAL', items:[
-      { key:'work', label:'WORK (bloques profundos)', max:8 },
-      { key:'trabajo_extra', label:'TRABAJO EXTRA', max:6 },
-      { key:'planificacion_diaria', label:'PLANIFICACIÓN DIARIA', max:4 },
-      { key:'valor_economico', label:'GENERÉ VALOR ECONÓMICO HOY', max:8 },
-      { key:'capacitacion', label:'CAPACITACIÓN', max:6 },
-      { key:'ver_tutoriales', label:'VER TUTORIALES', max:4 },
-      { key:'leer_1_hora', label:'LEER 1 HORA', max:4 }
+      { key:'work', label:'WORK (bloques profundos)', max:7, input:'check' },
+      { key:'trabajo_extra', label:'TRABAJO EXTRA', max:5, input:'check' },
+      { key:'planificacion_diaria', label:'PLANIFICACIÓN DIARIA', max:3, input:'check' },
+      { key:'valor_economico', label:'GENERÉ VALOR ECONÓMICO HOY', max:7, input:'check' },
+      { key:'capacitacion', label:'CAPACITACIÓN', max:5, input:'check' },
+      { key:'ver_tutoriales', label:'VER TUTORIALES', max:3, input:'check' },
+      { key:'leer_1_hora', label:'LEER 1 HORA', max:3, input:'check' }
     ]},
     { area:'SALUD Y ENERGÍA', items:[
-      { key:'desayuno', label:'DESAYUNO', max:2 },
-      { key:'almuerzo', label:'ALMUERZO', max:2 },
-      { key:'cena', label:'CENA', max:2 },
-      { key:'descansar_8_horas', label:'DORMIR 8 HORAS', max:6 },
-      { key:'tomar_2_litros', label:'TOMAR 2 LITROS DE AGUA', max:3 },
-      { key:'extracto_verduras', label:'EXTRACTO DE VERDURAS', max:2 },
-      { key:'ejercicios', label:'EJERCICIOS', max:6 },
-      { key:'azucar_control', label:'AZÚCAR CONTROLADO', max:1 }
+      { key:'desayuno', label:'DESAYUNO', max:2, input:'check' },
+      { key:'almuerzo', label:'ALMUERZO', max:2, input:'check' },
+      { key:'cena', label:'CENA', max:2, input:'check' },
+      { key:'descansar_8_horas', label:'DORMIR 8 HORAS', max:8, input:'range' },
+      { key:'tomar_2_litros', label:'TOMAR 2 LITROS DE AGUA', max:3, input:'check' },
+      { key:'extracto_verduras', label:'EXTRACTO DE VERDURAS', max:2, input:'check' },
+      { key:'ejercicios', label:'EJERCICIOS', max:6, input:'check' },
+      { key:'azucar_control', label:'AZÚCAR CONTROLADO', max:1, input:'check' }
     ]},
     { area:'ASEO Y ORDEN', items:[
-      { key:'cepillarse', label:'CEPILLARSE LOS DIENTES', max:3 },
-      { key:'afeitarse', label:'AFEITARSE', max:1 },
-      { key:'banarse', label:'BAÑARSE (2 VECES)', max:3 },
-      { key:'ordenar_cuarto', label:'ORDENAR CUARTO', max:3 },
-      { key:'ropa_sucia', label:'ROPA SUCIA (≤ 5 PRENDAS)', max:2 }
+      { key:'cepillarse', label:'CEPILLARSE LOS DIENTES', max:4, input:'range' },
+      { key:'afeitarse', label:'AFEITARSE', max:1, input:'check' },
+      { key:'banarse', label:'BAÑARSE (2 VECES)', max:3, input:'check' },
+      { key:'ordenar_cuarto', label:'ORDENAR CUARTO', max:3, input:'check' },
+      { key:'ropa_sucia', label:'ROPA SUCIA (≤ 5 PRENDAS)', max:5, input:'range' }
     ]},
     { area:'CUIDADO PERSONAL', items:[
-      { key:'minioxidil', label:'MINIOXIDIL', max:1 },
-      { key:'cera_ve', label:'CERA VE', max:1 },
-      { key:'movilidad', label:'MOVILIDAD / ESTIRAMIENTOS', max:2 },
-      { key:'skincare', label:'CUIDADO PIEL', max:2 }
+      { key:'minioxidil', label:'MINIOXIDIL', max:1, input:'check' },
+      { key:'cera_ve', label:'CERA VE', max:2, input:'range' },
+      { key:'movilidad', label:'MOVILIDAD / ESTIRAMIENTOS', max:2, input:'check' },
+      { key:'skincare', label:'CUIDADO PIEL', max:2, input:'check' }
     ]},
     { area:'DISCIPLINA Y MENTAL', items:[
-      { key:'no_mt', label:'NO MT', max:2 },
-      { key:'sin_distracciones', label:'SIN DISTRACCIONES DIGITALES', max:5 },
-      { key:'gratitud_llamar', label:'GRATITUD / LLAMAR A FAMILIA', max:3 }
+      { key:'no_mt', label:'NO MT', max:2, input:'check' },
+      { key:'sin_distracciones', label:'SIN DISTRACCIONES DIGITALES', max:5, input:'check' },
+      { key:'gratitud_llamar', label:'GRATITUD / LLAMAR A FAMILIA', max:3, input:'check' }
     ]},
     { area:'GESTIÓN', items:[
-      { key:'revision_finanzas', label:'REVISIÓN FINANCIERA DIARIA', max:4 },
-      { key:'orden_digital', label:'ORDEN DIGITAL (CORREO/ARCHIVOS)', max:4 }
+      { key:'revision_finanzas', label:'REVISIÓN FINANCIERA DIARIA', max:4, input:'check' },
+      { key:'orden_digital', label:'ORDEN DIGITAL (CORREO/ARCHIVOS)', max:4, input:'check' }
     ]}
   ];
   let habitsSelectedDate = null;
@@ -764,19 +790,40 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
           const val = Math.max(0, Math.min(it.max, Math.round(raw)));
           const rowPct = it.max ? Math.round((val/it.max)*100) : 0;
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td><span class="habits-pill">${group.area}</span></td><td>${it.label}</td><td class="right habits-range">0–${it.max}</td><td class="right"><input class="habits-input" type="number" inputmode="numeric" min="0" max="${it.max}" data-key="${it.key}" value="${val}"/></td><td class="right"><strong>${rowPct}%</strong></td>`;
+          const inputCell = (it.input === 'check')
+            ? `<div class="habit-check ${val>0?'active':''}" data-key="${it.key}" data-max="${it.max}">${val>0?'✓':'—'}</div>`
+            : `<div class="habit-stepper">
+                 <button class="step-btn" data-key="${it.key}" data-max="${it.max}" data-delta="-1">–</button>
+                 <div class="step-val">${val}</div>
+                 <button class="step-btn" data-key="${it.key}" data-max="${it.max}" data-delta="1">+</button>
+               </div>`;
+          tr.innerHTML = `<td><span class="habits-pill">${group.area}</span></td><td>${it.label}</td><td class="right habits-range">0–${it.max}</td><td class="right">${inputCell}</td><td class="right"><strong>${rowPct}%</strong></td>`;
           tbody.appendChild(tr);
         });
       });
     }
-    $$('#habitsTable input').forEach(inp=>{
-      inp.oninput = ()=>{
-        const key = inp.dataset.key;
-        const max = Number(inp.max)||0;
-        let v = Math.round(Number(inp.value)||0);
-        if(v < 0) v = 0;
-        if(v > max) v = max;
-        inp.value = v;
+    $$('#habitsTable .step-btn').forEach(btn=>{
+      btn.onclick = ()=>{
+        const key = btn.dataset.key;
+        const max = Number(btn.dataset.max)||0;
+        const delta = Number(btn.dataset.delta)||0;
+        pushAndRender(d=>{
+          ensureHabitsStore();
+          const rec = ensureHabitsDay(habitsSelectedDate, true);
+          let v = Math.round(Number(rec[key])||0);
+          v = Math.max(0, Math.min(max, v + delta));
+          rec[key] = v;
+          rec.updatedAt = nowISO();
+          rec.deviceId = DEVICE_ID;
+        });
+      };
+    });
+    $$('#habitsTable .habit-check').forEach(btn=>{
+      btn.onclick = ()=>{
+        const key = btn.dataset.key;
+        const max = Number(btn.dataset.max)||1;
+        const isOn = btn.classList.contains('active');
+        const v = isOn ? 0 : max;
         pushAndRender(d=>{
           ensureHabitsStore();
           const rec = ensureHabitsDay(habitsSelectedDate, true);
@@ -786,6 +833,73 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
         });
       };
     });
+
+    const cards = $('#habitsCards');
+    if(cards){
+      const rec = state.data.habitsByDate[habitsSelectedDate] || {};
+      const cardHtml = [];
+      HABITS_CFG.forEach(group=>{
+        group.items.forEach(it=>{
+          const raw = Number(rec[it.key])||0;
+          const val = Math.max(0, Math.min(it.max, Math.round(raw)));
+          const rowPct = it.max ? Math.round((val/it.max)*100) : 0;
+          const control = (it.input === 'check')
+            ? `<div class="habit-check ${val>0?'active':''}" data-key="${it.key}" data-max="${it.max}">${val>0?'✓':'—'}</div>`
+            : `<div class="habit-stepper">
+                 <button class="step-btn" data-key="${it.key}" data-max="${it.max}" data-delta="-1">–</button>
+                 <div class="step-val">${val}</div>
+                 <button class="step-btn" data-key="${it.key}" data-max="${it.max}" data-delta="1">+</button>
+               </div>`;
+          cardHtml.push(`
+            <div class="habit-card">
+              <div class="habit-row">
+                <div>
+                  <div class="habit-title">${it.label}</div>
+                  <div class="habit-sub">${group.area} · Rango 0–${it.max}</div>
+                </div>
+                ${control}
+              </div>
+              <div class="habit-row">
+                <div class="progress-wrap" style="flex:1"><div class="progress-fill" style="width:${rowPct}%"></div></div>
+                <div class="area-pct">${rowPct}%</div>
+              </div>
+            </div>
+          `);
+        });
+      });
+      cards.innerHTML = cardHtml.join('');
+      $$('#habitsCards .step-btn').forEach(btn=>{
+        btn.onclick = ()=>{
+          const key = btn.dataset.key;
+          const max = Number(btn.dataset.max)||0;
+          const delta = Number(btn.dataset.delta)||0;
+          pushAndRender(d=>{
+            ensureHabitsStore();
+            const rec = ensureHabitsDay(habitsSelectedDate, true);
+            let v = Math.round(Number(rec[key])||0);
+            v = Math.max(0, Math.min(max, v + delta));
+            rec[key] = v;
+            rec.updatedAt = nowISO();
+            rec.deviceId = DEVICE_ID;
+          });
+        };
+      });
+      $$('#habitsCards .habit-check').forEach(btn=>{
+        btn.onclick = ()=>{
+          const key = btn.dataset.key;
+          const max = Number(btn.dataset.max)||1;
+          const isOn = btn.classList.contains('active');
+          const v = isOn ? 0 : max;
+          pushAndRender(d=>{
+            ensureHabitsStore();
+            const rec = ensureHabitsDay(habitsSelectedDate, true);
+            rec[key] = v;
+            rec.updatedAt = nowISO();
+            rec.deviceId = DEVICE_ID;
+          });
+        };
+      });
+    }
     const hist = $('#habitsHistory');
     if(hist){
       const lines = [];
@@ -797,6 +911,23 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
         lines.push(`<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><div style="min-width:92px">${key}</div><div class="progress-wrap" style="flex:1"><div class="progress-fill" style="width:${has?p:0}%"></div></div><div style="min-width:44px;text-align:right"><strong>${has ? (p+'%') : '—'}</strong></div></div>`);
       }
       hist.innerHTML = lines.join('') || '—';
+    }
+    const areaSummary = $('#habitsAreaSummary');
+    if(areaSummary){
+      const rec = state.data.habitsByDate[habitsSelectedDate] || {};
+      const rows = [];
+      HABITS_CFG.forEach(group=>{
+        let possible = 0; let earned = 0;
+        group.items.forEach(it=>{
+          possible += it.max;
+          const raw = Number(rec[it.key])||0;
+          const v = Math.max(0, Math.min(it.max, Math.round(raw)));
+          earned += v;
+        });
+        const pct = possible ? Math.round((earned/possible)*100) : 0;
+        rows.push(`<div class="area-row"><div class="area-name">${group.area}</div><div class="progress-wrap" style="flex:1"><div class="progress-fill" style="width:${pct}%"></div></div><div class="area-pct">${pct}%</div></div>`);
+      });
+      areaSummary.innerHTML = rows.join('') || '—';
     }
     feather.replace();
   }
@@ -1257,4 +1388,3 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   <script>document.addEventListener('DOMContentLoaded', ()=> { if(window.feather) feather.replace(); });</script>
 </body>
 </html>
-
