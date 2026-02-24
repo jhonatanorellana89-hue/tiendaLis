@@ -94,6 +94,20 @@ input.habits-input{min-width:84px;height:42px;font-size:16px;font-weight:800;bor
 .plan-tag.task{border-color:rgba(52,211,153,0.34);background:rgba(52,211,153,0.16);color:var(--positive)}
 .plan-tag.done{border-color:rgba(245,158,11,0.45);background:rgba(245,158,11,0.16);color:var(--warn)}
 .plan-empty{font-size:12px;color:var(--muted)}
+.planner-shell{display:flex;flex-direction:column;gap:12px}
+.planner-header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap}
+.planner-habits-wrap{max-height:42vh;overflow:auto;padding:6px;border-radius:12px;border:1px solid rgba(255,255,255,0.08)}
+.planner-table{width:100%;font-size:12px;min-width:640px}
+.planner-table th,.planner-table td{padding:8px 6px}
+.planner-footer{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.planner-task-item{gap:6px}
+.planner-task-grid{display:grid;grid-template-columns:minmax(0,1fr) 130px 102px 102px auto auto;gap:8px;align-items:center}
+.planner-task-grid .task-title{min-width:0}
+.planner-task-grid .task-status{display:flex;align-items:center;gap:4px;white-space:nowrap}
+.planner-task-meta{font-size:12px;color:var(--muted)}
+.plan-actions{display:flex;align-items:center;gap:6px;justify-self:end;flex-wrap:wrap}
+.plan-mini{padding:6px 8px;min-height:34px;font-size:12px}
+.plan-delete{color:var(--danger)}
 
 @media (max-width: 520px){
   .habits-table{font-size:12px}
@@ -106,8 +120,20 @@ input.habits-input{min-width:84px;height:42px;font-size:16px;font-weight:800;bor
   .habits-cards{display:flex;flex-direction:column;gap:10px}
   .step-btn{width:48px;height:48px;font-size:18px}
   .step-val{min-width:40px;font-size:16px}
-  .plan-item{grid-template-columns:80px 1fr}
-  .plan-item .plan-tag{grid-column:1/3;justify-self:start}
+  .plan-item{grid-template-columns:72px 1fr;align-items:start}
+  .plan-item > .plan-tag{grid-column:1/3;justify-self:start}
+  .plan-actions{grid-column:1/3;justify-self:stretch;display:grid;grid-template-columns:1fr 1fr 1fr}
+  .plan-actions .plan-tag{justify-content:center}
+  .plan-actions .btn{width:100%;padding:8px 6px}
+  .planner-habits-wrap{max-height:34vh;padding:4px}
+  .planner-table{min-width:760px}
+  .planner-task-grid{grid-template-columns:1fr 1fr}
+  .planner-task-grid .task-title{grid-column:1/3}
+  .planner-task-grid .task-category{grid-column:1/3}
+  .planner-task-grid .task-status{grid-column:1/2}
+  .planner-task-grid .task-delete{grid-column:2/3;justify-self:end}
+  .overlay{padding:10px}
+  .modal{max-height:92vh;overflow:auto;padding:12px}
 }
 
 .small{font-size:12px;color:var(--muted)}
@@ -120,6 +146,10 @@ input.habits-input{min-width:84px;height:42px;font-size:16px;font-weight:800;bor
 [data-theme="light"] .modal{background:#ffffff;border-color:rgba(0,0,0,0.06)}
 input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:var(--text);font-size:14px}
 [data-theme="light"] input,[data-theme="light"] select,[data-theme="light"] textarea{border-color:rgba(0,0,0,0.08);background:rgba(0,0,0,0.02);color:#0b172a}
+@media (max-width: 520px){
+  .overlay{padding:10px}
+  .modal{max-height:92vh;overflow:auto;padding:12px}
+}
 
 #chartFlows{max-height:240px}
 .loader{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,0.18);border-top-color:var(--accent);animation:spin .7s linear infinite;display:inline-block}
@@ -992,7 +1022,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
         const tagClass = it.done ? 'done' : (it.type==='task' ? 'task' : '');
         const tagText = it.done ? 'Hecho' : (it.type==='task' ? 'Quehacer' : 'Habito');
         const meta = `${it.functionName} · ${classifyDayBlock(it.start || it.end)}`;
-        return `<div class="plan-item"><div class="plan-time">${plannerTimeLabel(it)}</div><div class="plan-label"><div>${safeText(it.label)}</div><div class="small">${safeText(meta)}</div></div><div style="display:flex;align-items:center;gap:6px;justify-self:end"><div class="plan-tag ${tagClass}">${tagText}</div><button class="btn ghost" data-plan-act="edit" data-plan-type="${it.type}" data-plan-id="${it.type==='habit'?it.key:it.id}" style="padding:6px 8px">Editar</button><button class="btn" data-plan-act="delete" data-plan-type="${it.type}" data-plan-id="${it.type==='habit'?it.key:it.id}" style="padding:6px 8px;color:var(--danger)">Eliminar</button></div></div>`;
+        return `<div class="plan-item"><div class="plan-time">${plannerTimeLabel(it)}</div><div class="plan-label"><div>${safeText(it.label)}</div><div class="small">${safeText(meta)}</div></div><div class="plan-actions"><div class="plan-tag ${tagClass}">${tagText}</div><button class="btn ghost plan-mini" data-plan-act="edit" data-plan-type="${it.type}" data-plan-id="${it.type==='habit'?it.key:it.id}">Editar</button><button class="btn plan-mini plan-delete" data-plan-act="delete" data-plan-type="${it.type}" data-plan-id="${it.type==='habit'?it.key:it.id}">Eliminar</button></div></div>`;
       }).join('');
       timelineEl.querySelectorAll('[data-plan-act]').forEach(btn=>{
         btn.onclick = ()=>{
@@ -1045,29 +1075,31 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       return `<tr><td colspan="5" class="small" style="font-weight:900;padding-top:12px">${safeText(group.area)}</td></tr>${rows}`;
     }).join('');
 
-    const html = `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+    const html = `<div class="planner-shell">
+      <div class="planner-header">
         <div style="font-weight:900">Plan diario (${dayKey})</div>
         <div class="small">Organiza horario de habitos y quehaceres</div>
       </div>
-      <div style="max-height:42vh;overflow:auto;padding-right:4px;margin-top:10px">
-        <table style="width:100%;font-size:12px">
+      <div class="planner-habits-wrap">
+        <table class="planner-table">
           <thead><tr><th>Habito</th><th class="right">Avance</th><th>Inicio</th><th>Fin</th><th class="right">Hecho</th></tr></thead>
           <tbody id="plannerHabitsBody">${habitRows}</tbody>
         </table>
       </div>
-      <div class="card" style="margin-top:12px;background:rgba(255,255,255,0.02)">
-        <div class="section-title"><div>Quehaceres extra</div><button id="plannerAddTask" class="btn primary" style="padding:7px 10px"><i data-feather="plus"></i> Agregar</button></div>
+      <div class="card" style="background:rgba(255,255,255,0.02)">
+        <div class="section-title"><div>Quehaceres extra</div><button id="plannerAddTask" class="btn primary plan-mini"><i data-feather="plus"></i> Agregar</button></div>
         <div id="plannerTasksWrap" style="display:flex;flex-direction:column;gap:8px;margin-top:8px"></div>
       </div>
-      <div class="card" style="margin-top:12px;background:rgba(255,255,255,0.02)">
+      <div class="card" style="background:rgba(255,255,255,0.02)">
         <div class="section-title"><div>Agenda automatica por hora</div><div class="small" id="plannerLiveStats">0/0 bloques</div></div>
         <div id="plannerLiveCategories" class="small" style="margin-top:6px;color:var(--muted)">Bloques: --</div>
         <div id="plannerLiveTimeline" class="plan-list" style="margin-top:8px"></div>
       </div>
-      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px">
+      <div class="planner-footer">
         <button id="plannerCancel" class="btn ghost"><i data-feather="x"></i> Cancelar</button>
         <button id="plannerSave" class="btn positive"><i data-feather="save"></i> Guardar plan</button>
-      </div>`;
+      </div>
+    </div>`;
     showModal(html);
 
     const renderTasks = ()=>{
@@ -1077,16 +1109,16 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       if(!draft.tasks.length){
         wrap.innerHTML = '<div class="small">Sin quehaceres extra para este día.</div>';
       } else {
-        wrap.innerHTML = draft.tasks.map(t=>`<div class="habit-card" data-task-id="${t.id}">
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-              <input data-task-id="${t.id}" data-field="title" placeholder="Que hacer..." value="${safeText(t.title)}" style="flex:1;min-width:180px" />
-              <select data-task-id="${t.id}" data-field="category" style="max-width:130px">${TASK_CATEGORIES.map(c=>`<option value="${c}" ${normalizeTaskCategory(t.category)===c?'selected':''}>${c}</option>`).join('')}</select>
-              <input type="time" data-task-id="${t.id}" data-field="start" value="${t.start||''}" style="max-width:108px" />
-              <input type="time" data-task-id="${t.id}" data-field="end" value="${t.end||''}" style="max-width:108px" />
-              <label class="small" style="display:flex;align-items:center;gap:4px"><input type="checkbox" data-task-id="${t.id}" data-field="done" ${t.done?'checked':''} />Hecho</label>
-              <button class="btn" data-task-id="${t.id}" data-field="delete" style="color:var(--danger);padding:8px 10px"><i data-feather="trash-2"></i></button>
+        wrap.innerHTML = draft.tasks.map(t=>`<div class="habit-card planner-task-item" data-task-id="${t.id}">
+            <div class="planner-task-grid">
+              <input class="task-title" data-task-id="${t.id}" data-field="title" placeholder="Que hacer..." value="${safeText(t.title)}" />
+              <select class="task-category" data-task-id="${t.id}" data-field="category">${TASK_CATEGORIES.map(c=>`<option value="${c}" ${normalizeTaskCategory(t.category)===c?'selected':''}>${c}</option>`).join('')}</select>
+              <input class="task-start" type="time" data-task-id="${t.id}" data-field="start" value="${t.start||''}" />
+              <input class="task-end" type="time" data-task-id="${t.id}" data-field="end" value="${t.end||''}" />
+              <label class="small task-status"><input type="checkbox" data-task-id="${t.id}" data-field="done" ${t.done?'checked':''} />Hecho</label>
+              <button class="btn plan-mini plan-delete task-delete" data-task-id="${t.id}" data-field="delete"><i data-feather="trash-2"></i></button>
             </div>
-            <div class="small">Bloque: ${classifyDayBlock(t.start || t.end)}</div>
+            <div class="planner-task-meta">Bloque: ${classifyDayBlock(t.start || t.end)}</div>
           </div>`).join('');
       }
       wrap.querySelectorAll('[data-task-id]').forEach(el=>{
