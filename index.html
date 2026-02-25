@@ -111,6 +111,18 @@ input.habits-input{min-width:84px;height:42px;font-size:16px;font-weight:800;bor
 .planner-task-grid .task-status input{width:16px;height:16px;margin:0;accent-color:var(--positive)}
 .planner-task-grid .task-delete{min-width:40px;width:40px;height:40px;padding:0;display:inline-flex;align-items:center;justify-content:center}
 .planner-task-meta{font-size:12px;color:var(--muted);padding-left:2px}
+.dayline24{display:flex;flex-direction:column;gap:6px;padding:8px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03)}
+.dayline-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.dayline-row{display:grid;grid-template-columns:84px minmax(0,1fr) 62px;gap:8px;align-items:center;padding:7px 8px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03)}
+.dayline-row.free{background:rgba(255,255,255,0.02)}
+.dayline-range{font-size:12px;font-weight:900;font-variant-numeric:tabular-nums}
+.dayline-desc{font-size:12px;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dayline-dur{font-size:11px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.dayline-meter{grid-column:1/4;height:6px;border-radius:999px;background:rgba(255,255,255,0.08);overflow:hidden}
+.dayline-meter span{display:block;height:100%;border-radius:999px}
+.dayline-row.busy .dayline-meter span{background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+.dayline-row.free .dayline-meter span{background:linear-gradient(90deg,rgba(52,211,153,0.6),rgba(15,169,113,0.55))}
+.dayline-note{font-size:11px;color:var(--muted)}
 .planner-template-item{padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03)}
 .planner-template-grid{display:grid;grid-template-columns:minmax(0,1fr) 112px 112px 130px auto;gap:8px;align-items:center}
 .planner-template-grid .tpl-title{min-width:0;font-weight:700}
@@ -147,6 +159,12 @@ input.habits-input{min-width:84px;height:42px;font-size:16px;font-weight:800;bor
   .planner-card-actions{display:grid;grid-template-columns:1fr;width:100%}
   .planner-card-actions .btn{width:100%;justify-content:center;min-height:44px}
   .planner-task-item,.planner-template-item{padding:8px;border-radius:12px}
+  .dayline24{padding:7px}
+  .dayline-head{flex-direction:column;align-items:flex-start;gap:2px}
+  .dayline-row{grid-template-columns:76px minmax(0,1fr) 56px;padding:6px 7px}
+  .dayline-range{font-size:11px}
+  .dayline-desc{font-size:11px}
+  .dayline-dur{font-size:10px}
   .planner-task-grid{grid-template-columns:1fr 1fr;gap:8px}
   .planner-task-grid .task-title{grid-column:1/3}
   .planner-task-grid .task-start{grid-column:1/2;grid-row:2}
@@ -565,7 +583,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   function classifyDayBlock(timeValue){
     const min = timeToMinutes(timeValue);
     if(min == null) return 'Sin hora';
-    if(min >= 300 && min < 720) return 'Manana';
+    if(min >= 300 && min < 720) return 'Mañana';
     if(min >= 720 && min < 1080) return 'Tarde';
     if(min >= 1080) return 'Noche';
     return 'Madrugada';
@@ -575,6 +593,87 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     const min = timeToMinutes(t);
     if(min == null) return 9999;
     return min;
+  }
+  function plannerCompareByTime(a,b){
+    const aStart = timeToMinutes(a && a.start);
+    const bStart = timeToMinutes(b && b.start);
+    const aEnd = timeToMinutes(a && a.end);
+    const bEnd = timeToMinutes(b && b.end);
+    const aKey = aStart == null ? (aEnd == null ? 9999 : aEnd) : aStart;
+    const bKey = bStart == null ? (bEnd == null ? 9999 : bEnd) : bStart;
+    if(aKey !== bKey) return aKey - bKey;
+    const aEndKey = aEnd == null ? 9999 : aEnd;
+    const bEndKey = bEnd == null ? 9999 : bEnd;
+    if(aEndKey !== bEndKey) return aEndKey - bEndKey;
+    const aLabel = String((a && (a.label || a.title)) || '');
+    const bLabel = String((b && (b.label || b.title)) || '');
+    return aLabel.localeCompare(bLabel);
+  }
+  function minutesToClock(total){
+    let n = Number(total);
+    if(Number.isNaN(n)) n = 0;
+    n = Math.max(0, Math.min(1440, Math.round(n)));
+    if(n === 1440) return '24:00';
+    const h = Math.floor(n/60);
+    const m = n % 60;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  }
+  function formatMinutesSpan(total){
+    const t = Math.max(0, Math.round(Number(total) || 0));
+    const h = Math.floor(t / 60);
+    const m = t % 60;
+    if(h && m) return `${h}h ${m}m`;
+    if(h) return `${h}h`;
+    return `${m}m`;
+  }
+  function buildPlannerDayline(items){
+    const raw = [];
+    const noRange = [];
+    (items || []).forEach(it=>{
+      const start = timeToMinutes(it && it.start);
+      const end = timeToMinutes(it && it.end);
+      if(start == null || end == null){
+        noRange.push(it);
+        return;
+      }
+      const base = {
+        label: String((it && it.label) || (it && it.title) || 'Bloque'),
+        done: !!(it && it.done),
+        functionName: String((it && it.functionName) || 'General')
+      };
+      if(start === end) return;
+      if(end > start){
+        raw.push({ start, end, ...base });
+      } else {
+        raw.push({ start, end:1440, ...base });
+        raw.push({ start:0, end, ...base });
+      }
+    });
+    raw.sort((a,b)=> (a.start - b.start) || (a.end - b.end));
+
+    const merged = [];
+    raw.forEach(seg=>{
+      const prev = merged[merged.length-1];
+      if(!prev || seg.start > prev.end){
+        merged.push({ start:seg.start, end:seg.end, items:[seg] });
+      } else {
+        prev.end = Math.max(prev.end, seg.end);
+        prev.items.push(seg);
+      }
+    });
+
+    const out = [];
+    let cursor = 0;
+    merged.forEach(seg=>{
+      if(seg.start > cursor) out.push({ type:'free', start:cursor, end:seg.start, items:[] });
+      out.push({ type:'busy', start:seg.start, end:seg.end, items:seg.items });
+      cursor = Math.max(cursor, seg.end);
+    });
+    if(cursor < 1440) out.push({ type:'free', start:cursor, end:1440, items:[] });
+
+    const freeTotal = out.filter(x=>x.type==='free').reduce((acc,x)=> acc + Math.max(0, x.end - x.start), 0);
+    const busyTotal = 1440 - freeTotal;
+    return { segments:out, freeTotal, busyTotal, noRangeCount:noRange.length };
   }
   function summarizePlannerTimeline(items){
     const blockCounts = {};
@@ -1038,12 +1137,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
         fromTemplate:!!t.fromTemplate
       });
     });
-    list.sort((a,b)=>{
-      const da = plannerSortKey(a);
-      const db = plannerSortKey(b);
-      if(da !== db) return da - db;
-      return String(a.label||'').localeCompare(String(b.label||''));
-    });
+    list.sort((a,b)=> plannerCompareByTime(a,b));
     return list;
   }
   function buildPlannerTimeline(dateKey){
@@ -1100,28 +1194,44 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       persistPlannerTemplate();
     };
     const sortDraftTasksByTime = ()=>{
-      draft.tasks.sort((a,b)=>{
-        const da = plannerSortKey({ start:a.start, end:a.end });
-        const db = plannerSortKey({ start:b.start, end:b.end });
-        if(da !== db) return da - db;
-        return String(a.title||'').localeCompare(String(b.title||''));
-      });
+      draft.tasks.sort((a,b)=> plannerCompareByTime(
+        { start:a.start, end:a.end, title:a.title },
+        { start:b.start, end:b.end, title:b.title }
+      ));
     };
     const renderLiveAgenda = ()=>{
       const timelineEl = $('#plannerLiveTimeline');
       const statsEl = $('#plannerLiveStats');
       const catsEl = $('#plannerLiveCategories');
+      const daylineEl = $('#plannerDayline24');
       if(!timelineEl) return;
       const items = buildPlannerTimelineFromRecord(draft);
       const done = items.filter(it=>it.done).length;
       if(statsEl) statsEl.textContent = `${done}/${items.length} bloques`;
+      const summary = summarizePlannerTimeline(items);
+      const dayline = buildPlannerDayline(items);
+      if(catsEl) catsEl.innerHTML = `<strong>Bloques:</strong> ${safeText(fmtPlannerCounts(summary.blockCounts) || 'Sin hora')}<br/><strong>Funciones:</strong> ${safeText(fmtPlannerCounts(summary.functionCounts) || 'General')}<br/><strong>Disponibilidad:</strong> ${safeText(formatMinutesSpan(dayline.freeTotal))} libres · ${safeText(formatMinutesSpan(dayline.busyTotal))} ocupadas`;
+      if(daylineEl){
+        const rows = dayline.segments.map(seg=>{
+          const duration = Math.max(0, seg.end - seg.start);
+          const meter = Math.max(2, (duration / 1440) * 100);
+          const range = `${minutesToClock(seg.start)}-${minutesToClock(seg.end)}`;
+          if(seg.type === 'free'){
+            return `<div class="dayline-row free"><div class="dayline-range">${range}</div><div class="dayline-desc">Libre</div><div class="dayline-dur">${formatMinutesSpan(duration)}</div><div class="dayline-meter"><span style="width:${meter.toFixed(2)}%"></span></div></div>`;
+          }
+          const labels = Array.from(new Set((seg.items||[]).map(x=> String(x.label||'').trim()).filter(Boolean)));
+          const short = labels.slice(0,2).join(' · ');
+          const extra = labels.length > 2 ? ` +${labels.length-2}` : '';
+          const desc = short ? `${short}${extra}` : 'Bloque ocupado';
+          return `<div class="dayline-row busy"><div class="dayline-range">${range}</div><div class="dayline-desc">${safeText(desc)}</div><div class="dayline-dur">${formatMinutesSpan(duration)}</div><div class="dayline-meter"><span style="width:${meter.toFixed(2)}%"></span></div></div>`;
+        }).join('');
+        const note = dayline.noRangeCount ? `<div class="dayline-note">Bloques sin rango completo: ${dayline.noRangeCount}</div>` : '';
+        daylineEl.innerHTML = `<div class="dayline-head"><strong>Línea de tiempo 24h</strong><span class="small">00:00 a 24:00</span></div>${rows}${note}`;
+      }
       if(!items.length){
-        timelineEl.innerHTML = '<div class="plan-empty">Aún no hay bloques con hora.</div>';
-        if(catsEl) catsEl.innerHTML = '<strong>Bloques:</strong> Sin hora<br/><strong>Funciones:</strong> General';
+        timelineEl.innerHTML = '<div class="plan-empty">Aún no hay bloques registrados.</div>';
         return;
       }
-      const summary = summarizePlannerTimeline(items);
-      if(catsEl) catsEl.innerHTML = `<strong>Bloques:</strong> ${safeText(fmtPlannerCounts(summary.blockCounts) || 'Sin hora')}<br/><strong>Funciones:</strong> ${safeText(fmtPlannerCounts(summary.functionCounts) || 'General')}`;
       timelineEl.innerHTML = items.slice(0,18).map(it=>{
         const tagClass = it.done ? 'done' : (it.fromTemplate ? 'task' : '');
         const tagText = it.done ? 'Hecho' : (it.fromTemplate ? 'Recurrente' : 'Bloque');
@@ -1167,6 +1277,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       <div class="card" style="background:rgba(255,255,255,0.02)">
         <div class="section-title"><div>Agenda automática por hora</div><div class="small" id="plannerLiveStats">0/0 bloques</div></div>
         <div id="plannerLiveCategories" class="small" style="margin-top:6px;color:var(--muted)">Bloques: --</div>
+        <div id="plannerDayline24" class="dayline24" style="margin-top:8px"></div>
         <div id="plannerLiveTimeline" class="plan-list" style="margin-top:8px"></div>
       </div>
       <div class="planner-footer">
@@ -1985,5 +2096,8 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   <script>document.addEventListener('DOMContentLoaded', ()=> { if(window.feather) feather.replace(); });</script>
 </body>
 </html>
+
+
+
 
 
