@@ -103,10 +103,12 @@ input.habits-input{min-width:84px;height:42px;font-size:16px;font-weight:800;bor
 .planner-table th,.planner-table td{padding:8px 6px}
 .planner-footer{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
 .planner-task-item{gap:8px;padding:10px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.12)}
-.planner-task-grid{display:grid;grid-template-columns:minmax(0,1fr) 116px 116px auto auto;gap:8px;align-items:center}
+.planner-task-grid{display:grid;grid-template-columns:minmax(0,1fr) 110px 110px 106px auto auto;gap:8px;align-items:center}
 .planner-task-grid .task-title{min-width:0;grid-column:1/-1;font-weight:700}
 .planner-task-grid .task-category{min-width:0}
 .planner-task-grid .task-start,.planner-task-grid .task-end{min-width:0;font-variant-numeric:tabular-nums}
+.planner-task-grid .task-done-time{min-width:0;font-variant-numeric:tabular-nums}
+.planner-task-grid .task-done-time:disabled{opacity:0.55}
 .planner-task-grid .task-status{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);min-height:40px;font-weight:700;color:var(--text)}
 .planner-task-grid .task-status input{width:16px;height:16px;margin:0;accent-color:var(--positive)}
 .planner-task-grid .task-delete{min-width:40px;width:40px;height:40px;padding:0;display:inline-flex;align-items:center;justify-content:center}
@@ -169,17 +171,44 @@ input.habits-input{min-width:84px;height:42px;font-size:16px;font-weight:800;bor
   .planner-task-grid .task-title{grid-column:1/3}
   .planner-task-grid .task-start{grid-column:1/2;grid-row:2}
   .planner-task-grid .task-end{grid-column:2/3;grid-row:2}
-  .planner-task-grid .task-category{grid-column:1/2;grid-row:3}
-  .planner-task-grid .task-status{grid-column:2/3;grid-row:3;justify-content:center}
-  .planner-task-grid .task-delete{grid-column:2/3;grid-row:4;justify-self:end;width:44px;min-width:44px}
+  .planner-task-grid .task-category{grid-column:1/3;grid-row:3}
+  .planner-task-grid .task-done-time{grid-column:1/2;grid-row:4}
+  .planner-task-grid .task-status{grid-column:2/3;grid-row:4;justify-content:flex-start}
+  .planner-task-grid .task-delete{grid-column:2/3;grid-row:5;justify-self:end;width:44px;min-width:44px}
   .planner-template-grid{grid-template-columns:1fr 1fr;gap:8px}
   .planner-template-grid .tpl-title{grid-column:1/3}
-  .planner-template-grid .tpl-category{grid-column:1/2}
-  .planner-template-grid .tpl-start{grid-column:1/2}
-  .planner-template-grid .tpl-end{grid-column:2/3}
+  .planner-template-grid .tpl-start{grid-column:1/2;grid-row:2}
+  .planner-template-grid .tpl-end{grid-column:2/3;grid-row:2}
+  .planner-template-grid .tpl-category{grid-column:1/3;grid-row:3}
   .planner-template-grid .tpl-delete{grid-column:2/3;justify-self:end;width:44px;min-width:44px}
+  .planner-task-grid .task-status,.planner-task-grid .task-category,.planner-template-grid .tpl-category{min-height:44px}
+  .planner-task-grid .task-delete,.planner-template-grid .tpl-delete{height:44px}
   .overlay{padding:10px}
   .modal{max-height:92vh;overflow:auto;padding:12px}
+}
+
+@media (max-width: 700px){
+  .overlay{align-items:flex-start;padding:8px}
+  .modal{width:100%;max-width:none;margin-top:env(safe-area-inset-top);max-height:calc(100vh - 16px - env(safe-area-inset-top));overflow:auto}
+  .planner-card-head{flex-direction:column;align-items:stretch}
+  .planner-card-actions{display:grid;grid-template-columns:1fr;width:100%}
+  .planner-card-actions .btn{width:100%;justify-content:center;min-height:44px}
+  .planner-shell{gap:10px}
+  .planner-task-item,.planner-template-item,.dayline24{overflow:hidden}
+  .planner-task-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .planner-task-grid .task-title{grid-column:1/3}
+  .planner-task-grid .task-start{grid-column:1/2;grid-row:2}
+  .planner-task-grid .task-end{grid-column:2/3;grid-row:2}
+  .planner-task-grid .task-category{grid-column:1/3;grid-row:3}
+  .planner-task-grid .task-done-time{grid-column:1/2;grid-row:4}
+  .planner-task-grid .task-status{grid-column:2/3;grid-row:4;justify-content:flex-start}
+  .planner-task-grid .task-delete{grid-column:2/3;grid-row:5;justify-self:end;width:44px;min-width:44px}
+  .planner-template-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .planner-template-grid .tpl-title{grid-column:1/3}
+  .planner-template-grid .tpl-start{grid-column:1/2;grid-row:2}
+  .planner-template-grid .tpl-end{grid-column:2/3;grid-row:2}
+  .planner-template-grid .tpl-category{grid-column:1/3;grid-row:3}
+  .planner-template-grid .tpl-delete{grid-column:2/3;justify-self:end;width:44px;min-width:44px}
 }
 
 .small{font-size:12px;color:var(--muted)}
@@ -499,6 +528,10 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     const mm = Math.max(0, Math.min(59, Number(m[2])||0));
     return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
   }
+  function currentLocalClock(){
+    const d = new Date();
+    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }
   function timeToMinutes(val){
     const t = normalizeClock(val);
     if(!t) return null;
@@ -556,6 +589,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       end: tpl.end,
       category: tpl.category,
       done: false,
+      doneAt: '',
       templateId: tpl.id,
       fromTemplate: true
     };
@@ -626,9 +660,18 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     if(h) return `${h}h`;
     return `${m}m`;
   }
+  function normalizePlannerRange(startMin, endMin){
+    if(startMin == null || endMin == null) return null;
+    if(startMin === endMin) return null;
+    if(startMin < endMin) return { start:startMin, end:endMin, swapped:false };
+    // El plan diario se interpreta dentro del mismo día (00:00-24:00).
+    // Si el usuario invierte horas, corregimos el orden para evitar ocupar casi todo el día.
+    return { start:endMin, end:startMin, swapped:true };
+  }
   function buildPlannerDayline(items){
     const raw = [];
     const noRange = [];
+    let swappedCount = 0;
     (items || []).forEach(it=>{
       const start = timeToMinutes(it && it.start);
       const end = timeToMinutes(it && it.end);
@@ -636,18 +679,15 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
         noRange.push(it);
         return;
       }
+      const range = normalizePlannerRange(start, end);
+      if(!range) return;
+      if(range.swapped) swappedCount++;
       const base = {
         label: String((it && it.label) || (it && it.title) || 'Bloque'),
         done: !!(it && it.done),
         functionName: String((it && it.functionName) || 'General')
       };
-      if(start === end) return;
-      if(end > start){
-        raw.push({ start, end, ...base });
-      } else {
-        raw.push({ start, end:1440, ...base });
-        raw.push({ start:0, end, ...base });
-      }
+      raw.push({ start:range.start, end:range.end, ...base });
     });
     raw.sort((a,b)=> (a.start - b.start) || (a.end - b.end));
 
@@ -673,7 +713,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
 
     const freeTotal = out.filter(x=>x.type==='free').reduce((acc,x)=> acc + Math.max(0, x.end - x.start), 0);
     const busyTotal = 1440 - freeTotal;
-    return { segments:out, freeTotal, busyTotal, noRangeCount:noRange.length };
+    return { segments:out, freeTotal, busyTotal, noRangeCount:noRange.length, swappedCount };
   }
   function summarizePlannerTimeline(items){
     const blockCounts = {};
@@ -703,16 +743,20 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       }
     });
     const tasks = Array.isArray(rec.tasks) ? rec.tasks : [];
-    rec.tasks = tasks.map(t=>({
-      id: (t && t.id) ? String(t.id) : uid('task'),
-      title: String((t && t.title) ?? '').trim(),
-      start: normalizeClock(t && t.start),
-      end: normalizeClock(t && t.end),
-      category: normalizeTaskCategory(t && t.category),
-      done: !!(t && t.done),
-      templateId: (t && t.templateId) ? String(t.templateId) : '',
-      fromTemplate: !!(t && t.fromTemplate)
-    })).filter(t=> t.title || t.start || t.end);
+    rec.tasks = tasks.map(t=>{
+      const doneAt = normalizeClock(t && (t.doneAt || t.doneTime || t.completedAt));
+      return {
+        id: (t && t.id) ? String(t.id) : uid('task'),
+        title: String((t && t.title) ?? '').trim(),
+        start: normalizeClock(t && t.start),
+        end: normalizeClock(t && t.end),
+        category: normalizeTaskCategory(t && t.category),
+        done: !!(t && t.done) || !!doneAt,
+        doneAt,
+        templateId: (t && t.templateId) ? String(t.templateId) : '',
+        fromTemplate: !!(t && t.fromTemplate)
+      };
+    }).filter(t=> t.title || t.start || t.end);
     if(!rec.updatedAt) rec.updatedAt = nowISO();
     if(!rec.deviceId) rec.deviceId = DEVICE_ID;
     return rec;
@@ -1133,6 +1177,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
         end:t.end||'',
         functionName:normalizeTaskCategory(t.category),
         done:!!t.done,
+        doneAt:t.doneAt || '',
         templateId:t.templateId || '',
         fromTemplate:!!t.fromTemplate
       });
@@ -1162,7 +1207,8 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     const rows = items.slice(0,10).map(it=>{
       const tagClass = it.done ? 'done' : (it.fromTemplate ? 'task' : '');
       const tagText = it.done ? 'Hecho' : (it.fromTemplate ? 'Recurrente' : 'Bloque');
-      const meta = `${it.functionName} · ${classifyDayBlock(it.start || it.end)}`;
+      const doneMeta = (it.done && it.doneAt) ? ` · Culminó ${it.doneAt}` : '';
+      const meta = `${it.functionName} · ${classifyDayBlock(it.start || it.end)}${doneMeta}`;
       return `<div class="plan-item"><div class="plan-time">${plannerTimeLabel(it)}</div><div class="plan-label"><div>${safeText(it.label)}</div><div class="small">${safeText(meta)}</div></div><div class="plan-tag ${tagClass}">${tagText}</div></div>`;
     }).join('');
     const more = items.length>10 ? `<div class="small" style="margin-top:8px">+${items.length-10} bloques más...</div>` : '';
@@ -1210,7 +1256,10 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       if(statsEl) statsEl.textContent = `${done}/${items.length} bloques`;
       const summary = summarizePlannerTimeline(items);
       const dayline = buildPlannerDayline(items);
-      if(catsEl) catsEl.innerHTML = `<strong>Bloques:</strong> ${safeText(fmtPlannerCounts(summary.blockCounts) || 'Sin hora')}<br/><strong>Funciones:</strong> ${safeText(fmtPlannerCounts(summary.functionCounts) || 'General')}<br/><strong>Disponibilidad:</strong> ${safeText(formatMinutesSpan(dayline.freeTotal))} libres · ${safeText(formatMinutesSpan(dayline.busyTotal))} ocupadas`;
+      if(catsEl){
+        const corrected = dayline.swappedCount ? `<br/><strong>Ajustes:</strong> ${dayline.swappedCount} rango(s) invertido(s) corregido(s)` : '';
+        catsEl.innerHTML = `<strong>Bloques:</strong> ${safeText(fmtPlannerCounts(summary.blockCounts) || 'Sin hora')}<br/><strong>Funciones:</strong> ${safeText(fmtPlannerCounts(summary.functionCounts) || 'General')}<br/><strong>Disponibilidad:</strong> ${safeText(formatMinutesSpan(dayline.freeTotal))} libres · ${safeText(formatMinutesSpan(dayline.busyTotal))} ocupadas${corrected}`;
+      }
       if(daylineEl){
         const rows = dayline.segments.map(seg=>{
           const duration = Math.max(0, seg.end - seg.start);
@@ -1225,7 +1274,9 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
           const desc = short ? `${short}${extra}` : 'Bloque ocupado';
           return `<div class="dayline-row busy"><div class="dayline-range">${range}</div><div class="dayline-desc">${safeText(desc)}</div><div class="dayline-dur">${formatMinutesSpan(duration)}</div><div class="dayline-meter"><span style="width:${meter.toFixed(2)}%"></span></div></div>`;
         }).join('');
-        const note = dayline.noRangeCount ? `<div class="dayline-note">Bloques sin rango completo: ${dayline.noRangeCount}</div>` : '';
+        const missing = dayline.noRangeCount ? `<div class="dayline-note">Bloques sin rango completo: ${dayline.noRangeCount}</div>` : '';
+        const swapped = dayline.swappedCount ? `<div class="dayline-note">Rangos invertidos corregidos: ${dayline.swappedCount}</div>` : '';
+        const note = `${missing}${swapped}`;
         daylineEl.innerHTML = `<div class="dayline-head"><strong>Línea de tiempo 24h</strong><span class="small">00:00 a 24:00</span></div>${rows}${note}`;
       }
       if(!items.length){
@@ -1235,7 +1286,8 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       timelineEl.innerHTML = items.slice(0,18).map(it=>{
         const tagClass = it.done ? 'done' : (it.fromTemplate ? 'task' : '');
         const tagText = it.done ? 'Hecho' : (it.fromTemplate ? 'Recurrente' : 'Bloque');
-        const meta = `${it.functionName} · ${classifyDayBlock(it.start || it.end)}`;
+        const doneMeta = (it.done && it.doneAt) ? ` · Culminó ${it.doneAt}` : '';
+        const meta = `${it.functionName} · ${classifyDayBlock(it.start || it.end)}${doneMeta}`;
         return `<div class="plan-item"><div class="plan-time">${plannerTimeLabel(it)}</div><div class="plan-label"><div>${safeText(it.label)}</div><div class="small">${safeText(meta)}</div></div><div class="plan-actions"><div class="plan-tag ${tagClass}">${tagText}</div><button class="btn ghost plan-mini" data-plan-act="edit" data-plan-id="${it.id}">Editar</button><button class="btn plan-mini plan-delete" data-plan-act="delete" data-plan-id="${it.id}">Eliminar</button></div></div>`;
       }).join('');
       timelineEl.querySelectorAll('[data-plan-act]').forEach(btn=>{
@@ -1345,10 +1397,11 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
               <select class="task-category" data-task-id="${t.id}" data-field="category">${TASK_CATEGORIES.map(c=>`<option value="${c}" ${normalizeTaskCategory(t.category)===c?'selected':''}>${c}</option>`).join('')}</select>
               <input class="task-start" type="time" data-task-id="${t.id}" data-field="start" value="${t.start||''}" />
               <input class="task-end" type="time" data-task-id="${t.id}" data-field="end" value="${t.end||''}" />
+              <input class="task-done-time" type="time" data-task-id="${t.id}" data-field="doneAt" value="${t.doneAt||''}" ${t.done?'':'disabled'} />
               <label class="small task-status"><input type="checkbox" data-task-id="${t.id}" data-field="done" ${t.done?'checked':''} />Hecho</label>
               <button class="btn plan-mini plan-delete task-delete" data-task-id="${t.id}" data-field="delete"><i data-feather="trash-2"></i></button>
             </div>
-            <div class="planner-task-meta">Bloque: ${classifyDayBlock(t.start || t.end)}${t.fromTemplate?' · Recurrente':''}</div>
+            <div class="planner-task-meta">Bloque: ${classifyDayBlock(t.start || t.end)}${t.fromTemplate?' · Recurrente':''}${(t.done && t.doneAt)?` · Culminó ${t.doneAt}`:''}</div>
           </div>`).join('');
       }
       wrap.querySelectorAll('[data-task-id]').forEach(el=>{
@@ -1365,7 +1418,33 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
         const applyChange = ()=>{
           const task = draft.tasks.find(t=>t.id===taskId);
           if(!task) return;
-          if(field === 'done') task.done = !!el.checked;
+          if(field === 'done'){
+            task.done = !!el.checked;
+            if(task.done){
+              if(!task.doneAt) task.doneAt = currentLocalClock();
+            } else {
+              task.doneAt = '';
+            }
+            const doneAtInput = $(`#plannerTasksWrap [data-task-id="${taskId}"][data-field="doneAt"]`);
+            if(doneAtInput){
+              doneAtInput.disabled = !task.done;
+              doneAtInput.value = task.done ? (task.doneAt || '') : '';
+            }
+          }
+          else if(field === 'doneAt'){
+            task.doneAt = normalizeClock(el.value);
+            el.value = task.doneAt;
+            const doneCheck = $(`#plannerTasksWrap [data-task-id="${taskId}"][data-field="done"]`);
+            if(task.doneAt){
+              task.done = true;
+              if(doneCheck) doneCheck.checked = true;
+              el.disabled = false;
+            } else {
+              task.done = false;
+              if(doneCheck) doneCheck.checked = false;
+              el.disabled = true;
+            }
+          }
           else if(field === 'title') task.title = String(el.value || '').trim();
           else if(field === 'category') task.category = normalizeTaskCategory(el.value);
           else if(field === 'start' || field === 'end'){ task[field] = normalizeClock(el.value); el.value = task[field]; }
@@ -1400,7 +1479,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     };
 
     $('#plannerAddTask').onclick = ()=>{
-      draft.tasks.unshift({ id:uid('task'), title:'', start:'', end:'', category:'General', done:false, templateId:'', fromTemplate:false });
+      draft.tasks.unshift({ id:uid('task'), title:'', start:'', end:'', category:'General', done:false, doneAt:'', templateId:'', fromTemplate:false });
       persistPlannerDraft();
       renderTasks();
     };
@@ -2096,8 +2175,5 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   <script>document.addEventListener('DOMContentLoaded', ()=> { if(window.feather) feather.replace(); });</script>
 </body>
 </html>
-
-
-
 
 
