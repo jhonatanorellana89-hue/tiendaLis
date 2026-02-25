@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-<title>Suite Empresarial Â· Diario</title>
+<title>Suite Empresarial · Diario</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -96,6 +96,8 @@ input.habits-input{min-width:84px;height:42px;font-size:16px;font-weight:800;bor
 .plan-empty{font-size:12px;color:var(--muted)}
 .planner-shell{display:flex;flex-direction:column;gap:12px}
 .planner-header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap}
+.planner-card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.planner-card-actions{display:flex;gap:8px;flex-wrap:wrap}
 .planner-habits-wrap{max-height:42vh;overflow:auto;padding:6px;border-radius:12px;border:1px solid rgba(255,255,255,0.08)}
 .planner-table{width:100%;font-size:12px;min-width:640px}
 .planner-table th,.planner-table td{padding:8px 6px}
@@ -115,6 +117,8 @@ input.habits-input{min-width:84px;height:42px;font-size:16px;font-weight:800;bor
 .planner-template-grid .tpl-start,.planner-template-grid .tpl-end{min-width:0;font-variant-numeric:tabular-nums}
 .planner-template-grid .tpl-category{min-width:0}
 .planner-template-grid .tpl-delete{min-width:40px;width:40px;height:40px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.planner-template-grid input,.planner-template-grid select,.planner-task-grid input,.planner-task-grid select{min-height:42px}
+.planner-template-grid input[type="time"],.planner-task-grid input[type="time"]{text-align:center}
 .plan-actions{display:flex;align-items:center;gap:6px;justify-self:end;flex-wrap:wrap}
 .plan-mini{padding:6px 8px;min-height:34px;font-size:12px}
 .plan-delete{color:var(--danger)}
@@ -137,19 +141,25 @@ input.habits-input{min-width:84px;height:42px;font-size:16px;font-weight:800;bor
   .plan-actions .btn{width:100%;padding:8px 6px}
   .planner-habits-wrap{max-height:34vh;padding:4px}
   .planner-table{min-width:760px}
+  .planner-shell{gap:10px}
+  .planner-header{gap:6px}
+  .planner-card-head{flex-direction:column;align-items:stretch}
+  .planner-card-actions{display:grid;grid-template-columns:1fr;width:100%}
+  .planner-card-actions .btn{width:100%;justify-content:center;min-height:44px}
+  .planner-task-item,.planner-template-item{padding:8px;border-radius:12px}
   .planner-task-grid{grid-template-columns:1fr 1fr;gap:8px}
   .planner-task-grid .task-title{grid-column:1/3}
-  .planner-task-grid .task-category{grid-column:1/3}
-  .planner-task-grid .task-start{grid-column:1/2}
-  .planner-task-grid .task-end{grid-column:2/3}
-  .planner-task-grid .task-status{grid-column:1/2}
-  .planner-task-grid .task-delete{grid-column:2/3;justify-self:end}
+  .planner-task-grid .task-start{grid-column:1/2;grid-row:2}
+  .planner-task-grid .task-end{grid-column:2/3;grid-row:2}
+  .planner-task-grid .task-category{grid-column:1/2;grid-row:3}
+  .planner-task-grid .task-status{grid-column:2/3;grid-row:3;justify-content:center}
+  .planner-task-grid .task-delete{grid-column:2/3;grid-row:4;justify-self:end;width:44px;min-width:44px}
   .planner-template-grid{grid-template-columns:1fr 1fr;gap:8px}
   .planner-template-grid .tpl-title{grid-column:1/3}
-  .planner-template-grid .tpl-category{grid-column:1/3}
+  .planner-template-grid .tpl-category{grid-column:1/2}
   .planner-template-grid .tpl-start{grid-column:1/2}
   .planner-template-grid .tpl-end{grid-column:2/3}
-  .planner-template-grid .tpl-delete{grid-column:2/3;justify-self:end}
+  .planner-template-grid .tpl-delete{grid-column:2/3;justify-self:end;width:44px;min-width:44px}
   .overlay{padding:10px}
   .modal{max-height:92vh;overflow:auto;padding:12px}
 }
@@ -186,33 +196,33 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
         <div class="logo">JO</div>
         <div class="title-wrap">
           <h1>JHONATAN ORELLANA</h1>
-          <p>Control financiero centralizado â€¢ UNA DATA</p>
+          <p>Control financiero centralizado • UNA DATA</p>
           <div class="status-bar">
             <span class="badge green" id="statusCloud">LOCAL</span>
             <span class="badge amber" id="syncStatus">idle</span>
             <span class="badge" id="netStatus">online</span>
           </div>
           <div class="small">orgId: <strong id="orgBadge">oxIgjNwqNPiAneP5alpM</strong></div>
-          <div class="small" id="syncLog">Ãšltimo sync: â€”</div>
+          <div class="small" id="syncLog">Último sync: —</div>
         </div>
         <button id="themeToggle" class="btn ghost" title="Tema claro/oscuro"><i data-feather="sun"></i></button>
       </header>
 
-      <div class="nav-scroll" aria-label="MenÃº">
+      <div class="nav-scroll" aria-label="Menú">
         <button class="nav-btn active" data-view="dashboard"><i data-feather="bar-chart-2"></i>Resumen</button>
         <button class="nav-btn" data-view="transactions"><i data-feather="credit-card"></i>Transacciones</button>
         <button class="nav-btn" data-view="banks"><i data-feather="bank"></i>Bancos</button>
         <button class="nav-btn" data-view="assets"><i data-feather="layers"></i>Activos</button>
         <button class="nav-btn" data-view="debts"><i data-feather="briefcase"></i>Deudas</button>
         <button class="nav-btn" data-view="fixed"><i data-feather="calendar"></i>Mensuales</button>
-        <button class="nav-btn" data-view="categories"><i data-feather="tag"></i>CategorÃ­as</button>
+        <button class="nav-btn" data-view="categories"><i data-feather="tag"></i>Categorías</button>
         <button class="nav-btn" data-view="businesses"><i data-feather="briefcase"></i>Empresas</button>
-        <button class="nav-btn" data-view="habits"><i data-feather="check-square"></i>HÃ¡bitos</button>
+        <button class="nav-btn" data-view="habits"><i data-feather="check-square"></i>Hábitos</button>
         <button class="nav-btn" data-view="export"><i data-feather="download-cloud"></i>Export</button>
       </div>
 
       <div class="top-actions">
-        <button id="btnNewTx" class="btn primary"><i data-feather="plus"></i> Nueva transacciÃ³n</button>
+        <button id="btnNewTx" class="btn primary"><i data-feather="plus"></i> Nueva transacción</button>
         <button id="btnNewBank" class="btn ghost"><i data-feather="plus-circle"></i> Nueva cuenta</button>
         <button id="btnPDF" class="btn positive"><i data-feather="file-text"></i> Exportar PDF</button>
         <button id="btnSyncNow" class="btn ghost"><i data-feather="refresh-cw"></i> Sync ahora</button>
@@ -239,8 +249,8 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
           <div id="alertsArea" class="small" style="margin-top:6px;color:var(--muted)">Sin alertas</div>
         </div>
         <div class="card" style="margin-top:12px;background:rgba(255,255,255,0.02)">
-          <div class="section-title"><div>Ãšltimas transacciones</div><button id="btnApplyFixedQuick" class="btn warn" style="padding:6px 10px"><i data-feather="zap"></i> Fijos hoy</button></div>
-          <div id="smallTxList" class="small" style="margin-top:6px;color:var(--muted)">â€”</div>
+          <div class="section-title"><div>Últimas transacciones</div><button id="btnApplyFixedQuick" class="btn warn" style="padding:6px 10px"><i data-feather="zap"></i> Fijos hoy</button></div>
+          <div id="smallTxList" class="small" style="margin-top:6px;color:var(--muted)">—</div>
         </div>
       </section>
 
@@ -254,7 +264,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
           </div>
         </div>
         <div class="scroll-y">
-          <table id="txTable"><thead><tr><th>Fecha</th><th>Cuenta</th><th>Tipo</th><th>Cat/Activo</th><th>DescripciÃ³n</th><th class="right">Monto</th><th></th></tr></thead><tbody></tbody></table>
+          <table id="txTable"><thead><tr><th>Fecha</th><th>Cuenta</th><th>Tipo</th><th>Cat/Activo</th><th>Descripción</th><th class="right">Monto</th><th></th></tr></thead><tbody></tbody></table>
         </div>
       </section>
 
@@ -303,7 +313,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       </section>
 
       <section id="view-categories" class="card" style="display:none">
-        <div class="section-title"><div>CategorÃ­as & LÃ­mites</div><button id="btnAddCategoryTop" class="btn primary"><i data-feather="tag"></i> Nueva</button></div>
+        <div class="section-title"><div>Categorías & Límites</div><button id="btnAddCategoryTop" class="btn primary"><i data-feather="tag"></i> Nueva</button></div>
         <div id="categoriesArea" class="scroll-y"></div>
       </section>
 
@@ -314,45 +324,45 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
 
   <section id="view-habits" class="card" style="display:none">
         <div class="section-title" style="flex-wrap:wrap;gap:8px">
-          <div>HÃ¡bitos diarios</div>
+          <div>Hábitos diarios</div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <input id="habitsDate" type="date" style="max-width:160px" />
             <span id="habitsBadge" class="badge green">0%</span>
-            <button id="btnHabitsPlanner" class="btn warn"><i data-feather="clock"></i> Plan dia</button>
-            <button id="btnHabitsReset" class="btn ghost"><i data-feather="refresh-cw"></i> Reset dÃ­a</button>
+            <button id="btnHabitsPlanner" class="btn warn"><i data-feather="clock"></i> Plan día</button>
+            <button id="btnHabitsReset" class="btn ghost"><i data-feather="refresh-cw"></i> Reset día</button>
             <button id="btnHabitsExport" class="btn primary"><i data-feather="download"></i> Export JSON</button>
           </div>
         </div>
 
         <div class="kpigrid" style="margin-top:10px">
-          <div class="kpi"><div class="label">Puntaje logrado</div><div class="value" id="habitsScore">0/0</div><div class="sub">Suma del dÃ­a</div></div>
-          <div class="kpi"><div class="label">Porcentaje del dÃ­a</div><div class="value" id="habitsPct">0%</div><div class="sub">Meta diaria</div></div>
-          <div class="kpi"><div class="label">Racha</div><div class="value" id="habitsStreak">0</div><div class="sub">DÃ­as seguidos â‰¥ 70%</div></div>
+          <div class="kpi"><div class="label">Puntaje logrado</div><div class="value" id="habitsScore">0/0</div><div class="sub">Suma del día</div></div>
+          <div class="kpi"><div class="label">Porcentaje del día</div><div class="value" id="habitsPct">0%</div><div class="sub">Meta diaria</div></div>
+          <div class="kpi"><div class="label">Racha</div><div class="value" id="habitsStreak">0</div><div class="sub">Días seguidos ≥ 70%</div></div>
           <div class="kpi"><div class="label">Racha sin alcohol</div><div class="value" id="habitsNoAlcoholStreak">0</div><div class="sub" id="habitsNoAlcoholNote">Hoy: pendiente</div></div>
         </div>
 
         <div class="card" style="margin-top:12px;background:rgba(255,255,255,0.02)">
           <div class="section-title"><div>Planificador diario</div><div class="small" id="plannerCount">0/0 bloques</div></div>
-          <div id="plannerSummary" class="small" style="margin-top:6px;color:var(--muted)">Sin bloques programados para este dÃ­a.</div>
+          <div id="plannerSummary" class="small" style="margin-top:6px;color:var(--muted)">Sin bloques programados para este día.</div>
         </div>
 
         <div class="card" style="margin-top:12px;background:rgba(255,255,255,0.02)">
-          <div class="section-title"><div>Resumen por Ã¡rea</div></div>
-          <div id="habitsAreaSummary" class="small" style="margin-top:6px;color:var(--muted)">â€”</div>
+          <div class="section-title"><div>Resumen por área</div></div>
+          <div id="habitsAreaSummary" class="small" style="margin-top:6px;color:var(--muted)">—</div>
         </div>
 
         <div id="habitsCards" class="habits-cards" style="margin-top:12px"></div>
 
         <div class="scroll-y" style="margin-top:12px">
           <table id="habitsTable" class="habits-table">
-            <thead><tr><th>Ãrea</th><th>HÃ¡bito</th><th class="right">Rango</th><th class="right">Hoy</th><th class="right">%</th></tr></thead>
+            <thead><tr><th>Área</th><th>Hábito</th><th class="right">Rango</th><th class="right">Hoy</th><th class="right">%</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
 
         <div class="card" style="margin-top:12px;background:rgba(255,255,255,0.02)">
-          <div class="section-title"><div>Historial Ãºltimos 14 dÃ­as</div></div>
-          <div id="habitsHistory" class="small" style="margin-top:6px;color:var(--muted)">â€”</div>
+          <div class="section-title"><div>Historial últimos 14 días</div></div>
+          <div id="habitsHistory" class="small" style="margin-top:6px;color:var(--muted)">—</div>
         </div>
       </section>
 
@@ -367,13 +377,13 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
             <button id="btnExportPDF" class="btn positive"><i data-feather="file-text"></i> PDF</button>
           </div>
         </div>
-        <div class="small" style="margin-top:8px">PDF: TÃ­tulo 12pt Â· SubtÃ­tulos 11pt Â· Texto 10pt</div>
+        <div class="small" style="margin-top:8px">PDF: Título 12pt · Subtítulos 11pt · Texto 10pt</div>
       </section>
     </div>
   </div>
 
   <div id="overlay" class="overlay" aria-hidden="true"><div class="modal" id="panelRoot"></div></div>
-  <button id="fab" class="fab" title="Nueva transacciÃ³n"><i data-feather="plus"></i> Nueva Tx</button>
+  <button id="fab" class="fab" title="Nueva transacción"><i data-feather="plus"></i> Nueva Tx</button>
   <div id="toast" style="position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#0f243d;padding:10px 12px;border-radius:12px;display:none;z-index:1200;box-shadow:var(--card-shadow)"></div>
 
   <script>
@@ -403,13 +413,13 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     { area:'DESARROLLO PROFESIONAL', items:[
       { key:'work', label:'WORK (bloques profundos)', max:7, input:'check' },
       { key:'trabajo_extra', label:'TRABAJO EXTRA', max:5, input:'check' },
-      { key:'planificacion_diaria', label:'PLANIFICACIÃ“N DIARIA', max:3, input:'check' },
-      { key:'valor_economico', label:'GENERÃ‰ VALOR ECONÃ“MICO HOY', max:7, input:'check' },
-      { key:'capacitacion', label:'CAPACITACIÃ“N', max:5, input:'check' },
+      { key:'planificacion_diaria', label:'PLANIFICACIÓN DIARIA', max:3, input:'check' },
+      { key:'valor_economico', label:'GENERÉ VALOR ECONÓMICO HOY', max:7, input:'check' },
+      { key:'capacitacion', label:'CAPACITACIÓN', max:5, input:'check' },
       { key:'ver_tutoriales', label:'VER TUTORIALES', max:3, input:'check' },
       { key:'leer_1_hora', label:'LEER 1 HORA', max:3, input:'check' }
     ]},
-    { area:'SALUD Y ENERGÃA', items:[
+    { area:'SALUD Y ENERGÍA', items:[
       { key:'desayuno', label:'DESAYUNO', max:2, input:'check' },
       { key:'almuerzo', label:'ALMUERZO', max:2, input:'check' },
       { key:'cena', label:'CENA', max:2, input:'check' },
@@ -417,14 +427,14 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       { key:'tomar_2_litros', label:'TOMAR 2 LITROS DE AGUA', max:3, input:'check' },
       { key:'extracto_verduras', label:'EXTRACTO DE VERDURAS', max:2, input:'check' },
       { key:'ejercicios', label:'EJERCICIOS', max:6, input:'check' },
-      { key:'azucar_control', label:'AZÃšCAR CONTROLADO', max:1, input:'check' }
+      { key:'azucar_control', label:'AZÚCAR CONTROLADO', max:1, input:'check' }
     ]},
     { area:'ASEO Y ORDEN', items:[
       { key:'cepillarse', label:'CEPILLARSE LOS DIENTES', max:4, input:'range' },
       { key:'afeitarse', label:'AFEITARSE', max:1, input:'check' },
-      { key:'banarse', label:'BAÃ‘ARSE (2 VECES)', max:3, input:'check' },
+      { key:'banarse', label:'BAÑARSE (2 VECES)', max:3, input:'check' },
       { key:'ordenar_cuarto', label:'ORDENAR CUARTO', max:3, input:'check' },
-      { key:'ropa_sucia', label:'ROPA SUCIA (â‰¤ 5 PRENDAS)', max:5, input:'range' }
+      { key:'ropa_sucia', label:'ROPA SUCIA (≤ 5 PRENDAS)', max:5, input:'range' }
     ]},
     { area:'CUIDADO PERSONAL', items:[
       { key:'minioxidil', label:'MINIOXIDIL', max:1, input:'check' },
@@ -438,8 +448,8 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       { key:'gratitud_llamar', label:'GRATITUD / LLAMAR A FAMILIA', max:3, input:'check' },
       { key:'no_alcohol', label:'NO BEBO ALCOHOL', max:6, input:'check' }
     ]},
-    { area:'GESTIÃ“N', items:[
-      { key:'revision_finanzas', label:'REVISIÃ“N FINANCIERA DIARIA', max:4, input:'check' },
+    { area:'GESTIÓN', items:[
+      { key:'revision_finanzas', label:'REVISIÓN FINANCIERA DIARIA', max:4, input:'check' },
       { key:'orden_digital', label:'ORDEN DIGITAL (CORREO/ARCHIVOS)', max:4, input:'check' }
     ]}
   ];
@@ -578,7 +588,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     return { blockCounts, functionCounts };
   }
   function fmtPlannerCounts(obj){
-    return Object.entries(obj).sort((a,b)=> b[1]-a[1]).map(([k,v])=> `${k}: ${v}`).join(' Â· ');
+    return Object.entries(obj).sort((a,b)=> b[1]-a[1]).map(([k,v])=> `${k}: ${v}`).join(' · ');
   }
   function safeText(v){ return String(v ?? '').replace(/[&<>"']/g, ch=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[ch])); }
   function normalizePlannerRecord(rec){
@@ -763,7 +773,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     const updatedAt=nowISO();
     await setDoc(ref,{data:merged,updatedAt},{merge:true});
     state.data=merged; persistLocal();
-    const syncLog=$('#syncLog'); if(syncLog) syncLog.textContent='Ãšltimo sync: '+updatedAt;
+    const syncLog=$('#syncLog'); if(syncLog) syncLog.textContent='Último sync: '+updatedAt;
     return updatedAt;
   }
 
@@ -777,7 +787,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       const payload=snap.data(); if(!payload||!payload.data) return;
       state.data = normalizeData(mergeFullDatasets(payload.data, state.data));
       persistLocal(); renderAll();
-      const syncLog=$('#syncLog'); if(syncLog) syncLog.textContent='Ãšltimo sync: '+(payload.updatedAt||nowISO());
+      const syncLog=$('#syncLog'); if(syncLog) syncLog.textContent='Último sync: '+(payload.updatedAt||nowISO());
       showToast('Datos sincronizados');
     }, err=> { console.warn('Realtime err', err); const syncLog=$('#syncLog'); if(syncLog) syncLog.textContent='Realtime error'; });
   }
@@ -847,7 +857,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   function addDebt(obj){ ensureTimestamps(obj); obj.id=obj.id||uid('debt'); obj.outstanding=Number(obj.outstanding)||0; obj.monthlyPayment=Number(obj.monthlyPayment)||0; pushAndRender(d=>d.debts.unshift(obj)); }
 
   async function addTransaction(tx){
-    if(!parseDateDDMMYYYY(tx.dateStr)) throw new Error('Fecha invÃ¡lida (dd/mm/yyyy)');
+    if(!parseDateDDMMYYYY(tx.dateStr)) throw new Error('Fecha inválida (dd/mm/yyyy)');
     if(!tx.bankId) throw new Error('Seleccione una cuenta bancaria');
     tx.id=tx.id||uid('t'); tx.amount=Number(tx.amount)||0; ensureTimestamps(tx);
     pushAndRender(d=>{ d.transactions.unshift(tx); applyTransactionEffects(d, tx); });
@@ -912,7 +922,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       }
       showToast('CSV importado');
     } else {
-      try{ const d=JSON.parse(text); state.data=normalizeData(mergeFullDatasets(d, state.data)); persistLocal(); if(state.fsHelpers) schedulePushDebounced(400); renderAll(); showToast('JSON importado y fusionado'); } catch(e){ alert('JSON invÃ¡lido'); }
+      try{ const d=JSON.parse(text); state.data=normalizeData(mergeFullDatasets(d, state.data)); persistLocal(); if(state.fsHelpers) schedulePushDebounced(400); renderAll(); showToast('JSON importado y fusionado'); } catch(e){ alert('JSON inválido'); }
     }
   }
 
@@ -938,16 +948,16 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       <div class="pdf-root">
         <div class="pdf-header">
           <div>
-            <div class="pdf-title">REPORTE FINANCIERO â€” JHONATAN ORELLANA</div>
-            <div class="pdf-sub">Org: ${ORG_ID} Â· Fecha: ${toDDMMYYYY(new Date())}</div>
+            <div class="pdf-title">REPORTE FINANCIERO — JHONATAN ORELLANA</div>
+            <div class="pdf-sub">Org: ${ORG_ID} · Fecha: ${toDDMMYYYY(new Date())}</div>
           </div>
-          <div style="text-align:right"><div class="pdf-text">Resumen tÃ©cnico</div></div>
+          <div style="text-align:right"><div class="pdf-text">Resumen técnico</div></div>
         </div>
         <section><div class="pdf-sub">Resumen ejecutivo</div>
           <p class="pdf-text">Saldo cuentas: <strong>${fmtMoney(banksTotal)}</strong><br/>Bienes (activos+empresas): <strong>${fmtMoney(assetsTotal + activeItems(state.data.businesses).reduce((s,b)=>s+(Number(b.estimateValue)||0),0))}</strong><br/>Pasivos+Deudas: <strong>${fmtMoney(liabilitiesTotal + debtsTotal)}</strong><br/>Tasa de ahorro: <strong>${savingsRate}%</strong></p>
         </section>
-        <section><div class="pdf-sub">GrÃ¡fica</div>${chartImg?`<div style="text-align:center"><img src="${chartImg}" style="max-width:100%;height:auto;border:1px solid #ddd"/></div>`:'<p class="pdf-text">GrÃ¡fica no disponible</p>'}</section>
-        <div style="margin-top:12px;font-size:9pt;color:#666">Generado por JHONATAN ORELLANA Â· TÃ­tulos 12pt Â· SubtÃ­tulos 11pt Â· Texto 10pt</div>
+        <section><div class="pdf-sub">Gráfica</div>${chartImg?`<div style="text-align:center"><img src="${chartImg}" style="max-width:100%;height:auto;border:1px solid #ddd"/></div>`:'<p class="pdf-text">Gráfica no disponible</p>'}</section>
+        <div style="margin-top:12px;font-size:9pt;color:#666">Generado por JHONATAN ORELLANA · Títulos 12pt · Subtítulos 11pt · Texto 10pt</div>
       </div>`;
     if(window.html2pdf){
       html2pdf().set({ margin:12, filename:`reporte_${(new Date()).toISOString().slice(0,10)}.pdf`, image:{type:'jpeg',quality:0.95}, html2canvas:{scale:2,useCORS:true}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} }).from(node).save();
@@ -1049,7 +1059,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     const done = items.filter(it=>it.done).length;
     if(counter) counter.textContent = `${done}/${items.length} bloques`;
     if(!items.length){
-      wrap.innerHTML = '<div class="plan-empty">Sin bloques programados para este dÃ­a.</div>';
+      wrap.innerHTML = '<div class="plan-empty">Sin bloques programados para este día.</div>';
       return;
     }
     const summary = summarizePlannerTimeline(items);
@@ -1058,10 +1068,10 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     const rows = items.slice(0,10).map(it=>{
       const tagClass = it.done ? 'done' : (it.fromTemplate ? 'task' : '');
       const tagText = it.done ? 'Hecho' : (it.fromTemplate ? 'Recurrente' : 'Bloque');
-      const meta = `${it.functionName} Â· ${classifyDayBlock(it.start || it.end)}`;
+      const meta = `${it.functionName} · ${classifyDayBlock(it.start || it.end)}`;
       return `<div class="plan-item"><div class="plan-time">${plannerTimeLabel(it)}</div><div class="plan-label"><div>${safeText(it.label)}</div><div class="small">${safeText(meta)}</div></div><div class="plan-tag ${tagClass}">${tagText}</div></div>`;
     }).join('');
-    const more = items.length>10 ? `<div class="small" style="margin-top:8px">+${items.length-10} bloques mÃ¡s...</div>` : '';
+    const more = items.length>10 ? `<div class="small" style="margin-top:8px">+${items.length-10} bloques más...</div>` : '';
     wrap.innerHTML = `<div class="small" style="margin-bottom:6px"><strong>Bloques:</strong> ${safeText(blocksLine)}</div><div class="small" style="margin-bottom:8px"><strong>Funciones:</strong> ${safeText(functionsLine)}</div><div class="plan-list">${rows}</div>${more}`;
   }
   function openDayPlannerModal(dateKey){
@@ -1106,7 +1116,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       const done = items.filter(it=>it.done).length;
       if(statsEl) statsEl.textContent = `${done}/${items.length} bloques`;
       if(!items.length){
-        timelineEl.innerHTML = '<div class="plan-empty">Aun no hay bloques con hora.</div>';
+        timelineEl.innerHTML = '<div class="plan-empty">Aún no hay bloques con hora.</div>';
         if(catsEl) catsEl.innerHTML = '<strong>Bloques:</strong> Sin hora<br/><strong>Funciones:</strong> General';
         return;
       }
@@ -1138,24 +1148,24 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     const html = `<div class="planner-shell">
       <div class="planner-header">
         <div style="font-weight:900">Plan diario (${dayKey})</div>
-        <div class="small">Programa tu dia con bloques repetidos y bloques libres.</div>
+        <div class="small">Programa tu día con bloques repetidos y bloques libres.</div>
       </div>
       <div class="card" style="background:rgba(255,255,255,0.02)">
-        <div class="section-title">
+        <div class="section-title planner-card-head">
           <div>Rutina diaria recurrente</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div class="planner-card-actions">
             <button id="plannerAddTemplate" class="btn ghost plan-mini"><i data-feather="plus"></i> Nuevo</button>
-            <button id="plannerApplyTemplate" class="btn warn plan-mini"><i data-feather="repeat"></i> Aplicar al dia</button>
+            <button id="plannerApplyTemplate" class="btn warn plan-mini"><i data-feather="repeat"></i> Aplicar al día</button>
           </div>
         </div>
         <div id="plannerTemplateWrap" style="display:flex;flex-direction:column;gap:8px;margin-top:8px"></div>
       </div>
       <div class="card" style="background:rgba(255,255,255,0.02)">
-        <div class="section-title"><div>Programacion del dia</div><button id="plannerAddTask" class="btn primary plan-mini"><i data-feather="plus"></i> Agregar bloque</button></div>
+        <div class="section-title planner-card-head"><div>Programación del día</div><div class="planner-card-actions"><button id="plannerAddTask" class="btn primary plan-mini"><i data-feather="plus"></i> Agregar bloque</button></div></div>
         <div id="plannerTasksWrap" style="display:flex;flex-direction:column;gap:10px;margin-top:10px"></div>
       </div>
       <div class="card" style="background:rgba(255,255,255,0.02)">
-        <div class="section-title"><div>Agenda automatica por hora</div><div class="small" id="plannerLiveStats">0/0 bloques</div></div>
+        <div class="section-title"><div>Agenda automática por hora</div><div class="small" id="plannerLiveStats">0/0 bloques</div></div>
         <div id="plannerLiveCategories" class="small" style="margin-top:6px;color:var(--muted)">Bloques: --</div>
         <div id="plannerLiveTimeline" class="plan-list" style="margin-top:8px"></div>
       </div>
@@ -1216,7 +1226,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       if(!wrap) return;
       sortDraftTasksByTime();
       if(!draft.tasks.length){
-        wrap.innerHTML = '<div class="small">Sin bloques para este dia. Agrega uno manual o aplica la rutina recurrente.</div>';
+        wrap.innerHTML = '<div class="small">Sin bloques para este día. Agrega uno manual o aplica la rutina recurrente.</div>';
       } else {
         wrap.innerHTML = draft.tasks.map(t=>`<div class="habit-card planner-task-item" data-task-id="${t.id}">
             <div class="planner-task-grid">
@@ -1367,13 +1377,13 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
           const rowPct = it.max ? Math.round((val/it.max)*100) : 0;
           const tr = document.createElement('tr');
           const inputCell = (it.input === 'check')
-            ? `<div class="habit-check ${val>0?'active':''}" data-key="${it.key}" data-max="${it.max}">${val>0?'âœ“':'â€”'}</div>`
+            ? `<div class="habit-check ${val>0?'active':''}" data-key="${it.key}" data-max="${it.max}">${val>0?'✓':'—'}</div>`
             : `<div class="habit-stepper">
-                 <button class="step-btn" data-key="${it.key}" data-max="${it.max}" data-delta="-1">â€“</button>
+                 <button class="step-btn" data-key="${it.key}" data-max="${it.max}" data-delta="-1">–</button>
                  <div class="step-val">${val}</div>
                  <button class="step-btn" data-key="${it.key}" data-max="${it.max}" data-delta="1">+</button>
                </div>`;
-          tr.innerHTML = `<td><span class="habits-pill">${group.area}</span></td><td>${it.label}</td><td class="right habits-range">0â€“${it.max}</td><td class="right">${inputCell}</td><td class="right"><strong>${rowPct}%</strong></td>`;
+          tr.innerHTML = `<td><span class="habits-pill">${group.area}</span></td><td>${it.label}</td><td class="right habits-range">0–${it.max}</td><td class="right">${inputCell}</td><td class="right"><strong>${rowPct}%</strong></td>`;
           tbody.appendChild(tr);
         });
       });
@@ -1420,9 +1430,9 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
           const val = Math.max(0, Math.min(it.max, Math.round(raw)));
           const rowPct = it.max ? Math.round((val/it.max)*100) : 0;
           const control = (it.input === 'check')
-            ? `<div class="habit-check ${val>0?'active':''}" data-key="${it.key}" data-max="${it.max}">${val>0?'âœ“':'â€”'}</div>`
+            ? `<div class="habit-check ${val>0?'active':''}" data-key="${it.key}" data-max="${it.max}">${val>0?'✓':'—'}</div>`
             : `<div class="habit-stepper">
-                 <button class="step-btn" data-key="${it.key}" data-max="${it.max}" data-delta="-1">â€“</button>
+                 <button class="step-btn" data-key="${it.key}" data-max="${it.max}" data-delta="-1">–</button>
                  <div class="step-val">${val}</div>
                  <button class="step-btn" data-key="${it.key}" data-max="${it.max}" data-delta="1">+</button>
                </div>`;
@@ -1431,7 +1441,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
               <div class="habit-row">
                 <div>
                   <div class="habit-title">${it.label}</div>
-                  <div class="habit-sub">${group.area} Â· Rango 0â€“${it.max}</div>
+                  <div class="habit-sub">${group.area} · Rango 0–${it.max}</div>
                 </div>
                 ${control}
               </div>
@@ -1484,9 +1494,9 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
         const key = toLocalISODate(d);
         const has = !!state.data.habitsByDate[key];
         const { pct: p } = calcHabitsDay(key);
-        lines.push(`<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><div style="min-width:92px">${key}</div><div class="progress-wrap" style="flex:1"><div class="progress-fill" style="width:${has?p:0}%"></div></div><div style="min-width:44px;text-align:right"><strong>${has ? (p+'%') : 'â€”'}</strong></div></div>`);
+        lines.push(`<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><div style="min-width:92px">${key}</div><div class="progress-wrap" style="flex:1"><div class="progress-fill" style="width:${has?p:0}%"></div></div><div style="min-width:44px;text-align:right"><strong>${has ? (p+'%') : '—'}</strong></div></div>`);
       }
-      hist.innerHTML = lines.join('') || 'â€”';
+      hist.innerHTML = lines.join('') || '—';
     }
     const areaSummary = $('#habitsAreaSummary');
     if(areaSummary){
@@ -1503,7 +1513,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
         const pct = possible ? Math.round((earned/possible)*100) : 0;
         rows.push(`<div class="area-row"><div class="area-name">${group.area}</div><div class="progress-wrap" style="flex:1"><div class="progress-fill" style="width:${pct}%"></div></div><div class="area-pct">${pct}%</div></div>`);
       });
-      areaSummary.innerHTML = rows.join('') || 'â€”';
+      areaSummary.innerHTML = rows.join('') || '—';
     }
     feather.replace();
   }
@@ -1562,13 +1572,13 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     activeItems(state.data.categories).forEach(cat=>{
       if(!cat.limitMonthly||Number(cat.limitMonthly)<=0) return;
       const spent=activeItems(state.data.transactions).reduce((acc,t)=>{ const td=parseDateDDMMYYYY(t.dateStr||''); if(!td) return acc; if(td.getMonth()===month&&td.getFullYear()===year&&t.categoryId===cat.id) acc+=Number(t.amount)||0; return acc; },0);
-      if(spent>Number(cat.limitMonthly)) alerts.push(`âš  ${cat.name} superÃ³ lÃ­mite ${fmtMoney(spent)} / ${fmtMoney(cat.limitMonthly)}`);
-      else if(spent>=Number(cat.limitMonthly)*0.8) alerts.push(`! ${cat.name} cerca del lÃ­mite ${fmtMoney(spent)} / ${fmtMoney(cat.limitMonthly)}`);
+      if(spent>Number(cat.limitMonthly)) alerts.push(`⚠ ${cat.name} superó límite ${fmtMoney(spent)} / ${fmtMoney(cat.limitMonthly)}`);
+      else if(spent>=Number(cat.limitMonthly)*0.8) alerts.push(`! ${cat.name} cerca del límite ${fmtMoney(spent)} / ${fmtMoney(cat.limitMonthly)}`);
     });
-    activeItems(state.data.banks).forEach(b=>{ if(Number(b.balance)<0) alerts.push(`â— ${b.name} saldo negativo ${fmtMoney(b.balance)}`); });
+    activeItems(state.data.banks).forEach(b=>{ if(Number(b.balance)<0) alerts.push(`❗ ${b.name} saldo negativo ${fmtMoney(b.balance)}`); });
     $('#alertsArea').innerHTML = alerts.length?alerts.join('<br/>'):'<span class="small">Sin alertas</span>';
     $('#todayDate').textContent='Hoy: '+toDDMMYYYY(new Date());
-    const last=activeItems(state.data.transactions).slice(0,6).map(t=> `${t.dateStr} Â· ${t.type} Â· ${fmtMoney(t.amount)} Â· ${(t.description||'')}`).join('<br/>')||'â€”';
+    const last=activeItems(state.data.transactions).slice(0,6).map(t=> `${t.dateStr} · ${t.type} · ${fmtMoney(t.amount)} · ${(t.description||'')}`).join('<br/>')||'—';
     $('#smallTxList').innerHTML=last;
     renderFlowsChart();
   }
@@ -1600,7 +1610,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     });
     $$('#txTable button').forEach(btn=> btn.onclick=()=>{
       const {id,act}=btn.dataset;
-      if(act==='del'){ if(confirm('Eliminar transacciÃ³n?')) removeTransaction(id); }
+      if(act==='del'){ if(confirm('Eliminar transacción?')) removeTransaction(id); }
       if(act==='edit'){ const tx=state.data.transactions.find(x=>x.id===id); if(tx) openTxModal(tx); }
       feather.replace();
     });
@@ -1624,13 +1634,13 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   }
 
   function renderAssets(){ const wrap=$('#assetsArea'); if(!wrap) return; const activeAssets=activeItems(state.data.assets); if(!activeAssets.length){ wrap.innerHTML='<div class="small">Sin activos</div>'; return; }
-    wrap.innerHTML=activeAssets.map(a=>`<div style="padding:10px;border-bottom:1px solid rgba(255,255,255,0.05)"><div style="display:flex;justify-content:space-between;align-items:center"><div><strong>${a.name}</strong><div class="small">${a.subtype||'-'} Â· Valor: ${fmtMoney(a.estimatedValue)}</div></div><div style="display:flex;gap:8px"><button data-id="${a.id}" data-act="view" class="btn ghost"><i data-feather="eye"></i></button><button data-id="${a.id}" data-act="edit" class="btn ghost"><i data-feather="edit-2"></i></button><button data-id="${a.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></div></div></div>`).join('');
+    wrap.innerHTML=activeAssets.map(a=>`<div style="padding:10px;border-bottom:1px solid rgba(255,255,255,0.05)"><div style="display:flex;justify-content:space-between;align-items:center"><div><strong>${a.name}</strong><div class="small">${a.subtype||'-'} · Valor: ${fmtMoney(a.estimatedValue)}</div></div><div style="display:flex;gap:8px"><button data-id="${a.id}" data-act="view" class="btn ghost"><i data-feather="eye"></i></button><button data-id="${a.id}" data-act="edit" class="btn ghost"><i data-feather="edit-2"></i></button><button data-id="${a.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></div></div></div>`).join('');
     $$('#assetsArea button').forEach(btn=> btn.onclick=()=>{ const {id,act}=btn.dataset; if(act==='del'){ if(confirm('Eliminar activo?')){ const a=state.data.assets.find(x=>x.id===id); markDeleted(a); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } } if(act==='edit'){ openAssetModal(state.data.assets.find(x=>x.id===id)); } if(act==='view'){ openAssetViewModal(state.data.assets.find(x=>x.id===id)); } feather.replace(); });
     feather.replace();
   }
 
   function renderLiabilities(){ const wrap=$('#liabilitiesArea'); if(!wrap) return; const activeLiabs=activeItems(state.data.liabilities); if(!activeLiabs.length){ wrap.innerHTML='<div class="small">Sin pasivos</div>'; return; }
-    wrap.innerHTML=activeLiabs.map(l=>`<div style="padding:10px;border-bottom:1px solid rgba(255,255,255,0.05)"><div style="display:flex;justify-content:space-between"><div><strong>${l.name}</strong><div class="small">Tasa: ${l.interestRate||0}% Â· Venc: ${l.maturityDate||'-'}</div></div><div style="display:flex;gap:8px"><button data-id="${l.id}" data-act="edit" class="btn ghost"><i data-feather="edit-2"></i></button><button data-id="${l.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></div></div></div>`).join('');
+    wrap.innerHTML=activeLiabs.map(l=>`<div style="padding:10px;border-bottom:1px solid rgba(255,255,255,0.05)"><div style="display:flex;justify-content:space-between"><div><strong>${l.name}</strong><div class="small">Tasa: ${l.interestRate||0}% · Venc: ${l.maturityDate||'-'}</div></div><div style="display:flex;gap:8px"><button data-id="${l.id}" data-act="edit" class="btn ghost"><i data-feather="edit-2"></i></button><button data-id="${l.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></div></div></div>`).join('');
     $$('#liabilitiesArea button').forEach(btn=> btn.onclick=()=>{ const {id,act}=btn.dataset; if(act==='del'){ if(confirm('Eliminar pasivo?')){ const l=state.data.liabilities.find(x=>x.id===id); markDeleted(l); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } } if(act==='edit'){ openLiabilityModal(state.data.liabilities.find(x=>x.id===id)); } feather.replace(); });
     feather.replace();
   }
@@ -1649,9 +1659,9 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     feather.replace();
   }
 
-  function renderCategories(){ const wrap=$('#categoriesArea'); if(!wrap) return; const activeCats=activeItems(state.data.categories); if(!activeCats.length){ wrap.innerHTML='<div class="small">Sin categorÃ­as</div>'; return; }
-    wrap.innerHTML=`<table style="width:100%"><thead><tr><th>CategorÃ­a</th><th class="right">LÃ­mite</th><th>Acc</th></tr></thead><tbody>${activeCats.map(c=>`<tr><td>${c.name}</td><td class="right">${c.limitMonthly?fmtMoney(Number(c.limitMonthly)||0):'Sin lÃ­mite'}</td><td><button data-id="${c.id}" data-act="edit" class="btn ghost"><i data-feather="edit-2"></i></button> <button data-id="${c.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></td></tr>`).join('')}</tbody></table>`;
-    $$('#categoriesArea button').forEach(btn=> btn.onclick=()=>{ const {id,act}=btn.dataset; if(act==='del'){ if(confirm('Eliminar categorÃ­a?')){ const c=state.data.categories.find(x=>x.id===id); markDeleted(c); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } } if(act==='edit'){ openCategoryModal(state.data.categories.find(x=>x.id===id)); } feather.replace(); });
+  function renderCategories(){ const wrap=$('#categoriesArea'); if(!wrap) return; const activeCats=activeItems(state.data.categories); if(!activeCats.length){ wrap.innerHTML='<div class="small">Sin categorías</div>'; return; }
+    wrap.innerHTML=`<table style="width:100%"><thead><tr><th>Categoría</th><th class="right">Límite</th><th>Acc</th></tr></thead><tbody>${activeCats.map(c=>`<tr><td>${c.name}</td><td class="right">${c.limitMonthly?fmtMoney(Number(c.limitMonthly)||0):'Sin límite'}</td><td><button data-id="${c.id}" data-act="edit" class="btn ghost"><i data-feather="edit-2"></i></button> <button data-id="${c.id}" data-act="del" class="btn" style="color:var(--danger)"><i data-feather="trash-2"></i></button></td></tr>`).join('')}</tbody></table>`;
+    $$('#categoriesArea button').forEach(btn=> btn.onclick=()=>{ const {id,act}=btn.dataset; if(act==='del'){ if(confirm('Eliminar categoría?')){ const c=state.data.categories.find(x=>x.id===id); markDeleted(c); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } } if(act==='edit'){ openCategoryModal(state.data.categories.find(x=>x.id===id)); } feather.replace(); });
     feather.replace();
   }
 
@@ -1673,22 +1683,22 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
 
   function openTxModal(existing){
     const bankOpt='<option value="">-- seleccionar cuenta --</option>'+activeItems(state.data.banks).map(b=>`<option value="${b.id}">${b.name} (${fmtMoney(b.balance)})</option>`).join('');
-    const catOpt='<option value="">-- categorÃ­a --</option>'+activeItems(state.data.categories).map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    const catOpt='<option value="">-- categoría --</option>'+activeItems(state.data.categories).map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
     const assetOpt='<option value="">-- Ninguno --</option>'+activeItems(state.data.assets).map(a=>`<option value="${a.id}">${a.name}</option>`).join('');
     const def=existing||{type:'Egreso',amount:0,dateStr:toDDMMYYYY(new Date()),bankId:'',categoryId:'',assetId:'',description:''};
     const html=`
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div style="font-weight:900">${existing? 'Editar transacciÃ³n':'Nueva transacciÃ³n'}</div>
+        <div style="font-weight:900">${existing? 'Editar transacción':'Nueva transacción'}</div>
         <div class="small">Formato fecha dd/mm/yyyy</div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label>Tipo</label><select id="txType"><option ${def.type==='Ingreso'?'selected':''}>Ingreso</option><option ${def.type==='Egreso'?'selected':''}>Egreso</option></select></div>
         <div><label>Monto</label><input id="txAmount" type="number" value="${def.amount||0}" /></div>
         <div style="grid-column:1/3"><label>Cuenta</label><select id="txBank">${bankOpt}</select></div>
-        <div style="grid-column:1/3"><label>CategorÃ­a</label><select id="txCat">${catOpt}</select></div>
+        <div style="grid-column:1/3"><label>Categoría</label><select id="txCat">${catOpt}</select></div>
         <div><label>Activo (opcional)</label><select id="txAsset">${assetOpt}</select></div>
         <div><label>Fecha</label><input id="txDate" value="${def.dateStr}" /></div>
-        <div style="grid-column:1/3"><label>DescripciÃ³n</label><input id="txDesc" value="${(def.description||'').replace(/\"/g,'&quot;')}" /></div>
+        <div style="grid-column:1/3"><label>Descripción</label><input id="txDesc" value="${(def.description||'').replace(/\"/g,'&quot;')}" /></div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px">
         <button id="txCancel" class="btn ghost"><i data-feather="x"></i> Cancelar</button>
@@ -1707,8 +1717,8 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
         const assetId = $('#txAsset').value || null;
         const dateStr = $('#txDate').value.trim();
         const desc = $('#txDesc').value.trim();
-        if(!amount || amount<=0) return alert('Monto invÃ¡lido');
-        if(!parseDateDDMMYYYY(dateStr)) return alert('Fecha invÃ¡lida (dd/mm/yyyy)');
+        if(!amount || amount<=0) return alert('Monto inválido');
+        if(!parseDateDDMMYYYY(dateStr)) return alert('Fecha inválida (dd/mm/yyyy)');
         if(existing){
           updateTransaction(existing.id, { type, amount, bankId, categoryId, assetId, description: desc, dateStr });
         } else {
@@ -1739,7 +1749,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   }
 
   function openAssetModal(a){
-    const subtypes = ['Inmueble','Maquinaria','InversiÃ³n','Patrimonio','VehÃ­culo','Otro'];
+    const subtypes = ['Inmueble','Maquinaria','Inversión','Patrimonio','Vehículo','Otro'];
     const bankOpt = '<option value="">-- Ninguna --</option>' + activeItems(state.data.banks).map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
     const def = a || { name:'', estimatedValue:0, subtype:'Inmueble', purchaseDate:'', depreciationRate:0, usefulLife:0, salvageValue:0, linkedBankId:'', notes:'', accumulatedGain:0 };
     const html = `<div style="font-weight:900;margin-bottom:8px">${a? 'Editar activo':'Nuevo activo'}</div>
@@ -1748,8 +1758,8 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
         <div><label>Subtipo</label><select id="aSubtype">${subtypes.map(s=>`<option ${def.subtype===s?'selected':''}>${s}</option>`).join('')}</select></div>
         <div><label>Valor estimado</label><input id="aValue" type="number" value="${Number(def.estimatedValue)||0}" /></div>
         <div><label>Fecha compra (dd/mm/yyyy)</label><input id="aPurchase" value="${def.purchaseDate||''}" /></div>
-        <div><label>DepreciaciÃ³n anual (%)</label><input id="aDep" type="number" value="${Number(def.depreciationRate)||0}" /></div>
-        <div><label>Vida Ãºtil (aÃ±os)</label><input id="aLife" type="number" value="${Number(def.usefulLife)||0}" /></div>
+        <div><label>Depreciación anual (%)</label><input id="aDep" type="number" value="${Number(def.depreciationRate)||0}" /></div>
+        <div><label>Vida útil (años)</label><input id="aLife" type="number" value="${Number(def.usefulLife)||0}" /></div>
         <div style="grid-column:1/3"><label>Valor residual</label><input id="aSalvage" type="number" value="${Number(def.salvageValue)||0}" /></div>
         <div style="grid-column:1/3"><label>Vinculado a cuenta</label><select id="aBank">${bankOpt}</select></div>
         <div style="grid-column:1/3"><label>Notas</label><textarea id="aNotes">${(def.notes||'')}</textarea></div>
@@ -1768,15 +1778,15 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   }
 
   function openLiabilityModal(l){
-    const subtypes=['PrÃ©stamo Bancario','Hipoteca','Tarjeta','Proveedor','GarantÃ­a','Otro'];
+    const subtypes=['Préstamo Bancario','Hipoteca','Tarjeta','Proveedor','Garantía','Otro'];
     const bankOpt = '<option value="">-- Ninguna --</option>' + activeItems(state.data.banks).map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
-    const def = l || { name:'', amount:0, subtype:'PrÃ©stamo Bancario', interestRate:0, maturityDate:'', collateral:'', linkedBankId:'', notes:'' };
+    const def = l || { name:'', amount:0, subtype:'Préstamo Bancario', interestRate:0, maturityDate:'', collateral:'', linkedBankId:'', notes:'' };
     const html = `<div style="font-weight:900;margin-bottom:8px">${l? 'Editar pasivo':'Nuevo pasivo'}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label>Nombre</label><input id="liName" value="${def.name}" /></div>
         <div><label>Subtipo</label><select id="liSubtype">${subtypes.map(s=>`<option ${def.subtype===s?'selected':''}>${s}</option>`).join('')}</select></div>
         <div><label>Monto</label><input id="liAmount" type="number" value="${Number(def.amount)||0}" /></div>
-        <div><label>Tasa interÃ©s (%)</label><input id="liInterest" type="number" value="${Number(def.interestRate)||0}" /></div>
+        <div><label>Tasa interés (%)</label><input id="liInterest" type="number" value="${Number(def.interestRate)||0}" /></div>
         <div><label>Fecha venc. (dd/mm/yyyy)</label><input id="liMaturity" value="${def.maturityDate||''}" /></div>
         <div><label>Colateral</label><input id="liCollateral" value="${(def.collateral||'')}" /></div>
         <div style="grid-column:1/3"><label>Vinculado a cuenta</label><select id="liBank">${bankOpt}</select></div>
@@ -1814,7 +1824,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     const bankOpt = '<option value="">-- Ninguna --</option>' + activeItems(state.data.banks).map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
     const catOpt = '<option value="">-- Ninguna --</option>' + activeItems(state.data.categories).map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
     const html = `<div style="font-weight:900;margin-bottom:8px">${f? 'Editar gasto fijo':'Nuevo gasto fijo'}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label>Nombre</label><input id="fName" value="${def.name}" /></div><div><label>Monto</label><input id="fAmount" type="number" value="${Number(def.amount)||0}" /></div><div><label>Cuenta</label><select id="fBank">${bankOpt}</select></div><div><label>CategorÃ­a</label><select id="fCat">${catOpt}</select></div><div><label>Frecuencia</label><select id="fFreq"><option ${def.frequency==='monthly'?'selected':''} value="monthly">Mensual</option><option ${def.frequency==='weekly'?'selected':''} value="weekly">Semanal</option><option ${def.frequency==='annual'?'selected':''} value="annual">Anual</option></select></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><label>Nombre</label><input id="fName" value="${def.name}" /></div><div><label>Monto</label><input id="fAmount" type="number" value="${Number(def.amount)||0}" /></div><div><label>Cuenta</label><select id="fBank">${bankOpt}</select></div><div><label>Categoría</label><select id="fCat">${catOpt}</select></div><div><label>Frecuencia</label><select id="fFreq"><option ${def.frequency==='monthly'?'selected':''} value="monthly">Mensual</option><option ${def.frequency==='weekly'?'selected':''} value="weekly">Semanal</option><option ${def.frequency==='annual'?'selected':''} value="annual">Anual</option></select></div></div>
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px"><button id="fCancel" class="btn ghost"><i data-feather="x"></i> Cancelar</button><button id="fSave" class="btn primary"><i data-feather="save"></i> Guardar</button></div>`;
     showModal(html);
     if(f) setTimeout(()=>{ $('#fBank').value=f.bankId||''; $('#fCat').value=f.categoryId||''; },50);
@@ -1824,9 +1834,9 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
 
   function openCategoryModal(c){
     const def = c || { name:'', limitMonthly:0 };
-    const html = `<div style="font-weight:900;margin-bottom:8px">${c? 'Editar categorÃ­a':'Nueva categorÃ­a'}</div>
+    const html = `<div style="font-weight:900;margin-bottom:8px">${c? 'Editar categoría':'Nueva categoría'}</div>
       <label>Nombre</label><input id="catName" value="${def.name}" />
-      <label>LÃ­mite mensual (0 = sin lÃ­mite)</label><input id="catLimit" type="number" value="${def.limitMonthly||0}" />
+      <label>Límite mensual (0 = sin límite)</label><input id="catLimit" type="number" value="${def.limitMonthly||0}" />
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px"><button id="catCancel" class="btn ghost"><i data-feather="x"></i> Cancelar</button><button id="catSave" class="btn primary"><i data-feather="save"></i> Guardar</button></div>`;
     showModal(html);
     $('#catCancel').onclick = closeModal;
@@ -1842,7 +1852,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
         <div><label>Banco</label><select id="dBank">${bankOpt}</select></div>
         <div><label>Saldo pendiente</label><input id="dOut" type="number" value="${Number(def.outstanding)||0}" /></div>
         <div><label>Cuota mensual</label><input id="dPay" type="number" value="${Number(def.monthlyPayment)||0}" /></div>
-        <div><label>Tasa interÃ©s (%)</label><input id="dInterest" type="number" value="${Number(def.interestRate)||0}" /></div>
+        <div><label>Tasa interés (%)</label><input id="dInterest" type="number" value="${Number(def.interestRate)||0}" /></div>
         <div style="grid-column:1/3"><label>Notas</label><input id="dNotes" value="${(def.notes||'').replace(/\"/g,'&quot;')}" /></div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px"><button id="dCancel" class="btn ghost"><i data-feather="x"></i> Cancelar</button><button id="dSave" class="btn primary"><i data-feather="save"></i> Guardar</button></div>`;
@@ -1855,16 +1865,16 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   function openDebtPayModal(debt){
     if(!debt) return alert('Deuda no encontrada');
     const bankOpt = activeItems(state.data.banks).map(b=>`<option value="${b.id}">${b.name} (${fmtMoney(b.balance)})</option>`).join('');
-    const html = `<div style="font-weight:900;margin-bottom:8px">Registrar pago Â· ${debt.name}</div>
+    const html = `<div style="font-weight:900;margin-bottom:8px">Registrar pago · ${debt.name}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label>Monto</label><input id="payAmount" type="number" value="${Math.min(Number(debt.monthlyPayment)||0, Number(debt.outstanding)||0)}" /></div>
         <div><label>Cuenta</label><select id="payBank">${bankOpt}</select></div>
-        <div style="grid-column:1/3"><label>DescripciÃ³n</label><input id="payDesc" value="Pago deuda ${debt.name}" /></div>
+        <div style="grid-column:1/3"><label>Descripción</label><input id="payDesc" value="Pago deuda ${debt.name}" /></div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px"><button id="payCancel" class="btn ghost"><i data-feather="x"></i> Cancelar</button><button id="paySave" class="btn positive"><i data-feather="check-circle"></i> Registrar pago</button></div>`;
     showModal(html);
     $('#payCancel').onclick = closeModal;
-    $('#paySave').onclick = async ()=> { const amt=Number($('#payAmount').value)||0; const bankId=$('#payBank').value; const desc=$('#payDesc').value.trim(); if(!amt||amt<=0) return alert('Monto invÃ¡lido'); await addTransaction({ type:'Egreso', amount:amt, bankId, debtId:debt.id, dateStr: toDDMMYYYY(new Date()), description: desc }); closeModal(); };
+    $('#paySave').onclick = async ()=> { const amt=Number($('#payAmount').value)||0; const bankId=$('#payBank').value; const desc=$('#payDesc').value.trim(); if(!amt||amt<=0) return alert('Monto inválido'); await addTransaction({ type:'Egreso', amount:amt, bankId, debtId:debt.id, dateStr: toDDMMYYYY(new Date()), description: desc }); closeModal(); };
   }
 
   function openAssetViewModal(asset){
@@ -1872,7 +1882,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     const rows=(asset.incomeRecords||[]).map(r=>`<tr><td>${r.dateStr}</td><td>${fmtMoney(r.amount)}</td><td>${r.desc||''}</td></tr>`).join('')||'<tr><td colspan="3" class="small">Sin ingresos registrados</td></tr>';
     showModal(`<div style="font-weight:900;margin-bottom:8px">Ingresos del activo: ${asset.name}</div>
       <table style="width:100%;border-collapse:collapse;font-size:13px">
-        <thead><tr><th>Fecha</th><th>Monto</th><th>DescripciÃ³n</th></tr></thead>
+        <thead><tr><th>Fecha</th><th>Monto</th><th>Descripción</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
       <div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn ghost" id="assetViewClose"><i data-feather="x"></i> Cerrar</button></div>`);
@@ -1918,7 +1928,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     const btnHabitsPlanner = $('#btnHabitsPlanner');
     if(btnHabitsPlanner){ btnHabitsPlanner.onclick = ()=> openDayPlannerModal(habitsSelectedDate || toLocalISODate(new Date())); }
     const btnHabitsReset = $('#btnHabitsReset');
-    if(btnHabitsReset){ btnHabitsReset.onclick = ()=>{ if(confirm('Reset dÃ­a?')) resetHabitsDay(habitsSelectedDate); }; }
+    if(btnHabitsReset){ btnHabitsReset.onclick = ()=>{ if(confirm('Reset día?')) resetHabitsDay(habitsSelectedDate); }; }
     const btnHabitsExport = $('#btnHabitsExport');
     if(btnHabitsExport){ btnHabitsExport.onclick = exportHabitsJSON; }
     $('#fileImport').onchange=e=> importFile(e.target.files[0]);
@@ -1933,13 +1943,13 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     try{
       if(!state.fsHelpers){ await initFirestore(firebaseConfig); startRealtime(); showToast('Firestore activado'); }
       const remote=await fsFetch();
-      if(remote.data){ state.data=normalizeData(mergeFullDatasets(remote.data,state.data)); persistLocal(); await fsSaveWithMerge(state.data); showToast('SincronizaciÃ³n manual completa'); }
+      if(remote.data){ state.data=normalizeData(mergeFullDatasets(remote.data,state.data)); persistLocal(); await fsSaveWithMerge(state.data); showToast('Sincronización manual completa'); }
       else { await fsSaveWithMerge(state.data); showToast('Nube inicializada con datos locales'); }
     }catch(e){ showToast('Error sync: '+(e.message||e),true); } finally{ setSyncStatus('idle'); renderAll(); flushPending(); }
   }
 
   function attachLocalLogin(){
-    const tryLogin=()=>{ const u=prompt('Usuario (local):','JHONATAN'); const p=prompt('ContraseÃ±a (local):','JHONATAN');
+    const tryLogin=()=>{ const u=prompt('Usuario (local):','JHONATAN'); const p=prompt('Contraseña (local):','JHONATAN');
       if(u===LOCAL_LOGIN.user && p===LOCAL_LOGIN.pass){ state.user=u; initApp(); showToast('Bienvenido '+u); }
       else { alert('Credenciales incorrectas. Intente de nuevo.'); tryLogin(); }
     };
@@ -1954,7 +1964,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     try{
       await initFirestore(firebaseConfig); startRealtime(); setSyncStatus('syncing');
       const remote=await fsFetch();
-      if(remote.data){ state.data=normalizeData(mergeFullDatasets(remote.data,state.data)); persistLocal(); await fsSaveWithMerge(state.data); showToast('SincronizaciÃ³n automÃ¡tica completa'); }
+      if(remote.data){ state.data=normalizeData(mergeFullDatasets(remote.data,state.data)); persistLocal(); await fsSaveWithMerge(state.data); showToast('Sincronización automática completa'); }
       else { await fsSaveWithMerge(state.data); showToast('Nube inicializada con datos locales'); }
     }catch(e){ showToast('No se pudo conectar a la nube (modo local)',true); }
     finally{ setSyncStatus('idle'); renderAll(); flushPending(); }
@@ -1975,4 +1985,5 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   <script>document.addEventListener('DOMContentLoaded', ()=> { if(window.feather) feather.replace(); });</script>
 </body>
 </html>
+
 
