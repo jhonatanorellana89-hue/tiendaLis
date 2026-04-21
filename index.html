@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8" />
@@ -38,11 +38,13 @@ body,html{margin:0;min-height:100%;background:radial-gradient(120% 120% at 12% 1
 .badge.amber{color:var(--warn);border-color:rgba(245,158,11,0.4)}
 .badge.red{color:var(--danger);border-color:rgba(239,68,68,0.4)}
 
-.nav-scroll{display:flex;gap:10px;overflow:auto;padding:8px 4px;margin:-6px 0 4px}
-.nav-btn{flex:1;min-width:120px;border:0;border-radius:12px;padding:11px 12px;display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--muted);background:rgba(255,255,255,0.04);font-weight:800;transition:all .12s;white-space:nowrap}
+.nav-scroll{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:6px 2px;margin:-4px 0 4px;overflow:visible}
+.nav-btn{width:100%;min-width:0;border:0;border-radius:12px;padding:10px 8px;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;color:var(--muted);background:rgba(255,255,255,0.04);font-weight:800;font-size:13px;transition:all .12s;white-space:normal;line-height:1.2;text-align:center}
 .nav-btn.active{color:var(--accent);background:rgba(79,195,247,0.14);box-shadow:0 10px 30px rgba(79,195,247,0.18);transform:translateY(-1px)}
 
-.top-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.top-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.top-actions .btn{padding:8px 9px;min-height:42px;border-radius:10px;font-size:12px;gap:6px}
+.top-actions .btn svg{width:16px;height:16px}
 .btn{padding:11px 12px;border-radius:12px;border:1px solid transparent;cursor:pointer;font-weight:800;display:inline-flex;gap:8px;align-items:center;justify-content:center;color:var(--text);background:rgba(255,255,255,0.06);transition:transform .08s,box-shadow .12s}
 .btn:active{transform:scale(0.98)}
 .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-2));border:0;color:#0b1220;box-shadow:0 12px 28px rgba(79,195,247,0.35)}
@@ -75,6 +77,58 @@ input.habits-input{min-width:84px;height:42px;font-size:16px;font-weight:800;bor
 .habits-table thead th{position:sticky;top:0;background:var(--panel);z-index:2}
 .habit-check{display:flex;align-items:center;justify-content:center;width:48px;height:42px;border-radius:12px;border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.04);color:var(--muted);font-weight:900;cursor:pointer;user-select:none}
 .habit-check.active{background:linear-gradient(135deg,var(--positive),#0fa971);color:#0b1220;border-color:transparent;box-shadow:0 8px 20px rgba(52,211,153,0.25)}
+.goal-check-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:48px;height:42px;padding:0 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.04);cursor:pointer;transition:transform .08s,box-shadow .16s,border-color .16s}
+.goal-check-wrap:active{transform:scale(0.97)}
+.goal-check{position:absolute;opacity:0;pointer-events:none}
+.goal-check-ui{width:22px;height:22px;border-radius:8px;border:2px solid rgba(255,255,255,0.34);background:rgba(255,255,255,0.05);display:inline-flex;align-items:center;justify-content:center;transition:all .16s}
+.goal-check-ui::after{content:'';width:10px;height:6px;border-left:3px solid #0b1220;border-bottom:3px solid #0b1220;transform:rotate(-45deg) scale(0);transform-origin:center;transition:transform .14s ease}
+.goal-check-wrap:hover{border-color:rgba(79,195,247,0.55);box-shadow:0 10px 24px rgba(79,195,247,0.15)}
+.goal-check:focus-visible + .goal-check-ui{outline:2px solid var(--accent);outline-offset:2px}
+.goal-check:checked + .goal-check-ui{background:linear-gradient(135deg,var(--positive),#0fa971);border-color:transparent;box-shadow:0 8px 18px rgba(52,211,153,0.35)}
+.goal-check:checked + .goal-check-ui::after{transform:rotate(-45deg) scale(1)}
+.goals-list{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.goal-item{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px 12px;border-radius:16px;border:1px solid rgba(255,255,255,0.11);background:linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03));box-shadow:0 10px 24px rgba(4,10,25,0.2)}
+.goal-item.is-done{border-color:rgba(52,211,153,0.35);background:linear-gradient(180deg,rgba(52,211,153,0.14),rgba(14,29,43,0.35))}
+.goal-item-main{min-width:0}
+.goal-item-title{font-weight:900;font-size:15px;line-height:1.25;letter-spacing:.01em;word-break:break-word}
+.goal-item-meta{margin-top:7px;display:flex;flex-wrap:wrap;gap:6px}
+.goal-pill{display:inline-flex;align-items:center;padding:4px 9px;border-radius:999px;font-size:11px;font-weight:800;border:1px solid rgba(255,255,255,0.16);background:rgba(255,255,255,0.05);color:var(--muted)}
+.goal-pill.type{color:var(--accent);border-color:rgba(79,195,247,0.45);background:rgba(79,195,247,0.13)}
+.goal-pill.date,.goal-pill.month{font-variant-numeric:tabular-nums}
+.goal-state{margin-top:7px;display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:900;border:1px solid rgba(255,255,255,0.14)}
+.goal-state.done{color:var(--positive);border-color:rgba(52,211,153,0.42);background:rgba(52,211,153,0.14)}
+.goal-state.pending{color:var(--warn);border-color:rgba(245,158,11,0.45);background:rgba(245,158,11,0.14)}
+.goal-item-side{display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.goal-cost{padding:7px 10px;border-radius:11px;border:1px solid rgba(124,140,255,0.32);background:rgba(124,140,255,0.16);font-weight:900;font-size:14px;white-space:nowrap}
+.goal-item-actions{display:flex;gap:6px}
+.goal-item-actions .btn{padding:0;width:38px;height:38px;min-width:38px;display:inline-flex;align-items:center;justify-content:center}
+[data-theme="light"] .goal-item{background:linear-gradient(180deg,rgba(28,72,135,0.05),rgba(28,72,135,0.02));border-color:rgba(28,72,135,0.16);box-shadow:0 8px 20px rgba(20,30,70,0.09)}
+[data-theme="light"] .goal-item.is-done{background:linear-gradient(180deg,rgba(34,197,94,0.12),rgba(34,197,94,0.05));border-color:rgba(34,197,94,0.36)}
+.goal-period-switch{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.goal-period-btn{border:1px solid rgba(255,255,255,0.16);background:rgba(255,255,255,0.04);color:var(--muted);padding:8px 11px;border-radius:999px;font-size:12px;font-weight:900;cursor:pointer;transition:all .14s}
+.goal-period-btn:hover{border-color:rgba(79,195,247,0.5);color:var(--text)}
+.goal-period-btn.active{background:linear-gradient(135deg,rgba(79,195,247,0.26),rgba(124,140,255,0.26));border-color:rgba(79,195,247,0.55);color:var(--accent);box-shadow:0 8px 18px rgba(79,195,247,0.2)}
+[data-theme="light"] .goal-period-btn{border-color:rgba(28,72,135,0.2);background:rgba(28,72,135,0.03)}
+[data-theme="light"] .goal-period-btn.active{color:#1d4ed8;border-color:rgba(37,99,235,0.45);background:linear-gradient(135deg,rgba(37,99,235,0.16),rgba(124,140,255,0.14))}
+.chart-switch{display:inline-flex;gap:6px;padding:4px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1)}
+.chart-switch-btn{border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.03);color:var(--muted);padding:6px 10px;border-radius:9px;font-size:12px;font-weight:900;cursor:pointer;transition:all .14s}
+.chart-switch-btn:hover{color:var(--text);border-color:rgba(79,195,247,0.45)}
+.chart-switch-btn.active{color:var(--accent);border-color:rgba(79,195,247,0.55);background:rgba(79,195,247,0.18);box-shadow:0 6px 14px rgba(79,195,247,0.2)}
+[data-theme="light"] .chart-switch{background:rgba(28,72,135,0.03);border-color:rgba(28,72,135,0.12)}
+[data-theme="light"] .chart-switch-btn{border-color:rgba(28,72,135,0.2);background:#f8fbff}
+[data-theme="light"] .chart-switch-btn.active{color:#1d4ed8;border-color:rgba(37,99,235,0.45);background:rgba(37,99,235,0.14)}
+.goal-filters{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:10px}
+.goal-select{min-height:44px;padding:10px 12px;border-radius:12px;border:1px solid rgba(79,195,247,0.35);background:linear-gradient(180deg,rgba(12,30,55,0.95),rgba(10,24,44,0.95));color:#eef6ff;font-weight:800}
+.goal-select:hover{border-color:rgba(79,195,247,0.58)}
+.goal-select:focus{outline:none;border-color:rgba(79,195,247,0.72);box-shadow:0 0 0 2px rgba(79,195,247,0.22)}
+.goal-select:disabled{opacity:0.75;cursor:not-allowed}
+.goal-select option{background:#102947;color:#f1f7ff;font-weight:700}
+.goal-select option:checked{background:#2f7df6;color:#ffffff}
+[data-theme="light"] .goal-select{background:linear-gradient(180deg,#f6f9ff,#eef4ff);color:#12223d;border-color:rgba(29,78,216,0.26)}
+[data-theme="light"] .goal-select:hover{border-color:rgba(29,78,216,0.4)}
+[data-theme="light"] .goal-select:focus{border-color:rgba(29,78,216,0.55);box-shadow:0 0 0 2px rgba(29,78,216,0.16)}
+[data-theme="light"] .goal-select option{background:#ffffff;color:#0b172a}
+[data-theme="light"] .goal-select option:checked{background:#2563eb;color:#ffffff}
 .habit-stepper{display:flex;align-items:center;justify-content:flex-end;gap:6px}
 .step-btn{width:40px;height:40px;border-radius:12px;border:1px solid rgba(255,255,255,0.16);background:rgba(255,255,255,0.06);color:var(--text);font-weight:900;cursor:pointer}
 .step-val{min-width:34px;text-align:center;font-weight:900}
@@ -183,11 +237,22 @@ input.habits-input{min-width:84px;height:42px;font-size:16px;font-weight:800;bor
   .planner-template-grid .tpl-delete{grid-column:2/3;justify-self:end;width:44px;min-width:44px}
   .planner-task-grid .task-status,.planner-task-grid .task-category,.planner-template-grid .tpl-category{min-height:44px}
   .planner-task-grid .task-delete,.planner-template-grid .tpl-delete{height:44px}
+  .goal-item{grid-template-columns:56px minmax(0,1fr);align-items:start}
+  .goal-item-side{grid-column:1/-1;flex-direction:row;justify-content:space-between;align-items:center;padding-left:66px}
+  .goal-item-title{font-size:14px}
+  .goal-cost{font-size:13px}
+  .goal-period-switch{display:grid;grid-template-columns:1fr;gap:6px}
+  .goal-period-btn{width:100%;text-align:center}
+  .goal-filters{grid-template-columns:1fr}
+  .chart-switch{width:100%;display:grid;grid-template-columns:repeat(3,1fr)}
+  .chart-switch-btn{text-align:center}
   .overlay{padding:10px}
   .modal{max-height:92vh;overflow:auto;padding:12px}
 }
 
 @media (max-width: 700px){
+  .top-actions{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .top-actions .btn{min-height:40px;padding:8px;font-size:12px}
   .overlay{align-items:flex-start;padding:8px}
   .modal{width:100%;max-width:none;margin-top:env(safe-area-inset-top);max-height:calc(100vh - 16px - env(safe-area-inset-top));overflow:auto}
   .planner-card-head{flex-direction:column;align-items:stretch}
@@ -256,6 +321,8 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       </header>
 
       <div class="nav-scroll" aria-label="Menú">
+        <button class="nav-btn" data-view="goals"><i data-feather="target"></i>Metas</button>
+        <button class="nav-btn" data-view="habits"><i data-feather="check-square"></i>Hábitos</button>
         <button class="nav-btn active" data-view="dashboard"><i data-feather="bar-chart-2"></i>Resumen</button>
         <button class="nav-btn" data-view="transactions"><i data-feather="credit-card"></i>Transacciones</button>
         <button class="nav-btn" data-view="banks"><i data-feather="bank"></i>Bancos</button>
@@ -264,7 +331,6 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
         <button class="nav-btn" data-view="fixed"><i data-feather="calendar"></i>Mensuales</button>
         <button class="nav-btn" data-view="categories"><i data-feather="tag"></i>Categorías</button>
         <button class="nav-btn" data-view="businesses"><i data-feather="briefcase"></i>Empresas</button>
-        <button class="nav-btn" data-view="habits"><i data-feather="check-square"></i>Hábitos</button>
         <button class="nav-btn" data-view="export"><i data-feather="download-cloud"></i>Export</button>
       </div>
 
@@ -284,8 +350,15 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
 
       <section id="view-dashboard" class="card" style="display:block">
         <div class="section-title">
-          <div>Flujo Ingresos vs Egresos (12 meses)</div>
-          <div class="small" id="todayDate">Hoy: --</div>
+          <div id="flowsTitle">Gasto por meses (últimos 12)</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+            <div class="small" id="todayDate">Hoy: --</div>
+            <div class="chart-switch" aria-label="Rango de gasto">
+              <button id="btnFlowsDay" class="chart-switch-btn">Días</button>
+              <button id="btnFlowsMonth" class="chart-switch-btn active">Meses</button>
+              <button id="btnFlowsYear" class="chart-switch-btn">Años</button>
+            </div>
+          </div>
         </div>
         <div><canvas id="chartFlows" height="220"></canvas></div>
         <div class="card" style="margin-top:12px;background:rgba(255,255,255,0.02)">
@@ -367,6 +440,25 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       <section id="view-businesses" class="card" style="display:none">
         <div class="section-title"><div>Empresas / Proyectos</div><button id="btnAddBizTop" class="btn primary"><i data-feather="briefcase"></i> Nueva</button></div>
         <div id="businessesArea" class="scroll-y"></div>
+      </section>
+
+      <section id="view-goals" class="card" style="display:none">
+        <div class="section-title">
+          <div>Metas</div>
+          <button id="btnAddGoalTop" class="btn primary"><i data-feather="target"></i> Nueva meta</button>
+        </div>
+        <div class="goal-period-switch">
+          <button id="btnGoalPeriodYear" class="goal-period-btn" data-period="ANO">Meta de Año</button>
+          <button id="btnGoalPeriodMonth" class="goal-period-btn" data-period="MES">Meta de Mes</button>
+          <button id="btnGoalPeriodDay" class="goal-period-btn active" data-period="DIA">Meta de Día</button>
+        </div>
+        <div class="goal-filters">
+          <select id="goalTypeFilter" class="goal-select"><option value="">Todos los tipos</option></select>
+          <select id="goalMonthFilter" class="goal-select"><option value="">Todos los meses</option></select>
+          <button id="btnGoalClearFilters" class="btn ghost"><i data-feather="x-circle"></i> Limpiar</button>
+        </div>
+        <div id="goalsSummary" class="small" style="margin-top:10px;color:var(--muted)">—</div>
+        <div id="goalsArea" class="scroll-y"></div>
       </section>
 
   <section id="view-habits" class="card" style="display:none">
@@ -464,7 +556,8 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       { key:'valor_economico', label:'GENERÉ VALOR ECONÓMICO HOY', max:7, input:'check' },
       { key:'capacitacion', label:'CAPACITACIÓN', max:5, input:'check' },
       { key:'ver_tutoriales', label:'VER TUTORIALES', max:3, input:'check' },
-      { key:'leer_1_hora', label:'LEER 1 HORA', max:3, input:'check' }
+      { key:'leer_1_hora', label:'LEER 1 HORA', max:3, input:'check' },
+      { key:'escribir_agenda_2_paginas', label:'ESCRIBIR 2 PÁGINAS EN AGENDA', max:2, input:'check' }
     ]},
     { area:'SALUD Y ENERGÍA', items:[
       { key:'desayuno', label:'DESAYUNO', max:2, input:'check' },
@@ -479,12 +572,12 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     { area:'ASEO Y ORDEN', items:[
       { key:'cepillarse', label:'CEPILLARSE LOS DIENTES', max:4, input:'range' },
       { key:'afeitarse', label:'AFEITARSE', max:1, input:'check' },
-      { key:'banarse', label:'BAÑARSE (2 VECES)', max:3, input:'check' },
+      { key:'banarse', label:'BAÑARSE (2 VECES)', max:2, input:'range' },
       { key:'ordenar_cuarto', label:'ORDENAR CUARTO', max:3, input:'check' },
       { key:'ropa_sucia', label:'ROPA SUCIA (≤ 5 PRENDAS)', max:5, input:'range' }
     ]},
     { area:'CUIDADO PERSONAL', items:[
-      { key:'minioxidil', label:'MINIOXIDIL', max:1, input:'check' },
+      { key:'orar', label:'ORAR (2 VECES)', max:2, input:'range', unitPoints:5 },
       { key:'cera_ve', label:'CERA VE', max:2, input:'range' },
       { key:'movilidad', label:'MOVILIDAD / ESTIRAMIENTOS', max:2, input:'check' },
       { key:'skincare', label:'CUIDADO PIEL', max:2, input:'check' }
@@ -505,6 +598,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     return acc;
   }, []);
   const TASK_CATEGORIES = ['General','Trabajo','Salud','Casa','Personal','Estudio','Gestion'];
+  const GOAL_CATEGORIES = ['ACADEMICA','LABORAL','PERSONAL','BIENES RAICES','CONSULTORIA'];
   const PLANNER_TEMPLATE_KEY = 'suite_planner_template_v1';
   const DEFAULT_PLANNER_TEMPLATE = [
     { id:'tpl_breakfast', title:'Desayuno', start:'08:00', end:'08:30', category:'Salud' },
@@ -513,6 +607,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   ];
   let plannerTemplate = [];
   let habitsSelectedDate = null;
+  let goalsPeriodMode = 'DIA';
 
   function uid(pref){ return `${pref}_${Date.now()}_${Math.floor(Math.random()*90000)}`; }
   function fmtMoney(v){ v = Number(v)||0; return 'S/ ' + v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
@@ -544,6 +639,77 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     if(!raw) return 'General';
     const hit = TASK_CATEGORIES.find(c=> c.toLowerCase() === raw.toLowerCase());
     return hit || 'General';
+  }
+  function normalizeGoalCategory(v){
+    const raw = String(v ?? '').trim();
+    if(!raw) return GOAL_CATEGORIES[0];
+    const hit = GOAL_CATEGORIES.find(c=> c.toLowerCase() === raw.toLowerCase());
+    return hit || GOAL_CATEGORIES[0];
+  }
+  function normalizeGoalDate(v){
+    const raw = String(v ?? '').trim();
+    if(!raw) return '';
+    if(/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+    const parsed = parseDateDDMMYYYY(raw);
+    return parsed ? toLocalISODate(parsed) : '';
+  }
+  function normalizeGoalPeriodType(v){
+    const raw = String(v ?? '').trim().toUpperCase();
+    return ['ANO','MES','DIA'].includes(raw) ? raw : 'DIA';
+  }
+  function normalizeGoalPeriodRef(type, raw, fallbackDate=''){
+    const t = normalizeGoalPeriodType(type);
+    const txt = String(raw ?? '').trim();
+    if(t === 'ANO'){
+      if(/^\d{4}$/.test(txt)) return txt;
+      const d = normalizeGoalDate(txt || fallbackDate);
+      return d ? d.slice(0,4) : String(new Date().getFullYear());
+    }
+    if(t === 'MES'){
+      if(/^\d{4}-\d{2}$/.test(txt)) return txt;
+      const d = normalizeGoalDate(txt || fallbackDate);
+      return d ? d.slice(0,7) : toLocalISODate(new Date()).slice(0,7);
+    }
+    const day = normalizeGoalDate(txt || fallbackDate);
+    return day || toLocalISODate(new Date());
+  }
+  function goalAnchorISO(type, periodRef){
+    const t = normalizeGoalPeriodType(type);
+    const ref = normalizeGoalPeriodRef(t, periodRef);
+    if(t === 'ANO') return `${ref}-01-01`;
+    if(t === 'MES') return `${ref}-01`;
+    return ref;
+  }
+  function goalMonthKeyFromGoal(goal){
+    const t = normalizeGoalPeriodType(goal && goal.periodType);
+    if(t === 'ANO') return '';
+    const ref = normalizeGoalPeriodRef(t, (goal && (goal.periodRef || goal.executionDate)) || '');
+    return t === 'MES' ? ref : (ref ? ref.slice(0,7) : '');
+  }
+  function goalMonthKey(v){
+    const iso = normalizeGoalDate(v);
+    return iso ? iso.slice(0,7) : '';
+  }
+  function goalMonthLabel(v){
+    const key = String(v || '').trim();
+    if(!/^\d{4}-\d{2}$/.test(key)) return '-';
+    const d = new Date(`${key}-01T00:00:00`);
+    if(Number.isNaN(d.getTime())) return key;
+    const text = d.toLocaleString('es-PE',{month:'long',year:'numeric'});
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+  function goalDateLabel(v){
+    const iso = normalizeGoalDate(v);
+    if(!iso) return '-';
+    const [y,m,d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  }
+  function goalPeriodLabel(type, periodRef){
+    const t = normalizeGoalPeriodType(type);
+    const ref = normalizeGoalPeriodRef(t, periodRef);
+    if(t === 'ANO') return `Año ${ref}`;
+    if(t === 'MES') return goalMonthLabel(ref);
+    return goalDateLabel(ref);
   }
   function normalizePlannerTemplateItem(item){
     if(!item || typeof item !== 'object') return null;
@@ -767,11 +933,11 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   $('#themeToggle').onclick = ()=> applyTheme(document.documentElement.getAttribute('data-theme')==='light'?'dark':'light');
 
   const state = { user:null, fsHelpers:null, unsubscribeRealtime:null,
-    data:{transactions:[],banks:[],debts:[],fixed:[],categories:[],assets:[],liabilities:[],businesses:[],habitsByDate:{},dayPlannerByDate:{},meta:{updatedAt:null}},
+    data:{transactions:[],banks:[],debts:[],fixed:[],categories:[],assets:[],liabilities:[],businesses:[],goals:[],habitsByDate:{},dayPlannerByDate:{},meta:{updatedAt:null}},
     pendingOps:[], syncing:false };
 
   function clone(obj){ return (typeof structuredClone === 'function') ? structuredClone(obj) : JSON.parse(JSON.stringify(obj)); }
-  function loadLocal(){ const raw=localStorage.getItem(STORAGE_KEY); if(raw) try{ state.data=JSON.parse(raw); }catch{}; ['transactions','banks','debts','fixed','categories','assets','liabilities','businesses'].forEach(k=> state.data[k] ||= []); state.data.habitsByDate ||= {}; state.data.dayPlannerByDate ||= {}; state.data = normalizeData(state.data); }
+  function loadLocal(){ const raw=localStorage.getItem(STORAGE_KEY); if(raw) try{ state.data=JSON.parse(raw); }catch{}; ['transactions','banks','debts','fixed','categories','assets','liabilities','businesses','goals'].forEach(k=> state.data[k] ||= []); state.data.habitsByDate ||= {}; state.data.dayPlannerByDate ||= {}; state.data = normalizeData(state.data); }
   function persistLocal(){ state.data.meta.updatedAt = nowISO(); localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data)); }
 
   const isDeleted = it => !!(it && it.deletedAt);
@@ -812,14 +978,38 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     data.assets = ensureIds(data.assets,'asset');
     data.liabilities = ensureIds(data.liabilities,'liab');
     data.businesses = ensureIds(data.businesses,'biz');
+    data.goals = ensureIds(data.goals,'goal');
     data.habitsByDate = data.habitsByDate || {};
     data.dayPlannerByDate = data.dayPlannerByDate || {};
+    data.goals = data.goals.map(g=>({
+      ...g,
+      title: String(g.title ?? g.name ?? '').trim(),
+      periodType: normalizeGoalPeriodType(
+        g.periodType ||
+        (/^\d{4}$/.test(String(g.periodRef||'')) ? 'ANO' : (/^\d{4}-\d{2}$/.test(String(g.periodRef||'')) ? 'MES' : 'DIA'))
+      ),
+      category: normalizeGoalCategory(g.category),
+      cost: Number(g.cost ?? g.amount ?? 0) || 0,
+      completed: !!(g.completed || g.done),
+      completedAt: g.completedAt ? String(g.completedAt) : ''
+    })).map(g=>{
+      const periodRef = normalizeGoalPeriodRef(g.periodType, g.periodRef || g.executionDate || g.targetDate || g.date || '');
+      return {
+        ...g,
+        periodRef,
+        executionDate: goalAnchorISO(g.periodType, periodRef)
+      };
+    });
     Object.keys(data.habitsByDate).forEach(k=>{
       const rec = data.habitsByDate[k];
       if(!rec || typeof rec !== 'object'){ delete data.habitsByDate[k]; return; }
       if(!rec.updatedAt) rec.updatedAt = nowISO();
       if(rec.deletedAt && Date.parse(rec.deletedAt) > Date.parse(rec.updatedAt||0)) rec.updatedAt = rec.deletedAt;
       if(!rec.deviceId) rec.deviceId = DEVICE_ID;
+      if(rec.orar == null && rec.minioxidil != null && rec.minioxidil !== ''){
+        rec.orar = Math.max(0, Math.min(2, Math.round(Number(rec.minioxidil)||0)));
+      }
+      delete rec.minioxidil;
       HABITS_CFG.forEach(g=> g.items.forEach(it=> { if(rec[it.key]==null || rec[it.key]==='') rec[it.key]=0; }));
     });
     Object.keys(data.dayPlannerByDate).forEach(k=>{
@@ -847,6 +1037,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     data.fixed = dedup(data.fixed, f=> f.id || f.name.toLowerCase());
     data.categories = dedup(data.categories, c=> c.id || c.name.toLowerCase());
     data.businesses = dedup(data.businesses, b=> b.id || b.name.toLowerCase());
+    data.goals = dedup(data.goals, g=> g.id || `${(g.title||'').toLowerCase()}|${g.executionDate||''}|${g.category||''}`);
     return data;
   };
 
@@ -883,6 +1074,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       assets: mergeCollectionsById(local.assets, remote.assets),
       liabilities: mergeCollectionsById(local.liabilities, remote.liabilities),
       businesses: mergeCollectionsById(local.businesses, remote.businesses),
+      goals: mergeCollectionsById(local.goals, remote.goals),
       habitsByDate: mergeByDateRecords(local.habitsByDate, remote.habitsByDate),
       dayPlannerByDate: mergeByDateRecords(local.dayPlannerByDate, remote.dayPlannerByDate),
       meta:{updatedAt:nowISO()}
@@ -998,6 +1190,19 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   function addBusiness(obj){ ensureTimestamps(obj); obj.id=obj.id||uid('biz'); obj.estimateValue=Number(obj.estimateValue)||0; pushAndRender(d=>d.businesses.unshift(obj)); }
   function addFixed(obj){ ensureTimestamps(obj); obj.id=obj.id||uid('fix'); obj.amount=Number(obj.amount)||0; pushAndRender(d=>d.fixed.unshift(obj)); }
   function addDebt(obj){ ensureTimestamps(obj); obj.id=obj.id||uid('debt'); obj.outstanding=Number(obj.outstanding)||0; obj.monthlyPayment=Number(obj.monthlyPayment)||0; pushAndRender(d=>d.debts.unshift(obj)); }
+  function addGoal(obj){
+    ensureTimestamps(obj);
+    obj.id=obj.id||uid('goal');
+    obj.title=String(obj.title||'').trim();
+    obj.periodType=normalizeGoalPeriodType(obj.periodType || goalsPeriodMode);
+    obj.periodRef=normalizeGoalPeriodRef(obj.periodType, obj.periodRef || obj.executionDate || '');
+    obj.executionDate=goalAnchorISO(obj.periodType, obj.periodRef);
+    obj.category=normalizeGoalCategory(obj.category);
+    obj.cost=Number(obj.cost)||0;
+    obj.completed=!!obj.completed;
+    obj.completedAt = obj.completed ? (obj.completedAt || nowISO()) : '';
+    pushAndRender(d=>d.goals.unshift(obj));
+  }
 
   async function addTransaction(tx){
     if(!parseDateDDMMYYYY(tx.dateStr)) throw new Error('Fecha inválida (dd/mm/yyyy)');
@@ -1497,15 +1702,30 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     renderLiveAgenda();
     feather.replace();
   }
+  function habitUnitPoints(it){
+    return Math.max(1, Number(it?.unitPoints)||1);
+  }
+  function habitClampValue(raw, it){
+    return Math.max(0, Math.min(Number(it?.max)||0, Math.round(Number(raw)||0)));
+  }
+  function habitPossiblePoints(it){
+    return (Number(it?.max)||0) * habitUnitPoints(it);
+  }
+  function habitEarnedPoints(raw, it){
+    return habitClampValue(raw, it) * habitUnitPoints(it);
+  }
+  function habitRangeText(it){
+    const maxVal = Number(it?.max)||0;
+    const unit = habitUnitPoints(it);
+    return unit > 1 ? `0–${maxVal} (${unit} pts c/u)` : `0–${maxVal}`;
+  }
   function calcHabitsDay(dateKey){
     ensureHabitsStore();
     const rec = state.data.habitsByDate[dateKey] || {};
     let possible = 0; let earned = 0;
     HABITS_CFG.forEach(g=> g.items.forEach(it=>{
-      possible += it.max;
-      const raw = Number(rec[it.key])||0;
-      const v = Math.max(0, Math.min(it.max, Math.round(raw)));
-      earned += v;
+      possible += habitPossiblePoints(it);
+      earned += habitEarnedPoints(rec[it.key], it);
     }));
     const pct = possible ? Math.round((earned/possible)*100) : 0;
     return { earned, possible, pct };
@@ -1562,8 +1782,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       const rec = state.data.habitsByDate[habitsSelectedDate] || {};
       HABITS_CFG.forEach(group=>{
         group.items.forEach(it=>{
-          const raw = Number(rec[it.key])||0;
-          const val = Math.max(0, Math.min(it.max, Math.round(raw)));
+          const val = habitClampValue(rec[it.key], it);
           const rowPct = it.max ? Math.round((val/it.max)*100) : 0;
           const tr = document.createElement('tr');
           const inputCell = (it.input === 'check')
@@ -1573,7 +1792,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
                  <div class="step-val">${val}</div>
                  <button class="step-btn" data-key="${it.key}" data-max="${it.max}" data-delta="1">+</button>
                </div>`;
-          tr.innerHTML = `<td><span class="habits-pill">${group.area}</span></td><td>${it.label}</td><td class="right habits-range">0–${it.max}</td><td class="right">${inputCell}</td><td class="right"><strong>${rowPct}%</strong></td>`;
+          tr.innerHTML = `<td><span class="habits-pill">${group.area}</span></td><td>${it.label}</td><td class="right habits-range">${habitRangeText(it)}</td><td class="right">${inputCell}</td><td class="right"><strong>${rowPct}%</strong></td>`;
           tbody.appendChild(tr);
         });
       });
@@ -1616,8 +1835,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       const cardHtml = [];
       HABITS_CFG.forEach(group=>{
         group.items.forEach(it=>{
-          const raw = Number(rec[it.key])||0;
-          const val = Math.max(0, Math.min(it.max, Math.round(raw)));
+          const val = habitClampValue(rec[it.key], it);
           const rowPct = it.max ? Math.round((val/it.max)*100) : 0;
           const control = (it.input === 'check')
             ? `<div class="habit-check ${val>0?'active':''}" data-key="${it.key}" data-max="${it.max}">${val>0?'✓':'—'}</div>`
@@ -1631,7 +1849,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
               <div class="habit-row">
                 <div>
                   <div class="habit-title">${it.label}</div>
-                  <div class="habit-sub">${group.area} · Rango 0–${it.max}</div>
+                  <div class="habit-sub">${group.area} · Rango ${habitRangeText(it)}</div>
                 </div>
                 ${control}
               </div>
@@ -1695,10 +1913,8 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       HABITS_CFG.forEach(group=>{
         let possible = 0; let earned = 0;
         group.items.forEach(it=>{
-          possible += it.max;
-          const raw = Number(rec[it.key])||0;
-          const v = Math.max(0, Math.min(it.max, Math.round(raw)));
-          earned += v;
+          possible += habitPossiblePoints(it);
+          earned += habitEarnedPoints(rec[it.key], it);
         });
         const pct = possible ? Math.round((earned/possible)*100) : 0;
         rows.push(`<div class="area-row"><div class="area-name">${group.area}</div><div class="progress-wrap" style="flex:1"><div class="progress-fill" style="width:${pct}%"></div></div><div class="area-pct">${pct}%</div></div>`);
@@ -1728,20 +1944,87 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   }
 
   let flowsChart=null; window.flowsChart=null;
+  let flowsGranularity='month';
+  function updateFlowsSwitchUI(){
+    const map = [
+      ['btnFlowsDay','day'],
+      ['btnFlowsMonth','month'],
+      ['btnFlowsYear','year']
+    ];
+    map.forEach(([id,mode])=>{
+      const btn = $('#'+id);
+      if(btn) btn.classList.toggle('active', flowsGranularity===mode);
+    });
+  }
+  function setFlowsGranularity(mode){
+    const next = ['day','month','year'].includes(mode) ? mode : 'month';
+    if(flowsGranularity === next) return;
+    flowsGranularity = next;
+    renderFlowsChart();
+  }
   function renderFlowsChart(){
     const el=document.getElementById('chartFlows'); if(!el) return;
-    const labels=[], incData=[], egData=[]; const now=new Date();
-    for(let i=11;i>=0;i--){ const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-      labels.push(d.toLocaleString('es-PE',{month:'short',year:'2-digit'}));
-      let inc=0,eg=0; activeItems(state.data.transactions).forEach(t=>{ const td=parseDateDDMMYYYY(t.dateStr||''); if(!td) return; if(td.getMonth()===d.getMonth()&&td.getFullYear()===d.getFullYear()){ if(t.type==='Egreso') eg+=Number(t.amount)||0; else inc+=Number(t.amount)||0; } });
-      incData.push(inc); egData.push(eg);
+    const titleEl = $('#flowsTitle');
+    const now=new Date();
+    const spendByDay = new Map();
+    const spendByMonth = new Map();
+    const spendByYear = new Map();
+    activeItems(state.data.transactions).forEach(t=>{
+      if(t.type !== 'Egreso') return;
+      const td = parseDateDDMMYYYY(t.dateStr||'');
+      if(!td) return;
+      const amount = Math.max(0, Number(t.amount)||0);
+      const dayKey = toLocalISODate(td);
+      const monthKey = `${td.getFullYear()}-${String(td.getMonth()+1).padStart(2,'0')}`;
+      const yearKey = String(td.getFullYear());
+      spendByDay.set(dayKey, (spendByDay.get(dayKey)||0) + amount);
+      spendByMonth.set(monthKey, (spendByMonth.get(monthKey)||0) + amount);
+      spendByYear.set(yearKey, (spendByYear.get(yearKey)||0) + amount);
+    });
+    const labels=[]; const egData=[];
+    if(flowsGranularity==='day'){
+      for(let i=29;i>=0;i--){
+        const d = new Date(now); d.setDate(now.getDate()-i);
+        const key = toLocalISODate(d);
+        labels.push(`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`);
+        egData.push(spendByDay.get(key)||0);
+      }
+      if(titleEl) titleEl.textContent = 'Gasto por días (últimos 30)';
+    } else if(flowsGranularity==='year'){
+      const yearNow = now.getFullYear();
+      for(let y=yearNow-5; y<=yearNow; y++){
+        const key = String(y);
+        labels.push(key);
+        egData.push(spendByYear.get(key)||0);
+      }
+      if(titleEl) titleEl.textContent = 'Gasto por años (últimos 6)';
+    } else {
+      for(let i=11;i>=0;i--){
+        const d = new Date(now.getFullYear(),now.getMonth()-i,1);
+        const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+        labels.push(d.toLocaleString('es-PE',{month:'short',year:'2-digit'}));
+        egData.push(spendByMonth.get(key)||0);
+      }
+      if(titleEl) titleEl.textContent = 'Gasto por meses (últimos 12)';
     }
     const data={labels,datasets:[
-      {label:'Ingresos',type:'line',data:incData,borderColor:'#34d399',backgroundColor:'rgba(52,211,153,0.08)',tension:0.25,yAxisID:'y'},
-      {label:'Egresos',type:'bar',data:egData,backgroundColor:'#ef4444',yAxisID:'y'}
+      {label:'Gastos',type:'bar',data:egData,backgroundColor:'#ef4444',borderRadius:6,maxBarThickness:30}
     ]};
-    if(flowsChart){ flowsChart.data=data; flowsChart.update(); }
-    else { flowsChart=new Chart(el,{data,type:'bar',options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{y:{beginAtZero:true},x:{stacked:false}}}}); window.flowsChart=flowsChart; }
+    const options = {
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:(ctx)=>`Gasto: ${fmtMoney(ctx.raw||0)}`}}
+      },
+      scales:{
+        y:{beginAtZero:true,ticks:{callback:(v)=>Number(v).toLocaleString('en-US')}},
+        x:{stacked:false}
+      }
+    };
+    if(flowsChart){ flowsChart.data=data; flowsChart.options=options; flowsChart.update(); }
+    else { flowsChart=new Chart(el,{data,type:'bar',options}); window.flowsChart=flowsChart; }
+    updateFlowsSwitchUI();
   }
 
   function dashboardMetrics(){
@@ -1861,9 +2144,131 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     feather.replace();
   }
 
+  function renderGoals(){
+    const wrap=$('#goalsArea'); if(!wrap) return;
+    const typeFilterEl = $('#goalTypeFilter');
+    const monthFilterEl = $('#goalMonthFilter');
+    const summaryEl = $('#goalsSummary');
+    const activeGoals=activeItems(state.data.goals);
+    const mode = normalizeGoalPeriodType(goalsPeriodMode);
+    $$('#view-goals .goal-period-btn').forEach(btn=>{
+      btn.classList.toggle('active', (btn.dataset.period||'') === mode);
+    });
+    const periodGoals = activeGoals.filter(g=> normalizeGoalPeriodType(g.periodType) === mode);
+    if(!periodGoals.length){
+      if(typeFilterEl) typeFilterEl.innerHTML = `<option value="">Todos los tipos</option>${GOAL_CATEGORIES.map(c=>`<option value="${c}">${c}</option>`).join('')}`;
+      if(monthFilterEl){
+        monthFilterEl.innerHTML = mode==='ANO' ? '<option value="">No aplica (Meta de Año)</option>' : '<option value="">Todos los meses</option>';
+        monthFilterEl.disabled = mode==='ANO';
+      }
+      if(summaryEl) summaryEl.textContent = `Sin registros en ${mode==='ANO'?'Meta de Año':(mode==='MES'?'Meta de Mes':'Meta de Día')}.`;
+      wrap.innerHTML='<div class="small">Sin metas registradas para este modo.</div>';
+      return;
+    }
+    const selectedType = typeFilterEl ? String(typeFilterEl.value || '') : '';
+    const selectedMonth = (monthFilterEl && !monthFilterEl.disabled) ? String(monthFilterEl.value || '') : '';
+    if(typeFilterEl){
+      typeFilterEl.innerHTML = `<option value="">Todos los tipos</option>${GOAL_CATEGORIES.map(c=>`<option value="${c}" ${selectedType===c?'selected':''}>${c}</option>`).join('')}`;
+    }
+    if(monthFilterEl){
+      const months = Array.from(new Set(periodGoals.map(g=> goalMonthKeyFromGoal(g)).filter(Boolean))).sort((a,b)=> b.localeCompare(a));
+      if(mode==='ANO'){
+        monthFilterEl.innerHTML = '<option value="">No aplica (Meta de Año)</option>';
+        monthFilterEl.disabled = true;
+      } else {
+        monthFilterEl.innerHTML = `<option value="">Todos los meses</option>${months.map(m=>`<option value="${m}" ${selectedMonth===m?'selected':''}>${goalMonthLabel(m)}</option>`).join('')}`;
+        monthFilterEl.disabled = false;
+      }
+    }
+    const filtered = periodGoals.filter(g=>{
+      const byType = !selectedType || (g.category === selectedType);
+      const byMonth = !selectedMonth || (goalMonthKeyFromGoal(g) === selectedMonth);
+      return byType && byMonth;
+    });
+    const typeLines = GOAL_CATEGORIES.map(cat=>{
+      const items = periodGoals.filter(g=> g.category === cat);
+      const done = items.filter(g=> g.completed).length;
+      const total = items.reduce((s,g)=> s + (Number(g.cost)||0), 0);
+      return `${cat}: ${done}/${items.length} cumplidas · ${fmtMoney(total)}`;
+    });
+    const monthKeys = Array.from(new Set(periodGoals.map(g=> goalMonthKeyFromGoal(g)).filter(Boolean))).sort((a,b)=> b.localeCompare(a));
+    const monthLines = monthKeys.map(key=>{
+      const items = periodGoals.filter(g=> goalMonthKeyFromGoal(g)===key);
+      const done = items.filter(g=> g.completed).length;
+      return `${goalMonthLabel(key)}: ${done}/${items.length}`;
+    });
+    if(summaryEl){
+      const shown = filtered.length;
+      const completedShown = filtered.filter(g=> g.completed).length;
+      const modeLabel = mode==='ANO' ? 'Meta de Año' : (mode==='MES' ? 'Meta de Mes' : 'Meta de Día');
+      const byMonthText = mode==='ANO' ? 'No aplica en metas anuales' : (monthLines.join(' | ') || '-');
+      summaryEl.innerHTML = `<strong>Modo:</strong> ${modeLabel} · <strong>Filtro:</strong> ${shown} metas (${completedShown} cumplidas)<br/><strong>Por tipo:</strong> ${safeText(typeLines.join(' | ') || '-')}` +
+        `<br/><strong>Por mes:</strong> ${safeText(byMonthText)}`;
+    }
+    if(!filtered.length){
+      wrap.innerHTML = '<div class="small">No hay metas con ese filtro.</div>';
+      feather.replace();
+      return;
+    }
+    const sorted = [...filtered].sort((a,b)=>{
+      const ad = Date.parse((goalAnchorISO(a.periodType, a.periodRef || a.executionDate) || '9999-12-31') + 'T00:00:00') || Number.MAX_SAFE_INTEGER;
+      const bd = Date.parse((goalAnchorISO(b.periodType, b.periodRef || b.executionDate) || '9999-12-31') + 'T00:00:00') || Number.MAX_SAFE_INTEGER;
+      if(ad !== bd) return ad - bd;
+      return tsVal(b)-tsVal(a);
+    });
+    wrap.innerHTML=`<div class="goals-list">${sorted.map(g=>`<article class="goal-item ${g.completed?'is-done':''}">
+      <label class="goal-check-wrap" title="Marcar cumplida">
+        <input type="checkbox" class="goal-check" data-id="${g.id}" ${g.completed?'checked':''} />
+        <span class="goal-check-ui" aria-hidden="true"></span>
+      </label>
+      <div class="goal-item-main">
+        <div class="goal-item-title">${safeText(g.title||'-')}</div>
+        <div class="goal-item-meta">
+          <span class="goal-pill type">${safeText(g.category||GOAL_CATEGORIES[0])}</span>
+          <span class="goal-pill date">${safeText(goalPeriodLabel(g.periodType, g.periodRef || g.executionDate))}</span>
+          ${goalMonthKeyFromGoal(g) ? `<span class="goal-pill month">${safeText(goalMonthLabel(goalMonthKeyFromGoal(g)))}</span>` : ''}
+        </div>
+        <span class="goal-state ${g.completed?'done':'pending'}">${g.completed?'Cumplida':'Pendiente'}</span>
+      </div>
+      <div class="goal-item-side">
+        <div class="goal-cost">${fmtMoney(Number(g.cost)||0)}</div>
+        <div class="goal-item-actions">
+          <button data-id="${g.id}" data-act="edit" class="btn ghost" title="Editar"><i data-feather="edit-2"></i></button>
+          <button data-id="${g.id}" data-act="del" class="btn" style="color:var(--danger)" title="Eliminar"><i data-feather="trash-2"></i></button>
+        </div>
+      </div>
+    </article>`).join('')}</div>`;
+    $$('#goalsArea .goal-check').forEach(chk=> chk.onchange=()=>{
+      const id = chk.dataset.id;
+      const done = !!chk.checked;
+      pushAndRender(d=>{
+        const g = d.goals.find(x=>x.id===id);
+        if(!g || isDeleted(g)) return;
+        g.completed = done;
+        g.completedAt = done ? nowISO() : '';
+        ensureTimestamps(g);
+      });
+    });
+    $$('#goalsArea button').forEach(btn=> btn.onclick=()=>{
+      const {id,act}=btn.dataset;
+      if(act==='del'){
+        if(confirm('Eliminar meta?')){
+          const g=state.data.goals.find(x=>x.id===id);
+          markDeleted(g);
+          persistLocal();
+          if(state.fsHelpers) schedulePushDebounced();
+          renderAll();
+        }
+      }
+      if(act==='edit'){ openGoalModal(state.data.goals.find(x=>x.id===id)); }
+      feather.replace();
+    });
+    feather.replace();
+  }
+
   function renderAll(){
     renderFlowsChart(); dashboardMetrics();
-    renderTransactions(); renderBanks(); renderAssets(); renderLiabilities(); renderDebts(); renderFixed(); renderCategories(); renderBusinesses(); renderHabits();
+    renderTransactions(); renderBanks(); renderAssets(); renderLiabilities(); renderDebts(); renderFixed(); renderCategories(); renderBusinesses(); renderGoals(); renderHabits();
     $('#orgBadge').textContent=ORG_ID; $('#orgShort').textContent=ORG_ID;
   }
 
@@ -2009,6 +2414,42 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     $('#bzSave').onclick = ()=> { const name=$('#bzName').value.trim(), role=$('#bzRole').value, val=Number($('#bzValue').value)||0, contrib=Number($('#bzContribution').value)||0, notes=$('#bzNotes').value.trim(); if(!name) return alert('Nombre requerido'); const obj={name,estimateValue:val,contribution:contrib,role,notes}; if(bz){ Object.assign(bz,obj); ensureTimestamps(bz); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); } else addBusiness(obj); closeModal(); };
   }
 
+  function openGoalModal(goal){
+    const periodType = normalizeGoalPeriodType((goal && goal.periodType) || goalsPeriodMode);
+    const periodRef = normalizeGoalPeriodRef(periodType, (goal && (goal.periodRef || goal.executionDate)) || '');
+    const periodLabel = periodType === 'ANO' ? 'Año objetivo' : (periodType === 'MES' ? 'Mes objetivo' : 'Fecha de ejecución');
+    const periodInputType = periodType === 'ANO' ? 'number' : (periodType === 'MES' ? 'month' : 'date');
+    const periodInputValue = periodType === 'ANO' ? periodRef : (periodType === 'MES' ? periodRef : normalizeGoalDate(periodRef));
+    const def = goal || { title:'', executionDate:goalAnchorISO(periodType, periodRef), category:GOAL_CATEGORIES[0], cost:0, completed:false };
+    const html = `<div style="font-weight:900;margin-bottom:8px">${goal? 'Editar meta':'Nueva meta'}</div>
+      <div class="small" style="margin-bottom:8px">Registro: <strong>${periodType==='ANO'?'Meta de Año':(periodType==='MES'?'Meta de Mes':'Meta de Día')}</strong></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="grid-column:1/3"><label>Meta</label><input id="goalTitle" value="${safeText(def.title||'')}" /></div>
+        <div><label>${periodLabel}</label><input id="goalPeriodInput" type="${periodInputType}" value="${safeText(periodInputValue)}" ${periodType==='ANO' ? 'min="2000" max="2100" step="1"' : ''} /></div>
+        <div><label>Clasificación</label><select id="goalCategory">${GOAL_CATEGORIES.map(c=>`<option ${normalizeGoalCategory(def.category)===c?'selected':''}>${c}</option>`).join('')}</select></div>
+        <div style="grid-column:1/3"><label>Monto de costo</label><input id="goalCost" type="number" value="${Number(def.cost)||0}" /></div>
+        <label style="grid-column:1/3;display:flex;gap:8px;align-items:center"><input id="goalDone" type="checkbox" style="width:auto" ${def.completed?'checked':''} /> Meta cumplida</label>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:12px"><button id="goalCancel" class="btn ghost"><i data-feather="x"></i> Cancelar</button><button id="goalSave" class="btn primary"><i data-feather="save"></i> Guardar meta</button></div>`;
+    showModal(html);
+    $('#goalCancel').onclick = closeModal;
+    $('#goalSave').onclick = ()=>{
+      const title = $('#goalTitle').value.trim();
+      const periodInputRaw = String($('#goalPeriodInput').value || '').trim();
+      const normPeriodRef = normalizeGoalPeriodRef(periodType, periodInputRaw);
+      const executionDate = goalAnchorISO(periodType, normPeriodRef);
+      const category = normalizeGoalCategory($('#goalCategory').value);
+      const cost = Number($('#goalCost').value)||0;
+      const completed = !!$('#goalDone').checked;
+      if(!title) return alert('Nombre de meta requerido');
+      if(!normPeriodRef) return alert(`${periodLabel} requerido`);
+      const obj = { title, periodType, periodRef:normPeriodRef, executionDate, category, cost, completed, completedAt: completed ? ((goal && goal.completedAt) || nowISO()) : '' };
+      if(goal){ Object.assign(goal,obj); ensureTimestamps(goal); persistLocal(); if(state.fsHelpers) schedulePushDebounced(); renderAll(); }
+      else addGoal(obj);
+      closeModal();
+    };
+  }
+
   function openFixedModal(f){
     const def = f || { name:'', amount:0, bankId:'', categoryId:'', frequency:'monthly' };
     const bankOpt = '<option value="">-- Ninguna --</option>' + activeItems(state.data.banks).map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
@@ -2103,6 +2544,29 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     $('#btnAddFixedTop').onclick=()=>openFixedModal(null);
     $('#btnAddCategoryTop').onclick=()=>openCategoryModal(null);
     $('#btnAddBizTop').onclick=()=>openBusinessModal(null);
+    $('#btnAddGoalTop').onclick=()=>openGoalModal(null);
+    $$('#view-goals .goal-period-btn').forEach(btn=>{
+      btn.onclick = ()=>{
+        goalsPeriodMode = normalizeGoalPeriodType(btn.dataset.period || 'DIA');
+        const typeFilter = $('#goalTypeFilter');
+        const monthFilter = $('#goalMonthFilter');
+        if(typeFilter) typeFilter.value = '';
+        if(monthFilter) monthFilter.value = '';
+        renderGoals();
+      };
+    });
+    const goalTypeFilter = $('#goalTypeFilter');
+    if(goalTypeFilter){ goalTypeFilter.onchange = renderGoals; }
+    const goalMonthFilter = $('#goalMonthFilter');
+    if(goalMonthFilter){ goalMonthFilter.onchange = renderGoals; }
+    const btnGoalClearFilters = $('#btnGoalClearFilters');
+    if(btnGoalClearFilters){
+      btnGoalClearFilters.onclick = ()=>{
+        if(goalTypeFilter) goalTypeFilter.value = '';
+        if(goalMonthFilter) goalMonthFilter.value = '';
+        renderGoals();
+      };
+    }
     $('#btnApplyFixedTop').onclick=()=>{ if(confirm('Aplicar gastos fijos?')) applyMonthlyFixed(); };
     $('#btnApplyFixedQuick').onclick=()=>{ if(confirm('Aplicar gastos fijos?')) applyMonthlyFixed(); };
     $('#btnExportCSV').onclick=exportCSV;
@@ -2111,6 +2575,12 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
     $('#btnExportPDF').onclick=exportPDF;
     $('#btnPDF').onclick=exportPDF;
     $('#btnSyncNow').onclick=manualSync;
+    const btnFlowsDay = $('#btnFlowsDay');
+    if(btnFlowsDay) btnFlowsDay.onclick = ()=> setFlowsGranularity('day');
+    const btnFlowsMonth = $('#btnFlowsMonth');
+    if(btnFlowsMonth) btnFlowsMonth.onclick = ()=> setFlowsGranularity('month');
+    const btnFlowsYear = $('#btnFlowsYear');
+    if(btnFlowsYear) btnFlowsYear.onclick = ()=> setFlowsGranularity('year');
     const habitsDate = $('#habitsDate');
     if(habitsDate){
       habitsDate.onchange = ()=>{ habitsSelectedDate = habitsDate.value || toLocalISODate(new Date()); renderHabits(); };
@@ -2175,5 +2645,4 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   <script>document.addEventListener('DOMContentLoaded', ()=> { if(window.feather) feather.replace(); });</script>
 </body>
 </html>
-
 
