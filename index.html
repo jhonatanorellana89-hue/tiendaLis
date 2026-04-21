@@ -286,6 +286,23 @@ input.habits-input{min-width:84px;height:42px;font-size:16px;font-weight:800;bor
 [data-theme="light"] .modal{background:#ffffff;border-color:rgba(0,0,0,0.06)}
 input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);color:var(--text);font-size:14px}
 [data-theme="light"] input,[data-theme="light"] select,[data-theme="light"] textarea{border-color:rgba(0,0,0,0.08);background:rgba(0,0,0,0.02);color:#0b172a}
+.auth-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:3100;background:radial-gradient(130% 130% at 20% 10%,rgba(15,49,90,0.92),rgba(8,16,32,0.95) 55%,rgba(5,11,24,0.97))}
+.auth-card{width:min(420px,92vw);padding:22px;border-radius:18px;border:1px solid rgba(79,195,247,0.28);background:linear-gradient(180deg,rgba(12,27,48,0.98),rgba(8,19,35,0.98));box-shadow:0 22px 60px rgba(4,10,25,0.45)}
+.auth-title{margin:0;font-size:24px;font-weight:900;letter-spacing:.01em}
+.auth-sub{margin:6px 0 0;color:var(--muted);font-size:13px}
+.auth-form{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.auth-label{font-size:12px;color:var(--muted);font-weight:700}
+.auth-input{height:44px;border-radius:12px;border:1px solid rgba(79,195,247,0.24);background:rgba(255,255,255,0.05);color:var(--text);font-weight:700}
+.auth-input:focus{outline:none;border-color:rgba(79,195,247,0.62);box-shadow:0 0 0 2px rgba(79,195,247,0.2)}
+.auth-row{position:relative}
+.auth-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.06);color:var(--muted);border-radius:9px;padding:5px 8px;font-size:11px;font-weight:800;cursor:pointer}
+.auth-submit{margin-top:6px;min-height:46px;font-size:14px;font-weight:900}
+.auth-error{min-height:18px;color:#fca5a5;font-size:12px;font-weight:700}
+[data-theme="light"] .auth-overlay{background:radial-gradient(130% 130% at 20% 10%,rgba(238,246,255,0.97),rgba(226,236,250,0.97) 58%,rgba(244,248,255,0.98))}
+[data-theme="light"] .auth-card{background:linear-gradient(180deg,#ffffff,#f7fbff);border-color:rgba(29,78,216,0.18);box-shadow:0 20px 50px rgba(20,30,70,0.16)}
+[data-theme="light"] .auth-input{background:#ffffff;color:#0b172a;border-color:rgba(29,78,216,0.2)}
+[data-theme="light"] .auth-toggle{background:#f5f9ff;color:#1f3f6c;border-color:rgba(29,78,216,0.2)}
+[data-theme="light"] .auth-error{color:#b91c1c}
 @media (max-width: 520px){
   .overlay{padding:10px}
   .modal{max-height:92vh;overflow:auto;padding:12px}
@@ -524,6 +541,23 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   <div id="overlay" class="overlay" aria-hidden="true"><div class="modal" id="panelRoot"></div></div>
   <button id="fab" class="fab" title="Nueva transacción"><i data-feather="plus"></i> Nueva Tx</button>
   <div id="toast" style="position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#0f243d;padding:10px 12px;border-radius:12px;display:none;z-index:1200;box-shadow:var(--card-shadow)"></div>
+  <div id="authOverlay" class="auth-overlay" aria-hidden="true">
+    <div class="auth-card">
+      <h2 class="auth-title">Acceso Privado</h2>
+      <p class="auth-sub">Ingresa tu usuario y contraseña para continuar</p>
+      <form id="authForm" class="auth-form" autocomplete="off">
+        <label class="auth-label" for="authUser">Usuario</label>
+        <input id="authUser" class="auth-input" type="text" placeholder="jhonatan" />
+        <label class="auth-label" for="authPass">Contraseña</label>
+        <div class="auth-row">
+          <input id="authPass" class="auth-input" type="password" placeholder="••••••••" />
+          <button id="authTogglePass" type="button" class="auth-toggle">Mostrar</button>
+        </div>
+        <div id="authError" class="auth-error"></div>
+        <button id="authSubmit" type="submit" class="btn primary auth-submit"><i data-feather="lock"></i> Entrar</button>
+      </form>
+    </div>
+  </div>
 
   <script>
     const firebaseConfig = {
@@ -537,7 +571,7 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
       measurementId: "G-44TXK10R9R"
     };
     const ORG_ID = "oxIgjNwqNPiAneP5alpM";
-    const LOCAL_LOGIN = { user: "JHONATAN", pass: "JHONATAN" };
+    const LOCAL_LOGIN = { user: "jhonatan", pass: "jhonatan" };
   </script>
 
   <script type="module">
@@ -2609,11 +2643,45 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   }
 
   function attachLocalLogin(){
-    const tryLogin=()=>{ const u=prompt('Usuario (local):','JHONATAN'); const p=prompt('Contraseña (local):','JHONATAN');
-      if(u===LOCAL_LOGIN.user && p===LOCAL_LOGIN.pass){ state.user=u; initApp(); showToast('Bienvenido '+u); }
-      else { alert('Credenciales incorrectas. Intente de nuevo.'); tryLogin(); }
+    const overlay = $('#authOverlay');
+    const form = $('#authForm');
+    const userInput = $('#authUser');
+    const passInput = $('#authPass');
+    const errorEl = $('#authError');
+    const submitBtn = $('#authSubmit');
+    const toggleBtn = $('#authTogglePass');
+    if(!overlay || !form || !userInput || !passInput || !errorEl || !submitBtn) return;
+    overlay.style.display = 'flex';
+    overlay.setAttribute('aria-hidden','false');
+    setTimeout(()=> userInput.focus(), 120);
+    if(toggleBtn){
+      toggleBtn.onclick = ()=>{
+        const isPass = passInput.type === 'password';
+        passInput.type = isPass ? 'text' : 'password';
+        toggleBtn.textContent = isPass ? 'Ocultar' : 'Mostrar';
+      };
+    }
+    form.onsubmit = async (e)=>{
+      e.preventDefault();
+      const u = String(userInput.value || '').trim().toLowerCase();
+      const p = String(passInput.value || '').trim().toLowerCase();
+      const loginUser = String(LOCAL_LOGIN.user || '').trim().toLowerCase();
+      const loginPass = String(LOCAL_LOGIN.pass || '').trim().toLowerCase();
+      const ok = (u === loginUser && p === loginPass);
+      if(!ok){
+        errorEl.textContent = 'Usuario o contraseña incorrectos.';
+        passInput.value = '';
+        passInput.focus();
+        return;
+      }
+      errorEl.textContent = '';
+      submitBtn.disabled = true;
+      state.user = LOCAL_LOGIN.user;
+      overlay.style.display = 'none';
+      overlay.setAttribute('aria-hidden','true');
+      await initApp();
+      showToast('Bienvenido ' + LOCAL_LOGIN.user);
     };
-    setTimeout(tryLogin,200);
   }
 
   function updateNetStatus(){ const online=navigator.onLine; $('#netStatus').textContent=online?'online':'offline'; $('#netStatus').className='badge '+(online?'green':'red'); if(online) flushPending(); }
@@ -2645,4 +2713,5 @@ input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px soli
   <script>document.addEventListener('DOMContentLoaded', ()=> { if(window.feather) feather.replace(); });</script>
 </body>
 </html>
+
 
